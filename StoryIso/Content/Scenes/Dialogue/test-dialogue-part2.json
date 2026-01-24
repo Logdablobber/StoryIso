@@ -1,0 +1,10 @@
+{
+	"id": "test part2",
+	"dialogueSteps": 
+	[
+		{
+			"speaker": "System",
+			"text": "You just got moved!"
+		}
+	]
+}

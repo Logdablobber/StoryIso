@@ -1,0 +1,10 @@
+#Test Scene
+.RunDialogue "test"
+.MoveTo ~-2 ~0 1
+.RunDialogue "test part2"
+.SetCharacterPos "test" 9 10
+.SetVisible "test" true
+.Wait 3
+.MoveCharacter "test" playerX playerY 1
+.Wait 2
+.SetCharacterDirection "test" Left

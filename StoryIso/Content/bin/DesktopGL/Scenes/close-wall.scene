@@ -1,0 +1,28 @@
+#Close Wall
+
+.Print "Toggled On!"
+
+// Interaction Tile
+.SetTile InteractionTileLayer 34 7 7
+
+// middle row
+.SetTile WallLayer 11 12 7
+.SetTile WallLayer 28 13 7
+.SetTile WallLayer 28 14 7
+
+// top row
+.SetTile WallLayer 11 12 6
+.SetTile WallLayer 28 13 6
+.SetTile WallLayer 28 14 6
+
+// bottom row
+.SetTile WallLayer 11 12 8
+.SetTile WallLayer 28 13 8
+.SetTile WallLayer 28 14 8
+
+// enable collider
+.SetCollider "removable1" true
+
+.RefreshMap
+
+.RunDialogue "wall close"

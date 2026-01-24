@@ -1,0 +1,10 @@
+{
+	"id": "wall open",
+	"dialogueSteps": 
+	[
+		{
+			"speaker": "System",
+			"text": "Something Happened!"
+		}
+	]
+}

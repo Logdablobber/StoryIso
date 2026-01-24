@@ -1,0 +1,32 @@
+{
+	"id": "test",
+	"dialogueSteps": 
+	[
+		{
+			"speaker": "System",
+			"text": "Hello, world!",
+			"color": {
+				"rgb": [0, 0, 0]
+			}
+		},
+		{
+			"speaker": "System",
+			"text": "This is the second item in the dialogue. It should wrap around.",
+			"color": {
+				"rgb": [0, 0, 0]
+			}
+		},
+		{
+			"speaker": "System",
+			"text": "This text has a really long aaaaaaaaaaaaaaaaaaaaaaaaaaaaa. Did it work?"
+		},
+		{
+			"speaker": "System",
+			"text": "This is\ntesting new lines :)"
+		},
+		{
+			"speaker": "System",
+			"text": "This text should get smaller aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+		}
+	]
+}

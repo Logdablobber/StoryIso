@@ -1,0 +1,6 @@
+C:\Users\herschlebh27\Documents\DotNet Projects\StoryIso\StoryIso\obj\Debug\net10.0\mgcb.tool.restore
+C:\Users\herschlebh27\Documents\DotNet Projects\StoryIso\StoryIso\obj\Debug\net10.0\StoryIso.csproj.AssemblyReference.cache
+C:\Users\herschlebh27\Documents\DotNet Projects\StoryIso\StoryIso\obj\Debug\net10.0\StoryIso.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\herschlebh27\Documents\DotNet Projects\StoryIso\StoryIso\obj\Debug\net10.0\StoryIso.AssemblyInfoInputs.cache
+C:\Users\herschlebh27\Documents\DotNet Projects\StoryIso\StoryIso\obj\Debug\net10.0\StoryIso.AssemblyInfo.cs
+C:\Users\herschlebh27\Documents\DotNet Projects\StoryIso\StoryIso\obj\Debug\net10.0\StoryIso.csproj.CoreCompileInputs.cache

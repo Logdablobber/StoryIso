@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <SourceFile>C:/Users/herschlebh27/Documents/DotNet Projects/StoryIso/StoryIso/Content/Tiled/Maps/test-tilemap2.tmx</SourceFile>
+  <SourceTime>2026-01-20T12:26:31.4849713-05:00</SourceTime>
+  <DestFile>C:/Users/herschlebh27/Documents/DotNet Projects/StoryIso/StoryIso/Content/bin/DesktopGL/Content/Tiled/Maps/test-tilemap2.xnb</DestFile>
+  <DestTime>2026-01-21T14:31:32.5561051-05:00</DestTime>
+  <Importer>TiledMapImporter</Importer>
+  <ImporterTime>2024-07-09T15:47:10-04:00</ImporterTime>
+  <Processor>TiledMapProcessor</Processor>
+  <ProcessorTime>2024-07-09T15:47:10-04:00</ProcessorTime>
+  <Dependencies />
+  <BuildAsset>
+    <string>C:/Users/herschlebh27/Documents/DotNet Projects/StoryIso/StoryIso/Content/bin/DesktopGL/Content/Tiled/tileset-atlas.xnb</string>
+  </BuildAsset>
+  <BuildOutput />
+</PipelineBuildEvent>

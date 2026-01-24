@@ -1,0 +1,12 @@
+{
+	"id": "wall close",
+	"dialogueSteps":
+	[
+		{
+			"speaker": "",
+			"text": "Something Unhappened",
+			"duration": 10,
+			"preventSkip": true
+		}
+	]
+}
