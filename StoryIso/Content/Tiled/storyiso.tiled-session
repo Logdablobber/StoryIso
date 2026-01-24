@@ -1,0 +1,73 @@
+{
+    "activeFile": "Maps/test-tilemap.tmx",
+    "expandedProjectPaths": [
+        "Maps",
+        "."
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "Maps/test-tilemap.tmx": {
+            "expandedObjectLayers": [
+                6,
+                4
+            ],
+            "scale": 2,
+            "selectedLayer": 5,
+            "viewCenter": {
+                "x": 239.75,
+                "y": 160.5
+            }
+        },
+        "Maps/test-tilemap2.tmx": {
+            "expandedObjectLayers": [
+                7,
+                4,
+                3
+            ],
+            "scale": 3,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 240,
+                "y": 159.83333333333331
+            }
+        },
+        "dungeon-floor-tiles.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1
+        },
+        "dungeon-wall-tiles.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1
+        },
+        "objects.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "tileset-atlas.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.imagePath": "C:/Users/herschlebh27/Documents/DotNet Projects/StoryIso/StoryIso/Content/Tiled/Tiles",
+    "openFiles": [
+        "Maps/test-tilemap2.tmx",
+        "Maps/test-tilemap.tmx",
+        "tileset-atlas.tsx"
+    ],
+    "project": "storyiso.tiled-project",
+    "property.type": "string",
+    "recentFiles": [
+        "Maps/test-tilemap2.tmx",
+        "tileset-atlas.tsx",
+        "Maps/test-tilemap.tmx",
+        "objects.tsx"
+    ],
+    "textEdit.monospace": true,
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}
