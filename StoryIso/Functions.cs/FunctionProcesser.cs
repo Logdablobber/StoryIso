@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -66,8 +67,7 @@ public static partial class FunctionProcessor
 
 						string input = matches[1].Trim();
 
-						var postfix = ParameterEvaluator.Postfix(input);
-						var joined_postfix = new FunctionParameter<string>(TextFormatter.JoinList(postfix));
+						var postfix = ParameterEvaluator.Postfix<bool?>(new Source(i, null, obj), "IF", input);
 
 						uint? goto_line = null;
 
@@ -88,7 +88,7 @@ public static partial class FunctionProcessor
 						}
 
 						funcs.Add(new Function(FunctionType.GOTOIF, 
-													[joined_postfix, 
+													[postfix, 
 													new FunctionParameter<uint?>(goto_line)], 
 												i));
 						continue;
@@ -102,8 +102,7 @@ public static partial class FunctionProcessor
 
 						string elif_input = matches[1].Trim();
 
-						var elif_postfix = ParameterEvaluator.Postfix(elif_input);
-						var elif_joined_postfix = new FunctionParameter<string>(TextFormatter.JoinList(elif_postfix));
+						var elif_postfix = ParameterEvaluator.Postfix<bool?>(new Source(i, null, obj), "ELIF", elif_input);
 
 						uint? elif_goto_line = null;
 						uint? endif_line = null;
@@ -147,7 +146,7 @@ public static partial class FunctionProcessor
 												i - 1));
 
 						funcs.Add(new Function(FunctionType.GOTOIF, 
-													[elif_joined_postfix, 
+													[elif_postfix, 
 													new FunctionParameter<uint?>(elif_goto_line)], 
 												i));
 						continue;

@@ -11,6 +11,54 @@ public partial class FunctionProcessor
 		return (T)(FunctionParameter<T>)param;
 	}
 
+	public static string ConvertBase(object param)
+	{
+		Type type = param.GetType();
+
+		if (type == typeof(FunctionParameter<string>))
+		{
+			return Convert<string>(param);
+		}
+
+		if (type == typeof(FunctionParameter<float?>))
+		{
+			float? value = Convert<float?>(param).Value;
+
+			if (!value.HasValue)
+			{
+				return null;
+			}
+
+			return value.ToString();
+		}
+
+		if (type == typeof(FunctionParameter<int?>))
+		{
+			int? value = Convert<int?>(param).Value;
+
+			if (!value.HasValue)
+			{
+				return null;
+			}
+
+			return value.ToString();
+		}
+
+		if (type == typeof(FunctionParameter<bool?>))
+		{
+			bool? value = Convert<bool?>(param).Value;
+
+			if (!value.HasValue)
+			{
+				return null;
+			}
+
+			return value.ToString();
+		}
+
+		return null;
+	}
+
 	public static RelativeVariable<T>? RelativeConvert<T>(object param) where T : struct
 	{
 		var converted_param = (RelativeVariable<FunctionParameter<T?>>)param;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection.PortableExecutable;
 using System.Text.RegularExpressions;
 using StoryIso.Debugging;
@@ -52,30 +53,30 @@ public static partial class ParameterProcessor
 		{typeof(uint[]), 14}
 	};
 
-	public static FunctionParameter<T?>? ParseParameter<T>(string value, string type_name, Source source, string function) where T : struct, IParsable<T>
+	public static FunctionParameter<T?>? ParseParameter<T>(string value, Source source, string function) where T : struct, IParsable<T>
 	{
 		if (!T.TryParse(value, null, out T parsed_value))
 		{
-			DebugConsole.Raise(new ParameterTypeError(source, function, value, type_name));
+			DebugConsole.Raise(new ParameterTypeError(source, function, value, typeof(T).FullName));
 			return null;
 		}
 
 		return new FunctionParameter<T?>(parsed_value);
 	}
 
-	public static FunctionParameter<T?>? ParseParameterVariable<T>(string value, string type_name, Source source, string function) where T : struct, IParsable<T>
+	public static FunctionParameter<T?>? ParseParameterVariable<T>(string value, Source source, string function) where T : struct, IParsable<T>
 	{
 		if (VariableManager.ValidName(value, retrieval_only: true))
 		{
 			return new FunctionParameter<T?>(null, value);
 		}
 
-		var parameter_value = ParseParameter<T>(value, type_name, source, function);
+		var parameter_value = ParseParameter<T>(value, source, function);
 
 		return parameter_value;
 	}
 
-	private static ArrayParameter<T?>? ParseArrayParameter<T>(string value, string type_name, Source source, string function) where T : struct, IParsable<T>
+	private static ArrayParameter<T?>? ParseArrayParameter<T>(string value, Source source, string function) where T : struct, IParsable<T>
 	{
 		if (value[0] == '[' && value[^1] == ']')
 		{
@@ -86,7 +87,7 @@ public static partial class ParameterProcessor
 
 		foreach (Match match in ArraySplitRegex.Matches(value))
 		{
-			FunctionParameter<T?>? function_parameter = ParseParameter<T>(match.Value.Trim(), type_name, source, function);
+			FunctionParameter<T?>? function_parameter = ParseParameter<T>(match.Value.Trim(), source, function);
 
 			if (!function_parameter.HasValue)
 			{
@@ -99,6 +100,62 @@ public static partial class ParameterProcessor
 		return new ArrayParameter<T?>(parameters);
 	}
 
+	public static (object, Type)? ProcessUnknownParameter(string value, Source source, string function)
+	{
+		if (StringRegex.IsMatch(value))
+		{
+			return (new FunctionParameter<string>(value), typeof(string));
+		}
+
+		if (FloatRegex.IsMatch(value))
+		{
+			var parameter = ParseParameter<float>(value, source, function);
+
+			if (!parameter.HasValue)
+			{
+				return null;
+			}
+
+			return (parameter.Value, typeof(float));
+		}
+
+		if (BoolRegex.IsMatch(value))
+		{
+			var parameter = ParseParameter<bool>(value, source, function);
+
+			if (!parameter.HasValue)
+			{
+				return null;
+			}
+
+			return (parameter.Value, typeof(bool));
+		}
+
+		if (VariableManager.ContainsVariable(value, out VariableType type, out _))
+		{
+			switch (type)
+			{
+				case VariableType.Int:
+					return (new FunctionParameter<int?>(null, value), typeof(FunctionParameter<int?>));
+
+				case VariableType.Float:
+					return (new FunctionParameter<float?>(null, value), typeof(FunctionParameter<float?>));
+
+				case VariableType.String:
+					return (new FunctionParameter<string>(null, value), typeof(FunctionParameter<string>));
+
+				case VariableType.Bool:
+					return (new FunctionParameter<bool?>(null, value), typeof(FunctionParameter<bool?>));
+
+				default:
+					break;
+			}
+		}
+
+		DebugConsole.Raise(new ParameterTypeError(source, function, value, "n\\a", "Unable to parse down to type or variable"));
+		return null;
+	}
+
 	public static List<object> ProcessParameters(Source source, string function_name, List<string> inputs, Type[] types)
 	{
 		List<object> args = [];
@@ -109,7 +166,7 @@ public static partial class ParameterProcessor
 			switch (typeDict[types[j]])
 			{
 				case 0: // int
-					var int_param = ParseParameterVariable<int>(inputs[j], "int", source, function_name);
+					var int_param = ParseParameterVariable<int>(inputs[j], source, function_name);
 					
 					if (!int_param.HasValue)
 					{
@@ -120,7 +177,7 @@ public static partial class ParameterProcessor
 					break;
 
 				case 1: // float
-					var float_param = ParseParameterVariable<float>(inputs[j], "float", source, function_name);
+					var float_param = ParseParameterVariable<float>(inputs[j], source, function_name);
 					
 					if (!float_param.HasValue)
 					{
@@ -148,7 +205,7 @@ public static partial class ParameterProcessor
 					break;
 
 				case 3: // bool
-					var bool_param = ParseParameterVariable<bool>(inputs[j], "bool", source, function_name);
+					var bool_param = ParseParameterVariable<bool>(inputs[j], source, function_name);
 					
 					if (!bool_param.HasValue)
 					{
@@ -170,7 +227,7 @@ public static partial class ParameterProcessor
 					break;
 
 				case 5: // ushort 
-					var ushort_param = ParseParameter<ushort>(inputs[j], "ushort", source, function_name);
+					var ushort_param = ParseParameter<ushort>(inputs[j], source, function_name);
 					
 					if (!ushort_param.HasValue)
 					{
@@ -181,7 +238,7 @@ public static partial class ParameterProcessor
 					break;
 
 				case 6: // uint 
-					var uint_param = ParseParameter<uint>(inputs[j], "uint", source, function_name);
+					var uint_param = ParseParameter<uint>(inputs[j], source, function_name);
 					
 					if (!uint_param.HasValue)
 					{
@@ -192,7 +249,7 @@ public static partial class ParameterProcessor
 					break;
 
 				case 7: // byte 
-					var byte_param = ParseParameter<byte>(inputs[j], "byte", source, function_name);
+					var byte_param = ParseParameter<byte>(inputs[j], source, function_name);
 					
 					if (!byte_param.HasValue)
 					{
@@ -207,7 +264,7 @@ public static partial class ParameterProcessor
 
 					string relative_int_input = inputs[j][(relative_int ? 1 : 0)..];
 
-					var relative_int_param = ParseParameterVariable<int>(relative_int_input, "int", source, function_name);
+					var relative_int_param = ParseParameterVariable<int>(relative_int_input, source, function_name);
 					
 					if (!relative_int_param.HasValue)
 					{
@@ -222,7 +279,7 @@ public static partial class ParameterProcessor
 
 					string relative_float_input = inputs[j][(relative_float ? 1 : 0)..];
 
-					var relative_float_param = ParseParameterVariable<float>(relative_float_input, "float", source, function_name);
+					var relative_float_param = ParseParameterVariable<float>(relative_float_input, source, function_name);
 					
 					if (!relative_float_param.HasValue)
 					{
@@ -269,7 +326,7 @@ public static partial class ParameterProcessor
 					break;
 
 				case 14: // uint[]
-					ArrayParameter<uint?>? uints = ParseArrayParameter<uint>(inputs[j], "uint", source, function_name);
+					ArrayParameter<uint?>? uints = ParseArrayParameter<uint>(inputs[j], source, function_name);
 					if (!uints.HasValue)
 					{
 						DebugConsole.Raise(new ParameterTypeError(source, function_name, inputs[j], "uint[]"));
@@ -288,7 +345,23 @@ public static partial class ParameterProcessor
 	}
 
 
+	private static readonly Regex ArraySplitRegex = _arraySplitRegex();
 	[GeneratedRegex(@"(?<=^|,)[^,]+", RegexOptions.Compiled)]
 	private static partial Regex _arraySplitRegex();
-	private static Regex ArraySplitRegex = _arraySplitRegex();
+	
+
+	private static readonly Regex StringRegex = _stringRegex();
+
+	[GeneratedRegex(@"^"".*""$", RegexOptions.Compiled)]
+	private static partial Regex _stringRegex();
+
+	private static readonly Regex FloatRegex = _floatRegex();
+
+	[GeneratedRegex(@"^[-]?[0-9]*[.]?[0-9]+$", RegexOptions.Compiled)]
+	private static partial Regex _floatRegex();
+
+	private static readonly Regex BoolRegex = _boolRegex();
+
+	[GeneratedRegex(@"^(true|false)$", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
+	private static partial Regex _boolRegex();
 }

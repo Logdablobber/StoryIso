@@ -1821,24 +1821,32 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\herschlebh27\\.nuget\\packages\\": {}
+    "C:\\Users\\hhers\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\herschlebh27\\Documents\\DotNet Projects\\StoryIso\\StoryIso\\StoryIso.csproj",
+      "projectUniqueName": "C:\\Users\\hhers\\OneDrive\\Documents\\GitHub\\StoryIso\\StoryIso\\StoryIso.csproj",
       "projectName": "StoryIso",
-      "projectPath": "C:\\Users\\herschlebh27\\Documents\\DotNet Projects\\StoryIso\\StoryIso\\StoryIso.csproj",
-      "packagesPath": "C:\\Users\\herschlebh27\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\herschlebh27\\Documents\\DotNet Projects\\StoryIso\\StoryIso\\obj\\",
+      "projectPath": "C:\\Users\\hhers\\OneDrive\\Documents\\GitHub\\StoryIso\\StoryIso\\StoryIso.csproj",
+      "packagesPath": "C:\\Users\\hhers\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\hhers\\OneDrive\\Documents\\GitHub\\StoryIso\\StoryIso\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\herschlebh27\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\hhers\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -1908,7 +1916,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\ProgramData\\DotNetSDK-10\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.CSharp": "(,4.7.32767]",
           "Microsoft.VisualBasic": "(,10.4.32767]",

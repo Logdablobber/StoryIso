@@ -8,7 +8,7 @@ using StoryIso.Enums;
 
 namespace StoryIso.Functions;
 
-public static class VariableManager
+public static partial class VariableManager
 {
 	private static Dictionary<string, int> _intVariables = [];
 	private static Dictionary<string, float> _floatVariables = [];
@@ -108,9 +108,7 @@ public static class VariableManager
 			return false;
 		}
 
-		const string PATTERN = @"^[A-Za-z_]+[A-Za-z0-9_]*$";
-
-		return Regex.IsMatch(name, PATTERN);
+		return VariableRegex.IsMatch(name);
 	}
 
 	public static void DefineVariable(VariableType type, string name, string value, Source source)
@@ -385,4 +383,8 @@ public static class VariableManager
 		DebugConsole.Raise(new UnknownVariableError(source, name));
 	}
 
+	public static readonly Regex VariableRegex = _variableRegex();
+
+	[GeneratedRegex(@"^[A-Za-z_]+[A-Za-z0-9_]*$", RegexOptions.Compiled)]
+	private static partial Regex _variableRegex();
 }

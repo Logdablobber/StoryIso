@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using StoryIso.Debugging;
+using StoryIso.Enums;
 
 namespace StoryIso.Functions;
 
 public static partial class ParameterEvaluator
 {
-	public static bool Evaluate<T>(Source source, (object, Type)[] postfix, out T result) where T : IParsable<T>
+	public static bool Evaluate<T>(Source source, (object, Type)[] postfix, out T result)
 	{
 		Stack<(object, Type)> stack = new();
 
@@ -19,12 +20,6 @@ public static partial class ParameterEvaluator
 				stack.Push(item);
 				continue;
 			}
-
-			/*if ((postfix.Item1 as OperatorDef).)
-			{
-				DebugConsole.Raise(new UnknownFunctionError(source, item));
-				return false;
-			}*/
 
 			var operatorDef = (OperatorDef)item.Item1;
 
@@ -41,9 +36,9 @@ public static partial class ParameterEvaluator
 			{
 				var param = stack.Pop();
 
-				if (param.Item2 != operatorDef.parameters[i])
+				if (operatorDef.parameters[i] != typeof(VariableObject) && param.Item2 != operatorDef.parameters[i])
 				{
-					DebugConsole.Raise(new ParameterTypeError(source, operatorDef.oper, param.Item1.ToString(), param.Item2.FullName));
+					DebugConsole.Raise(new ParameterTypeError(source, operatorDef.oper, param.Item1.ToString(), operatorDef.parameters[i].FullName));
 					result = default;
 					return false;
 				}
@@ -65,14 +60,16 @@ public static partial class ParameterEvaluator
 
 		var end_value = stack.Pop();
 
-		if (end_value.Item2 != typeof(T))
+		var type = typeof(T);
+
+		if (!(end_value.Item2 == typeof(T) || typeof(T).FullName.Contains(end_value.Item2.FullName))) // second part is for nullables
 		{
 			DebugConsole.Raise(new ParameterProcessError(source));
 			result = default;
 			return false;	
 		}
 
-		result = (T)end_value.Item1;
+		result = FunctionProcessor.Convert<T>(end_value.Item1);
 		return true;
 	}
 
@@ -98,7 +95,7 @@ public static partial class ParameterEvaluator
 								select match.Value).ToArray();
 
 		List<(object, Type)> res = [];
-		Stack<string> stack = new Stack<string>();
+		Stack<string> stack = new();
 
 		foreach (string item in infix)
 		{
@@ -109,7 +106,14 @@ public static partial class ParameterEvaluator
 
 			if (OperandRegex().IsMatch(item))
 			{
-				res.Add(ParameterProcessor.ParseParameterVariable(item, ));
+				var operand = ParameterProcessor.ProcessUnknownParameter(item, source, function);
+
+				if (!operand.HasValue)
+				{
+					return null;
+				}
+
+				res.Add(operand.Value);
 				continue;
 			}
 
@@ -123,7 +127,7 @@ public static partial class ParameterEvaluator
 			{
 				while (stack.Count > 0 && stack.Peek() != "(")
 				{
-					res.Add(stack.Pop());
+					res.Add((OperatorDefs.Get(stack.Pop()), typeof(OperatorDef)));
 				}
 
 				stack.Pop();
@@ -135,7 +139,7 @@ public static partial class ParameterEvaluator
 					(precedence(stack.Peek()) == precedence(item) &&
 					item != "^")))
 			{
-				res.Add(stack.Pop());
+				res.Add((OperatorDefs.Get(stack.Pop()), typeof(OperatorDef)));
 			}
 
 			stack.Push(item);
@@ -143,10 +147,8 @@ public static partial class ParameterEvaluator
 
 		while (stack.Count > 0)
 		{
-			res.Add(stack.Pop());
+			res.Add((OperatorDefs.Get(stack.Pop()), typeof(OperatorDef)));
 		}
-
-		// TODO: MAKE THIS RETURN (object, Type)
 
 		return new PostfixEquation<T>(res.ToArray());
 	}

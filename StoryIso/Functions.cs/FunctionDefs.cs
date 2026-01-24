@@ -398,17 +398,15 @@ public static class FunctionDefs
 			parameters = [typeof(object), typeof(uint)],
 			function = (args, source) =>
 			{
-				var item1 = FunctionProcessor.Convert<PostfixEquation<bool>>(args[0]);
+				var item1 = (PostfixEquation<bool?>)args[0];
 				var item2 = FunctionProcessor.Convert<uint?>(args[1]);
 
 				if (item1 == null || !item2.HasValue)
 				{
 					return null;
 				}
-				
-				var postfix_list = TextFormatter.SeparateList(item1);
 
-				if (!ParameterEvaluator.Evaluate<bool>(source, postfix_list, out bool result) && !result)
+				if (!item1.Evaluate(source, out bool? result) || !result.HasValue || !result.Value)
 				{
 					return null;
 				}
@@ -574,7 +572,7 @@ public static class FunctionDefs
 		// update scene formatting extension with variable and function names
 
 		string user_folder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-		string extension_dir = Path.Combine(user_folder, "\\.vscode\\extensions\\scene-syntax-highlighting\\syntaxes\\");
+		string extension_dir = user_folder + "\\.vscode\\extensions\\scene-syntax-highlighting\\syntaxes\\";
 
 		string json = File.ReadAllText(extension_dir + "scene.tmLanguageBase.json");
 		JObject jsonObj = JsonConvert.DeserializeObject(json) as JObject;
