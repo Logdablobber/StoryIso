@@ -111,7 +111,7 @@ public static partial class VariableManager
 		return VariableRegex.IsMatch(name);
 	}
 
-	public static void DefineVariable(VariableType type, string name, string value, Source source)
+	public static void DefineVariable(VariableType type, string name, object value, Source source)
 	{
 		if (type == VariableType.None)
 		{
@@ -135,50 +135,43 @@ public static partial class VariableManager
 		switch (type)
 		{
 			case VariableType.Int:
-				if (!(int.TryParse(value, out int int_value) || 
-						_intVariables.TryGetValue(value, out int_value)))
+				if (value == null)
 				{
-					DebugConsole.Raise(new WrongVariableTypeError(source, name, "int", value));
+					DebugConsole.Raise(new WrongVariableTypeError(source, name, "int"));
 					return;
 				}
 
-				_intVariables[name] = int_value;
+				_intVariables[name] = (int)value;
 				break;
 
 			case VariableType.Float:
-				if (!(float.TryParse(value, out float float_value) ||
-						_floatVariables.TryGetValue(value, out float_value)))
+				if (value == null)
 				{
-					DebugConsole.Raise(new WrongVariableTypeError(source, name, "float", value));
+					DebugConsole.Raise(new WrongVariableTypeError(source, name, "float"));
 					return;
 				}
 
-				_floatVariables[name] = float_value;
+				_floatVariables[name] = (float)value;
 				break;
 
 			case VariableType.String:
-				string string_value = value;
-
-				if (!((value[0] == '\"' &&
-					value[^1] == '\"') || 
-					_stringVariables.TryGetValue(value, out string_value)))
+				if (value == null)
 				{
-					DebugConsole.Raise(new WrongVariableTypeError(source, name, "string", value));
+					DebugConsole.Raise(new WrongVariableTypeError(source, name, "string"));
 					return;
 				}
 
-				_stringVariables[name] = string_value;
+				_stringVariables[name] = (string)value;
 				break;
 
 			case VariableType.Bool:
-				if (!(bool.TryParse(value, out bool bool_value) ||
-						_boolVariables.TryGetValue(value, out bool_value)))
+				if (value == null)
 				{
-					DebugConsole.Raise(new WrongVariableTypeError(source, name, "bool", value));
+					DebugConsole.Raise(new WrongVariableTypeError(source, name, "bool"));
 					return;
 				}
 
-				_boolVariables[name] = bool_value;
+				_boolVariables[name] = (bool)value;
 				break;
 
 			default:

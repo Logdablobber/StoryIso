@@ -60,10 +60,20 @@ public static partial class ParameterEvaluator
 
 		var end_value = stack.Pop();
 
-		var type = typeof(T);
-
 		if (!(end_value.Item2 == typeof(T) || typeof(T).FullName.Contains(end_value.Item2.FullName))) // second part is for nullables
 		{
+			if (typeof(T) == typeof(float?) && end_value.Item2 == typeof(int)) // if return type is int and has float, convert
+			{
+				result = (T)(object)(int?)FunctionProcessor.Convert<float?>(end_value.Item1);
+				return true;
+			}
+
+			if (typeof(T) == typeof(int?) && end_value.Item2 == typeof(float)) // if return type is int and has float, convert
+			{
+				result = (T)(object)(float?)FunctionProcessor.Convert<int?>(end_value.Item1);
+				return true;
+			}
+
 			DebugConsole.Raise(new ParameterProcessError(source));
 			result = default;
 			return false;	
@@ -77,9 +87,10 @@ public static partial class ParameterEvaluator
 	{
 		return oper switch
 		{
-			"!" => 6,
-			"^" => 5,
-			"*" or "/" => 4,
+			"!" => 7,
+			"^" => 6,
+			"," or "'" => 5, // floor and ceiling operators
+			"*" or "/" or "%" => 4,
 			"+" or "-" => 3,
 			"!=" or "==" or ">" or "=" or "<" or ">=" or "<=" => 2,
 			"&&" => 1,

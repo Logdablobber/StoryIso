@@ -339,12 +339,12 @@ public static class FunctionDefs
 		{
 			name = "DefineVar",
 			type = FunctionType.DefineVar,
-			parameters = [typeof(VariableType), typeof(object), typeof(object)], // the last value is string because it will be parsed later
+			parameters = [typeof(VariableType), typeof(object), typeof(VariableObject)], // the last value is string because it will be parsed later
 			function = (args, source) => 
 			{
 				var type = FunctionProcessor.Convert<VariableType>(args[0]);
 				var name = FunctionProcessor.Convert<string>(args[1]);
-				var value = FunctionProcessor.Convert<string>(args[2]);
+				var value = FunctionProcessor.ConvertUnknown(args[2]);
 
 				if (name == null || value == null || type == VariableType.Bool)
 				{

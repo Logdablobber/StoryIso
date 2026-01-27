@@ -8,7 +8,6 @@ namespace StoryIso.Functions;
 public struct OperatorDef
 {
 	public string oper;
-	public OperatorType type;
 	public Type[] parameters;
 	public Type returnType;
 	public Func<List<object>, Source, object> function;

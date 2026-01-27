@@ -11,13 +11,14 @@ public partial class FunctionProcessor
 		return (T)(FunctionParameter<T>)param;
 	}
 
-	public static string ConvertBase(object param)
+	public static object ConvertUnknown(object param, out string string_value)
 	{
 		Type type = param.GetType();
 
 		if (type == typeof(FunctionParameter<string>))
 		{
-			return Convert<string>(param);
+			string_value = Convert<string>(param);
+			return string_value;
 		}
 
 		if (type == typeof(FunctionParameter<float?>))
@@ -26,10 +27,12 @@ public partial class FunctionProcessor
 
 			if (!value.HasValue)
 			{
+				string_value = null;
 				return null;
 			}
 
-			return value.ToString();
+			string_value = value.ToString();
+			return value;
 		}
 
 		if (type == typeof(FunctionParameter<int?>))
@@ -37,10 +40,12 @@ public partial class FunctionProcessor
 			int? value = Convert<int?>(param).Value;
 
 			if (!value.HasValue)
-			{
+			{	
+				string_value = null;
 				return null;
 			}
 
+			string_value = value.ToString();
 			return value.ToString();
 		}
 
@@ -50,13 +55,21 @@ public partial class FunctionProcessor
 
 			if (!value.HasValue)
 			{
+				string_value = null;
 				return null;
 			}
 
-			return value.ToString();
+			string_value = value.ToString();
+			return value;
 		}
 
+		string_value = null;
 		return null;
+	}
+
+	public static object ConvertUnknown(object param)
+	{
+		return ConvertUnknown(param, out _);
 	}
 
 	public static RelativeVariable<T>? RelativeConvert<T>(object param) where T : struct

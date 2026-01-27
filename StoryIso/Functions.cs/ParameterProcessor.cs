@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO.Compression;
+using System.Net.Http.Headers;
 using System.Reflection.PortableExecutable;
 using System.Text.RegularExpressions;
 using StoryIso.Debugging;
@@ -68,12 +70,22 @@ public static partial class ParameterProcessor
 	{
 		if (VariableManager.ValidName(value, retrieval_only: true))
 		{
-			return new FunctionParameter<T?>(null, value);
+			return new FunctionParameter<T?>(variable_name: value);
 		}
 
 		var parameter_value = ParseParameter<T>(value, source, function);
 
 		return parameter_value;
+	}
+
+	public static FunctionParameter<T?>? ParseEquation<T>(string value, Source source, string function) where T : struct, IParsable<T>
+	{
+		if (OperatorDefs.OperatorRegex.IsMatch(value))
+		{
+			return new FunctionParameter<T?>(ParameterEvaluator.Postfix<T?>(source, function, value));
+		}
+
+		return ParseParameterVariable<T>(value, source, function);
 	}
 
 	private static ArrayParameter<T?>? ParseArrayParameter<T>(string value, Source source, string function) where T : struct, IParsable<T>
@@ -104,7 +116,7 @@ public static partial class ParameterProcessor
 	{
 		if (StringRegex.IsMatch(value))
 		{
-			return (new FunctionParameter<string>(value), typeof(string));
+			return (new FunctionParameter<string>(value: value), typeof(string));
 		}
 
 		if (FloatRegex.IsMatch(value))
@@ -131,21 +143,21 @@ public static partial class ParameterProcessor
 			return (parameter.Value, typeof(bool));
 		}
 
-		if (VariableManager.ContainsVariable(value, out VariableType type, out _))
+		if (VariableManager.ValidName(value, out VariableType type, out _)) // TODO: fix this
 		{
 			switch (type)
 			{
 				case VariableType.Int:
-					return (new FunctionParameter<int?>(null, value), typeof(FunctionParameter<int?>));
+					return (new FunctionParameter<int?>(value), typeof(FunctionParameter<int?>));
 
 				case VariableType.Float:
-					return (new FunctionParameter<float?>(null, value), typeof(FunctionParameter<float?>));
+					return (new FunctionParameter<float?>(value), typeof(FunctionParameter<float?>));
 
 				case VariableType.String:
-					return (new FunctionParameter<string>(null, value), typeof(FunctionParameter<string>));
+					return (new FunctionParameter<string>(variable_name: value), typeof(FunctionParameter<string>));
 
 				case VariableType.Bool:
-					return (new FunctionParameter<bool?>(null, value), typeof(FunctionParameter<bool?>));
+					return (new FunctionParameter<bool?>(value), typeof(FunctionParameter<bool?>));
 
 				default:
 					break;
@@ -166,7 +178,7 @@ public static partial class ParameterProcessor
 			switch (typeDict[types[j]])
 			{
 				case 0: // int
-					var int_param = ParseParameterVariable<int>(inputs[j], source, function_name);
+					var int_param = ParseEquation<int>(inputs[j], source, function_name);
 					
 					if (!int_param.HasValue)
 					{
@@ -177,7 +189,7 @@ public static partial class ParameterProcessor
 					break;
 
 				case 1: // float
-					var float_param = ParseParameterVariable<float>(inputs[j], source, function_name);
+					var float_param = ParseEquation<float>(inputs[j], source, function_name);
 					
 					if (!float_param.HasValue)
 					{
@@ -197,15 +209,15 @@ public static partial class ParameterProcessor
 							return null;
 						}
 
-						args.Add(new FunctionParameter<string>(null, inputs[j]));
+						args.Add(new FunctionParameter<string>(variable_name: inputs[j]));
 						break;
 					}
 
-					args.Add(new FunctionParameter<string>(inputs[j]));
+					args.Add(new FunctionParameter<string>(value:inputs[j]));
 					break;
 
 				case 3: // bool
-					var bool_param = ParseParameterVariable<bool>(inputs[j], source, function_name);
+					var bool_param = ParseEquation<bool>(inputs[j], source, function_name);
 					
 					if (!bool_param.HasValue)
 					{
@@ -264,7 +276,7 @@ public static partial class ParameterProcessor
 
 					string relative_int_input = inputs[j][(relative_int ? 1 : 0)..];
 
-					var relative_int_param = ParseParameterVariable<int>(relative_int_input, source, function_name);
+					var relative_int_param = ParseEquation<int>(relative_int_input, source, function_name);
 					
 					if (!relative_int_param.HasValue)
 					{
@@ -279,7 +291,7 @@ public static partial class ParameterProcessor
 
 					string relative_float_input = inputs[j][(relative_float ? 1 : 0)..];
 
-					var relative_float_param = ParseParameterVariable<float>(relative_float_input, source, function_name);
+					var relative_float_param = ParseEquation<float>(relative_float_input, source, function_name);
 					
 					if (!relative_float_param.HasValue)
 					{
@@ -301,13 +313,13 @@ public static partial class ParameterProcessor
 					break;
 
 				case 11: // object 
-					args.Add(new FunctionParameter<string>(inputs[j]));
+					args.Add(new FunctionParameter<string>(value:inputs[j]));
 					break;
 
 				case 12: // variable object
 					if (VariableManager.ValidName(inputs[j]))
 					{
-						args.Add(new FunctionParameter<object>(null, inputs[j]));
+						args.Add(new FunctionParameter<object>(variable_name: inputs[j]));
 						break;
 					}
 

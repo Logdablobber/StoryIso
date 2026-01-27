@@ -1,5 +1,6 @@
 #startup
 .DefineVar string, testvar, "Hello, World!"
+.DefineVar int, testint, 12 + 3 * 2
 .Print testvar
 .SetVar testvar, "New testvar!"
 .Print testvar
@@ -12,5 +13,10 @@
 #ELSE
 	.Print "The Fourth Worked"
 #ENDIF
+
+#IF testint == 72:
+	.Print "MATH WORKS!!!"
+#ENDIF
+
 .Print "This is the end"
 // dsafdsaf

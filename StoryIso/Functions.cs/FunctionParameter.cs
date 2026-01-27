@@ -6,8 +6,9 @@ namespace StoryIso.Functions;
 
 public struct FunctionParameter<T>
 {
-	private T _value;
-	private string _variableName;
+	private readonly T _value;
+	private readonly string _variableName;
+	private readonly PostfixEquation<T> _postfixEquation;
 	public readonly T Value 
 	{ 
 		get
@@ -17,31 +18,58 @@ public struct FunctionParameter<T>
 				return _value;
 			}
 
-			if (_variableName == null)
+			if (_variableName != null)
 			{
-				return default;
-			}
-
-			if (typeof(T) == typeof(object))
-			{
-				if (VariableManager.ContainsVariable(_variableName, out var _, out object value))
+				if (typeof(T) == typeof(object))
 				{
-					return (T)value;
+					if (VariableManager.ContainsVariable(_variableName, out var _, out object value))
+					{
+						return (T)value;
+					}
+
+					return default;
 				}
 
+				object variable_value = VariableManager.GetVariable<T>(_variableName, new Source(0, "GetVariable", "VariableManager"));
+
+				return (T)variable_value;
+			}
+
+			if (_postfixEquation == null || !_postfixEquation.Evaluate(new Source(0, "Evaluate Parameter", null), out T res))
+			{
 				return default;
 			}
 
-			object variable_value = VariableManager.GetVariable<T>(_variableName, new Source(0, "GetVariable", "VariableManager"));
-
-			return (T)variable_value;
+			return res;
 		}
 	}
 
-	public FunctionParameter(T value, string variable_name = null)
+	public FunctionParameter()
+	{
+		_value = default;
+		_variableName = null;
+		_postfixEquation = null;
+	}
+
+	public FunctionParameter(T value)
 	{
 		_value = value;
+		_variableName = null;
+		_postfixEquation = null;
+	}
+
+	public FunctionParameter(string variable_name)
+	{
+		_value = default(T);
 		_variableName = variable_name;
+		_postfixEquation = null;
+	}
+
+	public FunctionParameter(PostfixEquation<T> equation)
+	{
+		_value = default;
+		_variableName = null;
+		_postfixEquation = equation;
 	}
 
 	public static explicit operator T(FunctionParameter<T> parameter)
