@@ -273,6 +273,7 @@ public static partial class ParameterProcessor
 
 				case 8: // relative int 
 					bool relative_int = inputs[j].StartsWith('~');
+					// TODO: Make this support equations
 
 					string relative_int_input = inputs[j][(relative_int ? 1 : 0)..];
 

@@ -5,7 +5,7 @@
 .SetCharacterPos "test", 9, 10
 .SetVisible "test", true
 .Wait 3
-.MoveCharacter "test", playerX, playerY, 1
+.MoveCharacter "test", playerX, playerY + 1, 1
 .UnlockPlayerMovement
 .Wait 2
 .SetCharacterDirection "test", Left
