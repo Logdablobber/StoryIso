@@ -4,6 +4,6 @@ namespace StoryIso.Dialogue;
 
 public class DialogueSequence
 {
-	public string id;
-	public List<DialogueStep> dialogueSteps;
+	public required string id;
+	public required List<DialogueStep> dialogueSteps;
 }

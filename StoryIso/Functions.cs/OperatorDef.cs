@@ -10,5 +10,5 @@ public struct OperatorDef
 	public string oper;
 	public Type[] parameters;
 	public Type returnType;
-	public Func<List<object>, Source, object> function;
+	public Func<List<object>?, Source?, object?>? function;
 }

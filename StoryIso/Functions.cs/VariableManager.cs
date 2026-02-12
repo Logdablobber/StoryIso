@@ -10,42 +10,10 @@ namespace StoryIso.Functions;
 
 public static partial class VariableManager
 {
-	private static Dictionary<string, int> _intVariables = [];
-	private static Dictionary<string, float> _floatVariables = [];
-	private static Dictionary<string, bool> _boolVariables = [];
-	private static Dictionary<string, string> _stringVariables = [];
-
-	public static Dictionary<string, int> Ints
-	{
-		get 
-		{
-			return _intVariables;
-		}
-	}
-
-	public static Dictionary<string, float> Floats
-	{
-		get 
-		{
-			return _floatVariables;
-		}
-	}
-
-	public static Dictionary<string, bool> Bools
-	{
-		get 
-		{
-			return _boolVariables;
-		}
-	}
-
-	public static Dictionary<string, string> Strings
-	{
-		get 
-		{
-			return _stringVariables;
-		}
-	}
+	private static Dictionary<string, int?> _intVariables = [];
+	private static Dictionary<string, float?> _floatVariables = [];
+	private static Dictionary<string, bool?> _boolVariables = [];
+	private static Dictionary<string, string?> _stringVariables = [];
 
 	public static VariableType GetVariableType(string name)
 	{
@@ -111,7 +79,7 @@ public static partial class VariableManager
 		return VariableRegex.IsMatch(name);
 	}
 
-	public static void DefineVariable(VariableType type, string name, object value, Source source)
+	public static void DefineVariable(VariableType type, string name, object? value, Source source)
 	{
 		if (type == VariableType.None)
 		{
@@ -135,43 +103,19 @@ public static partial class VariableManager
 		switch (type)
 		{
 			case VariableType.Int:
-				if (value == null)
-				{
-					DebugConsole.Raise(new WrongVariableTypeError(source, name, "int"));
-					return;
-				}
-
-				_intVariables[name] = (int)value;
+				_intVariables[name] = (int?)value;
 				break;
 
 			case VariableType.Float:
-				if (value == null)
-				{
-					DebugConsole.Raise(new WrongVariableTypeError(source, name, "float"));
-					return;
-				}
-
-				_floatVariables[name] = (float)value;
+				_floatVariables[name] = (float?)value;
 				break;
 
 			case VariableType.String:
-				if (value == null)
-				{
-					DebugConsole.Raise(new WrongVariableTypeError(source, name, "string"));
-					return;
-				}
-
-				_stringVariables[name] = (string)value;
+				_stringVariables[name] = (string?)value;
 				break;
 
 			case VariableType.Bool:
-				if (value == null)
-				{
-					DebugConsole.Raise(new WrongVariableTypeError(source, name, "bool"));
-					return;
-				}
-
-				_boolVariables[name] = (bool)value;
+				_boolVariables[name] = (bool?)value;
 				break;
 
 			default:
@@ -179,99 +123,127 @@ public static partial class VariableManager
 		}
 	}
 
-	public static T GetVariable<T>(string name, Source source)
+	public static T? GetVariable<T>(string name, Source source) where T : notnull
 	{
-		if (typeof(T) == typeof(int?))
+		if (typeof(T) == typeof(int))
 		{
 			if (_readonlyInts.TryGetValue(name, out var int_function))
 			{
-				return (T)(object)int_function();
+				return (T?)(object)int_function();
 			}
 
-			if (!_intVariables.TryGetValue(name, out int int_value))
+			if (!_intVariables.TryGetValue(name, out int? int_value) || !int_value.HasValue)
 			{
 				DebugConsole.Raise(new UnknownVariableError(source, name));
 				return default;
 			}
 
-			return (T)(object)int_value;
+			return (T?)(object)int_value.Value;
 		}
 
-		if (typeof(T) == typeof(float?))
+		if (typeof(T) == typeof(float))
 		{
 			if (_readonlyFloats.TryGetValue(name, out var float_function))
 			{
-				return (T)(object)float_function();
+				return (T?)(object)float_function();
 			}
 
-			if (!_floatVariables.TryGetValue(name, out float float_value))
+			if (!_floatVariables.TryGetValue(name, out float? float_value) || !float_value.HasValue)
 			{
 				DebugConsole.Raise(new UnknownVariableError(source, name));
 				return default;
 			}
 
-			return (T)(object)float_value;
+			return (T?)(object)float_value.Value;
 		}
 
 		if (typeof(T) == typeof(string))
 		{
 			if (_readonlyStrings.TryGetValue(name, out var string_function))
 			{
-				return (T)(object)string_function();
+				return (T?)(object)string_function();
 			}
 
-			if (!_stringVariables.TryGetValue(name, out string string_value))
+			if (!_stringVariables.TryGetValue(name, out string? string_value) || string_value == null)
 			{
 				DebugConsole.Raise(new UnknownVariableError(source, name));
 				return default;
 			}
 
-			return (T)(object)string_value;
+			return (T?)(object)string_value;
 		}
 
-		if (typeof(T) == typeof(bool?))
+		if (typeof(T) == typeof(bool))
 		{
 			if (_readonlyBools.TryGetValue(name, out var bool_function))
 			{
-				return (T)(object)bool_function();
+				return (T?)(object)bool_function();
 			}
 
-			if (!_boolVariables.TryGetValue(name, out bool bool_value))
+			if (!_boolVariables.TryGetValue(name, out bool? bool_value) || !bool_value.HasValue)
 			{
 				DebugConsole.Raise(new UnknownVariableError(source, name));
 				return default;
 			}
 
-			return (T)(object)bool_value;
+			return (T?)(object)bool_value.Value;
 		}
 
 		return default;
 	}
 
-	public static bool ContainsVariable(string name, out VariableType type, out object value)
+	public static bool ContainsVariable(string name, out VariableType type, out object? value)
 	{
-		if (_intVariables.TryGetValue(name, out int int_value))
+		if (_readonlyInts.TryGetValue(name, out Func<int>? readonly_int_value))
+		{
+			type = VariableType.Int;
+			value = (int?)readonly_int_value();
+			return true;
+		}
+
+		if (_intVariables.TryGetValue(name, out int? int_value))
 		{
 			type = VariableType.Int;
 			value = int_value;
 			return true;
 		}
 
-		if (_floatVariables.TryGetValue(name, out float float_value))
+		if (_readonlyFloats.TryGetValue(name, out Func<float>? readonly_float_value))
+		{
+			type = VariableType.Float;
+			value = (float?)readonly_float_value();
+			return true;
+		}
+
+		if (_floatVariables.TryGetValue(name, out float? float_value))
 		{
 			type = VariableType.Float;
 			value = float_value;
 			return true;
 		}
 
-		if (_boolVariables.TryGetValue(name, out bool bool_value))
+		if (_readonlyBools.TryGetValue(name, out Func<bool>? readonly_bool_value))
+		{
+			type = VariableType.Bool;
+			value = (bool?)readonly_bool_value();
+			return true;
+		}
+
+		if (_boolVariables.TryGetValue(name, out bool? bool_value))
 		{
 			type = VariableType.Bool;
 			value = bool_value;
 			return true;
 		}
 
-		if (_stringVariables.TryGetValue(name, out string string_value))
+		if (_readonlyStrings.TryGetValue(name, out Func<string>? readonly_string_value))
+		{
+			type = VariableType.String;
+			value = readonly_string_value();
+			return true;
+		}
+
+		if (_stringVariables.TryGetValue(name, out string? string_value))
 		{
 			type = VariableType.String;
 			value = string_value;
@@ -283,27 +255,27 @@ public static partial class VariableManager
 		return false;
 	}
 
-	public static bool ContainsVariable(string name, out string value)
+	public static bool ContainsVariable(string name, out string? value)
 	{
-		if (_intVariables.TryGetValue(name, out int int_value))
+		if (_intVariables.TryGetValue(name, out int? int_value))
 		{
 			value = int_value.ToString();
 			return true;
 		}
 
-		if (_floatVariables.TryGetValue(name, out float float_value))
+		if (_floatVariables.TryGetValue(name, out float? float_value))
 		{
 			value = float_value.ToString();
 			return true;
 		}
 
-		if (_boolVariables.TryGetValue(name, out bool bool_value))
+		if (_boolVariables.TryGetValue(name, out bool? bool_value))
 		{
 			value = bool_value.ToString();
 			return true;
 		}
 
-		if (_stringVariables.TryGetValue(name, out string string_value))
+		if (_stringVariables.TryGetValue(name, out string? string_value))
 		{
 			value = string_value;
 			return true;
@@ -313,7 +285,7 @@ public static partial class VariableManager
 		return false;
 	}
 
-	public static void SetVariable(string name, string value, Source source)
+	public static void SetVariable(string name, object? value, Source source)
 	{
 		if (value == null)
 		{
@@ -327,49 +299,25 @@ public static partial class VariableManager
 
 		if (_stringVariables.ContainsKey(name))
 		{
-			if (value[0] != '\"' || value[^1] != '\"')
-			{
-				DebugConsole.Raise(new ParameterTypeError(source, "SetVar", value, "string"));
-				return;
-			}
-
-			_stringVariables[name] = value;
+			_stringVariables[name] = (string?)value;
 			return;
 		}
 
 		if (_intVariables.ContainsKey(name))
 		{
-			if (!int.TryParse(value, out int int_value))
-			{
-				DebugConsole.Raise(new ParameterTypeError(source, "SetVar", value, "int"));
-				return;
-			}
-
-			_intVariables[name] = int_value;
+			_intVariables[name] = (int?)value;
 			return;
 		}
 
 		if (_floatVariables.ContainsKey(name))
 		{
-			if (!float.TryParse(value, out float float_value))
-			{
-				DebugConsole.Raise(new ParameterTypeError(source, "SetVar", value, "float"));
-				return;
-			}
-
-			_floatVariables[name] = float_value;
+			_floatVariables[name] = (float?)value;
 			return;
 		}
 
 		if (_boolVariables.ContainsKey(name))
 		{
-			if (!bool.TryParse(value, out bool bool_value))
-			{
-				DebugConsole.Raise(new ParameterTypeError(source, "SetVar", value, "bool"));
-				return;
-			}
-
-			_boolVariables[name] = bool_value;
+			_boolVariables[name] = (bool?)value;
 			return;
 		}
 

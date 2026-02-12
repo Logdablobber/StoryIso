@@ -3,11 +3,11 @@ namespace StoryIso.Debugging;
 public class Source
 {
 	uint line;
-	string function;
+	string? function;
 	string obj;
-	Source source;
+	Source? source;
 
-	public Source(uint line, string function, string obj, Source source = null)
+	public Source(uint line, string? function, string obj, Source? source = null)
 	{
 		this.line = line;
 		this.function = function;

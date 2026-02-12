@@ -6,12 +6,12 @@ namespace StoryIso.Functions;
 
 public partial class FunctionProcessor
 {
-	public static T Convert<T>(object param)
+	public static T? Convert<T>(object param) where T : notnull
 	{
-		return (T)(FunctionParameter<T>)param;
+		return ((FunctionParameter<T>)param).Value;
 	}
 
-	public static object ConvertUnknown(object param, out string string_value)
+	public static object? ConvertUnknown(object param, out string? string_value)
 	{
 		Type type = param.GetType();
 
@@ -21,9 +21,9 @@ public partial class FunctionProcessor
 			return string_value;
 		}
 
-		if (type == typeof(FunctionParameter<float?>))
+		if (type == typeof(FunctionParameter<float>))
 		{
-			float? value = Convert<float?>(param).Value;
+			float? value = Convert<float>(param);
 
 			if (!value.HasValue)
 			{
@@ -35,9 +35,9 @@ public partial class FunctionProcessor
 			return value;
 		}
 
-		if (type == typeof(FunctionParameter<int?>))
+		if (type == typeof(FunctionParameter<int>))
 		{
-			int? value = Convert<int?>(param).Value;
+			int? value = Convert<int>(param);
 
 			if (!value.HasValue)
 			{	
@@ -49,9 +49,9 @@ public partial class FunctionProcessor
 			return value.ToString();
 		}
 
-		if (type == typeof(FunctionParameter<bool?>))
+		if (type == typeof(FunctionParameter<bool>))
 		{
-			bool? value = Convert<bool?>(param).Value;
+			bool? value = Convert<bool>(param);
 
 			if (!value.HasValue)
 			{
@@ -67,26 +67,26 @@ public partial class FunctionProcessor
 		return null;
 	}
 
-	public static object ConvertUnknown(object param)
+	public static object? ConvertUnknown(object param)
 	{
 		return ConvertUnknown(param, out _);
 	}
 
-	public static RelativeVariable<T>? RelativeConvert<T>(object param) where T : struct
+	public static RelativeVariable<T>? RelativeConvert<T>(object param) where T : notnull
 	{
-		var converted_param = (RelativeVariable<FunctionParameter<T?>>)param;
+		var converted_param = (RelativeVariable<FunctionParameter<T>>)param;
 
 		var value = converted_param.Value.Value;
 
-		if (!value.HasValue)
+		if (value == null)
 		{
 			return null;
 		}
 
-		return new RelativeVariable<T>(converted_param.Value.Value.Value, converted_param.Relative);
+		return new RelativeVariable<T>(value, converted_param.Relative);
 	}
 
-	public static T[] ArrayConvert<T>(object param)
+	public static T[]? ArrayConvert<T>(object param) where T : notnull
 	{
 		var array_param = (ArrayParameter<T>)param;
 
@@ -95,20 +95,6 @@ public partial class FunctionProcessor
 			return null;
 		}
 
-		T[] res = new T[array_param.Length];
-
-		for (int i = 0; i < array_param.Length; i++)
-		{
-			T value = array_param.Get(i);
-
-			if (value == null)
-			{
-				return null;
-			}
-
-			res[i] = value;
-		}
-
-		return res;
+		return array_param.GetValues();
 	}
 }

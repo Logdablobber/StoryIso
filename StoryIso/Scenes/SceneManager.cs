@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Xna.Framework;
@@ -12,7 +13,7 @@ namespace StoryIso.Scenes;
 public class SceneManager
 {
 	public DialogueManager dialogueManager;
-	private Dictionary<string, Scene> _scenes;
+	private Dictionary<string, Scene>? _scenes;
 
 	private bool _active = false;
 	public bool Active
@@ -43,7 +44,17 @@ public class SceneManager
 
 	private void LoadScene(string scene_path)
 	{
-		Scene new_scene = SceneProcessor.ProcessScene(scene_path);
+		if (_scenes == null)
+		{
+			throw new NullReferenceException("_scenes is null :(");
+		}
+
+		Scene? new_scene = SceneProcessor.ProcessScene(scene_path);
+
+		if (new_scene == null)
+		{
+			return;
+		}
 
 		_scenes.Add(new_scene.name, new_scene);
 	}
@@ -58,13 +69,22 @@ public class SceneManager
 
 		foreach (var file in files)
 		{
+			SceneProcessor.PreprocessScene(file.FullName); // load variables
+		}
+		foreach (var file in files)
+		{
 			LoadScene(file.FullName);
 		}
 	}
 
 	public void RunScene(string name, Source source)
 	{
-		if (!_scenes.TryGetValue(name, out Scene scene))
+		if (_scenes == null)
+		{
+			throw new NullReferenceException("_scenes is null :(");
+		}
+
+		if (!_scenes.TryGetValue(name, out Scene? scene))
 		{
 			DebugConsole.Raise(new InvalidSceneError(source, name));
 			return;

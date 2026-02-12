@@ -7,7 +7,7 @@ namespace StoryIso.ECS;
 
 public class AnimationSystem : EntityUpdateSystem
 {
-	private ComponentMapper<Animation> _animationMapper;
+	private ComponentMapper<Animation> _animationMapper = null!;
 
 	public AnimationSystem() : base(Aspect.All(typeof(Animation))) { }
 

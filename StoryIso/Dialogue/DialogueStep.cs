@@ -5,8 +5,8 @@ namespace StoryIso.Dialogue;
 
 public struct DialogueStep
 {
-	public string speaker;
-	public string text;
+	public required string speaker;
+	public required string text;
 	public float? speedMultiplier;
 	public DialogueColor? color;
 	public bool preventSkip;

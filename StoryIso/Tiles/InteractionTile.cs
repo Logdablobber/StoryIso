@@ -15,11 +15,11 @@ public class InteractionTile
 {
 	public int id;
 	Rectangle interactionHitbox;
-	List<Function> onInteract;
-	List<Function> onUninteract;
-	List<Function> whileInteract;
-	List<Function> onToggleOn;
-	List<Function> onToggleOff;
+	List<Function>? onInteract;
+	List<Function>? onUninteract;
+	List<Function>? whileInteract;
+	List<Function>? onToggleOn;
+	List<Function>? onToggleOff;
 	bool interactingLastFrame = false;
 	bool toggleState;
 
@@ -28,11 +28,11 @@ public class InteractionTile
 
 	public InteractionTile(int id,
 							Rectangle rect, 
-							List<Function> on_interact = null, 
-							List<Function> on_uninteract = null, 
-							List<Function> while_interact = null,
-							List<Function> on_toggle_on = null,
-							List<Function> on_toggle_off = null,
+							List<Function>? on_interact = null, 
+							List<Function>? on_uninteract = null, 
+							List<Function>? while_interact = null,
+							List<Function>? on_toggle_on = null,
+							List<Function>? on_toggle_off = null,
 							bool default_toggle_state = false)
 	{
 		this.id = id;
@@ -80,7 +80,7 @@ public class InteractionTile
 
 				for (int i = 0; i < LEVELOFDETAIL; i++)
 				{
-					rays.Add(new Ray2(new Vector2(MathFuncs.Lerp(other.Left, other.Right, (float)i / (LEVELOFDETAIL - 1)), other.Top),
+					rays.Add(new Ray2(new Vector2(MiscFuncs.Lerp(other.Left, other.Right, (float)i / (LEVELOFDETAIL - 1)), other.Top),
 										new Vector2(0, -1)));
 				}
 				break;
@@ -95,7 +95,7 @@ public class InteractionTile
 
 				for (int i = 0; i < LEVELOFDETAIL; i++)
 				{
-					rays.Add(new Ray2(new Vector2(MathFuncs.Lerp(other.Left, other.Right, (float)i / (LEVELOFDETAIL - 1)), other.Bottom),
+					rays.Add(new Ray2(new Vector2(MiscFuncs.Lerp(other.Left, other.Right, (float)i / (LEVELOFDETAIL - 1)), other.Bottom),
 										new Vector2(0, 1)));
 				}
 				break;
@@ -110,7 +110,7 @@ public class InteractionTile
 
 				for (int i = 0; i < LEVELOFDETAIL; i++)
 				{
-					rays.Add(new Ray2(new Vector2(other.Left, MathFuncs.Lerp(other.Top, other.Bottom, (float)i / (LEVELOFDETAIL - 1))),
+					rays.Add(new Ray2(new Vector2(other.Left, MiscFuncs.Lerp(other.Top, other.Bottom, (float)i / (LEVELOFDETAIL - 1))),
 										new Vector2(-1, 0)));
 				}
 				break;
@@ -125,7 +125,7 @@ public class InteractionTile
 
 				for (int i = 0; i < LEVELOFDETAIL; i++)
 				{
-					rays.Add(new Ray2(new Vector2(other.Right, MathFuncs.Lerp(other.Top, other.Bottom, (float)i / (LEVELOFDETAIL - 1))),
+					rays.Add(new Ray2(new Vector2(other.Right, MiscFuncs.Lerp(other.Top, other.Bottom, (float)i / (LEVELOFDETAIL - 1))),
 										new Vector2(1, 0)));
 				}
 				break;
@@ -154,6 +154,11 @@ public class InteractionTile
 
 	private void RunUninteract()
 	{
+		if (onUninteract == null)
+		{
+			return;
+		}
+
 		if (interactingLastFrame)
 		{
 			FunctionProcessor.RunFuncts(onUninteract, $"onUninteract of Interaction {id}");
@@ -164,6 +169,11 @@ public class InteractionTile
 
 	private void RunInteraction()
 	{
+		if (onInteract == null || onToggleOff == null || onToggleOn == null || whileInteract == null)
+		{
+			return;
+		}
+
 		if (!interactingLastFrame)
 		{
 			FunctionProcessor.RunFuncts(onInteract, $"onInteract of Interaction {id}");

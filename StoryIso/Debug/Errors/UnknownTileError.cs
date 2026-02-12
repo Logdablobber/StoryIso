@@ -6,10 +6,10 @@ public class UnknownTileError : IError
 {
 	readonly string function;
 	readonly int given;
-	public Source source { get; set; }
-	public string message { get; set; }
+	public Source? source { get; set; }
+	public string? message { get; set; }
 
-	public UnknownTileError(Source source, string function, int given, string message = null)
+	public UnknownTileError(Source source, string function, int given, string? message = null)
 	{
 		this.source = source;
 		this.function = function;
@@ -19,6 +19,6 @@ public class UnknownTileError : IError
 
 	public string GetMessage()
 	{
-		return $"UnknownTileError: Unknown tile GUID given to function {function}. GUID {given} is out of range. {message}({source.Format()})";
+		return $"UnknownTileError: Unknown tile GUID given to function {function}. GUID {given} is out of range. {message}({source!.Format()})";
 	}
 }

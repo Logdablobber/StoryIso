@@ -14,7 +14,7 @@ public static class AsepriteLoader
 {
 	private static readonly Dictionary<string, Animation> _animations = [];
 
-	public static Animation GetAnimation(string name)
+	public static Animation? GetAnimation(string name)
 	{
 		if (_animations.TryGetValue(name, out var value))
 		{

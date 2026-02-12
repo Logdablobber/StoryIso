@@ -19,14 +19,14 @@ namespace StoryIso.Tiled;
 
 public class TiledManager
 {
-	private Dictionary<string, TilemapRoom> _rooms;
+	private Dictionary<string, TilemapRoom>? _rooms;
 
-	private string currentRoomName;
+	private string? currentRoomName;
 	public TilemapRoom currentRoom
 	{
 		get
 		{
-			return _rooms[currentRoomName];
+			return _rooms![currentRoomName!];
 		}
 	}
 	public int TilesetCount
@@ -37,7 +37,7 @@ public class TiledManager
 		}
 	}
 
-	private string map_to_load = null;
+	private string? map_to_load = null;
 	private bool refresh_map = false;
 
 	private readonly TiledMapRenderer _tiledMapRenderer;
@@ -80,7 +80,12 @@ public class TiledManager
 
 	public void LoadMap(string map_name)
 	{
-		if (_rooms.TryGetValue(map_name, out TilemapRoom room))
+		if (_rooms == null)
+		{
+			throw new NullReferenceException("Rooms is null");
+		}
+
+		if (_rooms.TryGetValue(map_name, out TilemapRoom? room))
 		{
 			currentRoomName = map_name;
 			_tiledMapRenderer.LoadMap(room.map);
@@ -203,9 +208,9 @@ public class TiledManager
 		{
 			foreach (var obj in map.ObjectLayers[layer_indices.triggerLayerIndex.Value].Objects)
 			{
-				List<Function> on_enter = [];
-				List<Function> on_exit = [];
-				List<Function> on_stay = [];
+				List<Function>? on_enter = [];
+				List<Function>? on_exit = [];
+				List<Function>? on_stay = [];
 				Color color = Color.White;
 				
 				if (obj.Properties.TryGetValue("onEnter", out string enter_code))
@@ -238,11 +243,11 @@ public class TiledManager
 		{
 			foreach (var obj in map.ObjectLayers[layer_indices.interactionLayerIndex.Value].Objects)
 			{
-				List<Function> on_interact = [];
-				List<Function> on_uninteract = [];
-				List<Function> while_interact = [];
-				List<Function> on_toggle_on = [];
-				List<Function> on_toggle_off = [];
+				List<Function>? on_interact = [];
+				List<Function>? on_uninteract = [];
+				List<Function>? while_interact = [];
+				List<Function>? on_toggle_on = [];
+				List<Function>? on_toggle_off = [];
 				bool default_toggle_state = false;
 				bool collides = true;
 				
@@ -323,14 +328,17 @@ public class TiledManager
 		return new RelativeVector2(new RelativeVariable<float>(x.Value * currentRoom.map.TileWidth, x.Relative), new RelativeVariable<float>(y.Value * currentRoom.map.TileHeight, y.Relative));
 	}
 
-	public RelativeVector2 TilePosToWorldPos(RelativeVariable<FunctionParameter<int?>> x, RelativeVariable<FunctionParameter<int?>> y)
+	public RelativeVector2 TilePosToWorldPos(RelativeVariable<FunctionParameter<int>> x, RelativeVariable<FunctionParameter<int>> y)
 	{
-		if (!x.Value.Value.HasValue || !y.Value.Value.HasValue)
+		int? x_value = x.Value.Value;
+		int? y_value = y.Value.Value;
+
+		if (!x_value.HasValue || !y_value.HasValue)
 		{
 			return new RelativeVector2(new RelativeVariable<float>(0, x.Relative), new RelativeVariable<float>(0, y.Relative));
 		}
 
-		return new RelativeVector2(new RelativeVariable<float>(x.Value.Value.Value * currentRoom.map.TileWidth, x.Relative), new RelativeVariable<float>(y.Value.Value.Value * currentRoom.map.TileHeight, y.Relative));
+		return new RelativeVector2(new RelativeVariable<float>(x.Value.Value * currentRoom.map.TileWidth, x.Relative), new RelativeVariable<float>(y.Value.Value * currentRoom.map.TileHeight, y.Relative));
 	}
 
 	public Point WorldPosToTilePos(Point point)

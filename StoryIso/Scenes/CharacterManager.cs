@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using MonoGame.Extended;
 using MonoGame.Extended.ECS;
 using Newtonsoft.Json;
+using StoryIso.Debugging;
 using StoryIso.Entities;
 using StoryIso.Enums;
 using StoryIso.Misc;
@@ -25,7 +26,12 @@ public static class CharacterManager
 
 			var data = JsonConvert.DeserializeObject<CharacterData>(text);
 
-			Animation animation = AsepriteLoader.GetAnimation(data.animation);
+			Animation? animation = AsepriteLoader.GetAnimation(data.animation);
+
+			if (animation == null)
+			{
+				DebugConsole.Raise(new MissingAssetError(new Source(0, null, "LoadCharacters"), f, "Missing animation"));
+			}
 
 			var new_character = world.CreateEntity();
 			new_character.Attach(animation);

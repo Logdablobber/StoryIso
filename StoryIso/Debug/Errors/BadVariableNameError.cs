@@ -3,10 +3,10 @@ namespace StoryIso.Debugging;
 public class BadVariableNameError : IError
 {
 	readonly string given;
-	public Source source { get; set; }
-	public string message { get; set; }
+	public Source? source { get; set; }
+	public string? message { get; set; }
 
-	public BadVariableNameError(Source source, string given, string message = null)
+	public BadVariableNameError(Source source, string given, string? message = null)
 	{
 		this.source = source;
 		this.given = given;
@@ -15,6 +15,6 @@ public class BadVariableNameError : IError
 
 	public string GetMessage()
 	{
-		return $"BadVariableNameError: '{given}' is not a usable name for a variable. {message}({source.Format()})";
+		return $"BadVariableNameError: '{given}' is not a usable name for a variable. {message}({source!.Format()})";
 	}
 }

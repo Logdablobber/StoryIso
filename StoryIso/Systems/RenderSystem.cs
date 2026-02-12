@@ -11,9 +11,9 @@ namespace StoryIso.ECS;
 public class RenderSystem : EntityDrawSystem
 {
 	private SpriteBatch _spriteBatch;
-	private ComponentMapper<Texture2D> _textureMapper;
-	private ComponentMapper<Animation> _animationMapper;
-	private ComponentMapper<Transform2> _transformMapper;
+	private ComponentMapper<Texture2D> _textureMapper = null!;
+	private ComponentMapper<Animation> _animationMapper = null!;
+	private ComponentMapper<Transform2> _transformMapper = null!;
 
 	public RenderSystem(SpriteBatch spriteBatch)
 		: base(Aspect.All(typeof(Transform2)).One(typeof(Texture2D), typeof(Animation)))

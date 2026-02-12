@@ -11,7 +11,7 @@ namespace StoryIso.Debugging;
 
 public static class DebugConsole
 {
-	public static BitmapFont Font;
+	public static BitmapFont? Font;
 	public static float Scale;
 
 	private static List<DebugLine> _lines = new List<DebugLine>();
@@ -54,6 +54,11 @@ public static class DebugConsole
 
 	public static void Draw(SpriteBatch spriteBatch)
 	{
+		if (Font == null)
+		{
+			throw new NullReferenceException("No font :(");
+		}
+
 		float screen_width = Game1.camera.BoundingRectangle.Width - 2 * XMARGIN;
 
 		int index = 0;

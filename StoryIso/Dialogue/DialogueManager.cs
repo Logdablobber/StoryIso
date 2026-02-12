@@ -31,9 +31,9 @@ public class DialogueManager
 	public float FontScale;
 
 	private Dictionary<string, DialogueSequence> dialogues;
-	private string currentDialogueName;
+	private string? currentDialogueName;
 	const float NAME_SCALE = 0.8f;
-	private DialogueSequence currentDialogueSequence
+	private DialogueSequence? currentDialogueSequence
 	{
 		get
 		{
@@ -143,7 +143,12 @@ public class DialogueManager
 			json = streamReader.ReadToEnd();
 		}
 
-		DialogueSequence sequence = DialogueGenerator.Generate(json);
+		DialogueSequence? sequence = DialogueGenerator.Generate(json);
+
+		if (sequence == null)
+		{
+			return;
+		}
 
 		dialogues.Add(sequence.id, sequence);
 	}
@@ -162,7 +167,7 @@ public class DialogueManager
 		}
  	}
 
-	public void EndDialogue(Source source = null)
+	public void EndDialogue(Source? source = null)
 	{
 		if (!Active)
 		{
@@ -184,7 +189,7 @@ public class DialogueManager
 
 		var keystate = Keyboard.GetState();
 
-		_dialogueTimer += (float)gameTime.ElapsedGameTime.TotalSeconds * (currentDialogueStep.Value.speedMultiplier ?? 1f);
+		_dialogueTimer += (float)gameTime.ElapsedGameTime.TotalSeconds * (currentDialogueStep!.Value.speedMultiplier ?? 1f);
 
 		if (keystate.IsKeyDown(Keys.X) || keystate.IsKeyDown(Keys.RightShift) || keystate.IsKeyDown(Keys.LeftShift)) 
 		{
@@ -203,7 +208,7 @@ public class DialogueManager
 		if (keystate.IsKeyDown(Keys.Z) || keystate.IsKeyDown(Keys.Enter))
 		{
 			if (!_continueKeyPressedLastFrame && _dialogueTimer >= currentDialogueDuration &&
-				dialogueIndex < currentDialogueSequence.dialogueSteps.Count)
+				dialogueIndex < currentDialogueSequence!.dialogueSteps.Count)
 			{	
 				dialogueIndex += 1;
 				_dialogueTimer = 0f;
@@ -226,14 +231,14 @@ public class DialogueManager
 
 		spriteBatch.Draw(DialogueBox, _screenPosition, null, Color.White, 0, new Vector2(0, DialogueBox.Height), Scale, SpriteEffects.None, 0);
 
-		DialogueStep current_step = currentDialogueStep.Value;
+		DialogueStep current_step = currentDialogueStep!.Value;
 
 		if (current_step.speaker != "")
 		{
 			DrawNameBox(spriteBatch, current_step.speaker);
 		}
 
-		string dialogue_text = current_step.text[..(int)Math.Min(Math.Ceiling(_dialogueTimer.Value / TIMEPERCHARACTER), current_step.text.Length)];
+		string dialogue_text = current_step.text[..(int)Math.Min(Math.Ceiling(_dialogueTimer!.Value / TIMEPERCHARACTER), current_step.text.Length)];
 
 		List<string> fitted_text = TextFormatter.FitText(dialogue_text, Font, FontScale, unscaledTextBounds, out float scale_mult);
 

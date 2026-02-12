@@ -3,10 +3,10 @@ namespace StoryIso.Debugging;
 public class UnknownFunctionError : IError
 {
 	readonly string given;
-	public Source source { get; set; }
-	public string message { get; set; }
+	public Source? source { get; set; }
+	public string? message { get; set; }
 
-	public UnknownFunctionError(Source source, string given, string message = null)
+	public UnknownFunctionError(Source source, string given, string? message = null)
 	{
 		this.source = source;
 		this.given = given;
@@ -15,6 +15,6 @@ public class UnknownFunctionError : IError
 
 	public string GetMessage()
 	{
-		return $"UnknownFunctionError: Unknown function '{given}'. {message}(at {source.Format()})";
+		return $"UnknownFunctionError: Unknown function '{given}'. {message}(at {source!.Format()})";
 	}
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
@@ -19,12 +20,12 @@ namespace StoryIso;
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-	private SpriteBatch _spriteBatch;
+	private SpriteBatch _spriteBatch = null!;
 
-	public static TiledManager tiledManager;
+	public static TiledManager tiledManager = null!;
 
-	private World _world;
-	public static Entity player;
+	private World _world = null!;
+	public static Entity player = null!;
 	private const float CHARACTER_SCALE = 0.7f;
 	public static readonly Vector2 characterScale = new Vector2(CHARACTER_SCALE, CHARACTER_SCALE);
 
@@ -39,13 +40,18 @@ public class Game1 : Game
 	private const float PAUSE_TIME = 0.05f;
 	private static float _pauseRenderTimer = 0f;
 
-	public static SceneManager sceneManager;
+	public static SceneManager sceneManager = null!;
 
-	public static OrthographicCamera camera;
+	public static OrthographicCamera camera = null!;
 	public static Vector2 cameraOffset
 	{
 		get
 		{
+			if (camera == null)
+			{
+				throw new NullReferenceException("Camera is null, somehow");
+			}
+
 			return camera.BoundingRectangle.TopLeft;
 		}
 	}
@@ -92,7 +98,12 @@ public class Game1 : Game
 
 		CharacterManager.LoadCharacters("./Content/Characters/", _world);
 
-		Animation player_animation = AsepriteLoader.GetAnimation("player-animation");
+		Animation? player_animation = AsepriteLoader.GetAnimation("player-animation");
+
+		if (player_animation == null)
+		{
+			DebugConsole.Raise(new MissingAssetError(new Source(0, null, "Player"), "player-animation"));
+		}
 
 		player = _world.CreateEntity();
 		player.Attach(player_animation);
@@ -150,7 +161,7 @@ public class Game1 : Game
 	
 		if (debug)
 		{
-			_spriteBatch.Begin(samplerState: SamplerState.PointClamp, blendState:BlendState.AlphaBlend, transformMatrix: camera.GetViewMatrix());
+			_spriteBatch!.Begin(samplerState: SamplerState.PointClamp, blendState:BlendState.AlphaBlend, transformMatrix: camera.GetViewMatrix());
 
 			foreach (var trigger in tiledManager.currentRoom.triggers)
 			{
@@ -160,7 +171,7 @@ public class Game1 : Game
 			_spriteBatch.End();
 		}
 
-		_spriteBatch.Begin(samplerState: SamplerState.PointWrap, transformMatrix:camera.GetViewMatrix());
+		_spriteBatch!.Begin(samplerState: SamplerState.PointWrap, transformMatrix:camera.GetViewMatrix());
 
 		sceneManager.Draw(_spriteBatch);
 

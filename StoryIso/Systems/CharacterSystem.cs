@@ -15,10 +15,10 @@ namespace StoryIso.ECS;
 
 public class CharacterSystem : EntityUpdateSystem
 {
-	private ComponentMapper<Character> _characterMapper;
-	private ComponentMapper<Transform2> _transformMapper;
-	private ComponentMapper<Animation> _animationMapper;
-	private ComponentMapper<Texture2D> _texture2DMapper;
+	private ComponentMapper<Character> _characterMapper = null!;
+	private ComponentMapper<Transform2> _transformMapper = null!;
+	private ComponentMapper<Animation> _animationMapper = null!;
+	private ComponentMapper<Texture2D> _texture2DMapper = null!;
 
 	static readonly Dictionary<string, Movement> _movements = [];
 	static readonly Dictionary<string, bool> _visibilityChanges = [];

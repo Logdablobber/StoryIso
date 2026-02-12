@@ -32,7 +32,7 @@ public static class FunctionDefs
 			parameters = [typeof(string)],
 			function = (args, _) => 
 			{
-				var arg = FunctionProcessor.Convert<string>(args[0]);
+				string? arg = FunctionProcessor.Convert<string>(args![0]);
 
 				if (arg == null)
 				{
@@ -45,14 +45,13 @@ public static class FunctionDefs
 			}
 		},
 		new FunctionDef // SetPlayerPos 
-		
 		{
 			name = "SetPlayerPos",
 			type = FunctionType.SetPlayerPos,
 			parameters = [typeof(RelativeVariable<float>), typeof(RelativeVariable<float>)],
 			function = (args, _) => 
 			{
-				var x = FunctionProcessor.RelativeConvert<float>(args[0]);
+				var x = FunctionProcessor.RelativeConvert<float>(args![0]);
 				var y = FunctionProcessor.RelativeConvert<float>(args[1]);
 
 				if (!x.HasValue || !y.HasValue)
@@ -71,7 +70,7 @@ public static class FunctionDefs
 			parameters = [typeof(Direction)],
 			function = (args, _) => 
 			{
-				var item1 = FunctionProcessor.Convert<Direction>(args[0]);
+				var item1 = FunctionProcessor.Convert<Direction>(args![0]);
 
 				if (item1 == Direction.None)
 				{
@@ -89,8 +88,8 @@ public static class FunctionDefs
 			parameters = [typeof(float), typeof(float)],
 			function = (args, _) => 
 			{
-				float? x = FunctionProcessor.Convert<float?>(args[0]);
-				float? y = FunctionProcessor.Convert<float?>(args[1]);
+				float? x = FunctionProcessor.Convert<float>(args![0]);
+				float? y = FunctionProcessor.Convert<float>(args[1]);
 				if (!x.HasValue || !y.HasValue)
 				{
 					return null;
@@ -107,9 +106,9 @@ public static class FunctionDefs
 			parameters = [typeof(RelativeVariable<float>), typeof(RelativeVariable<float>), typeof(float)],
 			function = (args, _) => 
 			{
-				var item1 = FunctionProcessor.RelativeConvert<float>(args[0]);
+				var item1 = FunctionProcessor.RelativeConvert<float>(args![0]);
 				var item2 = FunctionProcessor.RelativeConvert<float>(args[1]);
-				var item3 = FunctionProcessor.Convert<float?>(args[2]);
+				float? item3 = FunctionProcessor.Convert<float>(args[2]);
 
 				if (!item1.HasValue || !item2.HasValue || !item3.HasValue)
 				{
@@ -134,7 +133,7 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(RelativeVariable<int>), typeof(RelativeVariable<int>)],
 			function = (args, _) => 
 			{
-				var map_name = FunctionProcessor.Convert<string>(args[0]);
+				string? map_name = FunctionProcessor.Convert<string>(args![0]);
 				var x = FunctionProcessor.RelativeConvert<int>(args[1]);
 				var y = FunctionProcessor.RelativeConvert<int>(args[2]);
 
@@ -156,10 +155,10 @@ public static class FunctionDefs
 			parameters = [typeof(TileLayerType), typeof(uint), typeof(ushort), typeof(ushort)],
 			function = (args, _) => 
 			{
-				var layer_type = FunctionProcessor.Convert<TileLayerType>(args[0]);
-				var guid = FunctionProcessor.Convert<uint?>(args[1]);
-				var x = FunctionProcessor.Convert<ushort?>(args[2]);
-				var y = FunctionProcessor.Convert<ushort?>(args[3]);
+				var layer_type = FunctionProcessor.Convert<TileLayerType>(args![0]);
+				uint? guid = FunctionProcessor.Convert<uint>(args[1]);
+				ushort? x = FunctionProcessor.Convert<ushort>(args[2]);
+				ushort? y = FunctionProcessor.Convert<ushort>(args[3]);
 
 				if (layer_type == TileLayerType.None || !guid.HasValue || !x.HasValue || !y.HasValue)
 				{
@@ -177,10 +176,10 @@ public static class FunctionDefs
 			parameters = [typeof(TileLayerType), typeof(ushort), typeof(ushort), typeof(uint[])],
 			function = (args, _) => 
 			{
-				var item1 = FunctionProcessor.Convert<TileLayerType>(args[0]);
-				var item2 = FunctionProcessor.Convert<ushort?>(args[1]);
-				var item3 = FunctionProcessor.Convert<ushort?>(args[2]);
-				var item4 = FunctionProcessor.ArrayConvert<uint?>(args[3]);
+				var item1 = FunctionProcessor.Convert<TileLayerType>(args![0]);
+				ushort? item2 = FunctionProcessor.Convert<ushort>(args[1]);
+				ushort? item3 = FunctionProcessor.Convert<ushort>(args[2]);
+				var item4 = FunctionProcessor.ArrayConvert<uint>(args[3]);
 
 				if (item1 == TileLayerType.None || !item2.HasValue || !item3.HasValue || item4 == null)
 				{
@@ -189,7 +188,7 @@ public static class FunctionDefs
 			
 				for (int i = 0; i < item4.Length; i++)
 				{
-					Game1.tiledManager.currentRoom.SetTile((ushort)(item2.Value + i), item3.Value, item4[i].Value, item1);
+					Game1.tiledManager.currentRoom.SetTile((ushort)(item2.Value + i), item3.Value, item4[i], item1);
 				}
 				
 				return null;
@@ -202,10 +201,10 @@ public static class FunctionDefs
 			parameters = [typeof(TileLayerType), typeof(ushort), typeof(ushort), typeof(uint[])],
 			function = (args, _) => 
 			{
-				var item1 = FunctionProcessor.Convert<TileLayerType>(args[0]);
-				var item2 = FunctionProcessor.Convert<ushort?>(args[1]);
-				var item3 = FunctionProcessor.Convert<ushort?>(args[2]);
-				var item4 = FunctionProcessor.ArrayConvert<uint?>(args[3]);
+				var item1 = FunctionProcessor.Convert<TileLayerType>(args![0]);
+				ushort? item2 = FunctionProcessor.Convert<ushort>(args[1]);
+				ushort? item3 = FunctionProcessor.Convert<ushort>(args[2]);
+				var item4 = FunctionProcessor.ArrayConvert<uint>(args[3]);
 
 				if (item1 == TileLayerType.None || !item2.HasValue || !item3.HasValue || item4 == null)
 				{
@@ -214,7 +213,7 @@ public static class FunctionDefs
 			
 				for (int i = 0; i < item4.Length; i++)
 				{
-					Game1.tiledManager.currentRoom.SetTile(item2.Value, (ushort)(item3.Value + i), item4[i].Value, item1);
+					Game1.tiledManager.currentRoom.SetTile(item2.Value, (ushort)(item3.Value + i), item4[i], item1);
 				}
 				
 				return null;
@@ -227,9 +226,9 @@ public static class FunctionDefs
 			parameters = [typeof(TileLayerType), typeof(ushort), typeof(ushort)],
 			function = (args, _) => 
 			{
-				var layer_type = FunctionProcessor.Convert<TileLayerType>(args[0]);
-				var x = FunctionProcessor.Convert<ushort?>(args[1]);
-				var y = FunctionProcessor.Convert<ushort?>(args[2]);
+				var layer_type = FunctionProcessor.Convert<TileLayerType>(args![0]);
+				ushort? x = FunctionProcessor.Convert<ushort>(args[1]);
+				ushort? y = FunctionProcessor.Convert<ushort>(args[2]);
 
 				if (layer_type == TileLayerType.None || !x.HasValue || !y.HasValue)
 				{
@@ -247,14 +246,14 @@ public static class FunctionDefs
 			parameters = [typeof(string)],
 			function = (args, source) =>
 			{
-				string collider_name = FunctionProcessor.Convert<string>(args[0]);
+				string? collider_name = FunctionProcessor.Convert<string>(args![0]);
 
 				if (collider_name == null)
 				{
 					return null;
 				}
 
-				Game1.tiledManager.currentRoom.ToggleCollider(collider_name[1..^1], source);
+				Game1.tiledManager.currentRoom.ToggleCollider(collider_name[1..^1], source!);
 				return null;
 			}
 		},
@@ -265,15 +264,15 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(bool)],
 			function = (args, source) => 
 			{
-				string collider_name = FunctionProcessor.Convert<string>(args[0]);
-				bool? state = FunctionProcessor.Convert<bool?>(args[1]);
+				string? collider_name = FunctionProcessor.Convert<string>(args![0]);
+				bool? state = FunctionProcessor.Convert<bool>(args[1]);
 
 				if (collider_name == null || !state.HasValue)
 				{
 					return null;
 				}
 
-				Game1.tiledManager.currentRoom.SetCollider(collider_name[1..^1], state.Value, source);
+				Game1.tiledManager.currentRoom.SetCollider(collider_name[1..^1], state.Value, source!);
 				return null;
 			}
 		},
@@ -295,14 +294,14 @@ public static class FunctionDefs
 			parameters = [typeof(string)],
 			function = (args, source) => 
 			{
-				string dialogue_name = FunctionProcessor.Convert<string>(args[0]);
+				string? dialogue_name = FunctionProcessor.Convert<string>(args![0]);
 
 				if (dialogue_name == null)
 				{
 					return null;
 				}
 
-				Game1.sceneManager.dialogueManager.RunDialogue(dialogue_name[1..^1], source);
+				Game1.sceneManager.dialogueManager.RunDialogue(dialogue_name[1..^1], source!);
 				return null;
 			}
 		},
@@ -324,14 +323,14 @@ public static class FunctionDefs
 			parameters = [typeof(string)],
 			function = (args, source) => 
 			{
-				string scene_name = FunctionProcessor.Convert<string>(args[0]);
+				string? scene_name = FunctionProcessor.Convert<string>(args![0]);
 
 				if (scene_name == null)
 				{
 					return null;
 				}
 			
-				Game1.sceneManager.RunScene(scene_name[1..^1], source);
+				Game1.sceneManager.RunScene(scene_name[1..^1], source!);
 				return null;
 			}
 		},
@@ -342,16 +341,16 @@ public static class FunctionDefs
 			parameters = [typeof(VariableType), typeof(object), typeof(VariableObject)], // the last value is string because it will be parsed later
 			function = (args, source) => 
 			{
-				var type = FunctionProcessor.Convert<VariableType>(args[0]);
-				var name = FunctionProcessor.Convert<string>(args[1]);
-				var value = FunctionProcessor.ConvertUnknown(args[2]);
+				// variables are defined at startup
+				string? name = FunctionProcessor.Convert<string>(args![1]);
+				object? value = FunctionProcessor.ConvertUnknown(args[2]);
 
-				if (name == null || value == null || type == VariableType.Bool)
+				if (name == null || value == null)
 				{
 					return null;
 				}
 			
-				VariableManager.DefineVariable(type, name, value, source);
+				VariableManager.SetVariable(name, value, source!);
 				return null;
 			}
 		},
@@ -359,18 +358,18 @@ public static class FunctionDefs
 		{
 			name = "SetVar",
 			type = FunctionType.SetVar,
-			parameters = [typeof(object), typeof(object)], // the last value is string because it will be parsed later
+			parameters = [typeof(object), typeof(VariableObject)], // the last value is string because it will be parsed later
 			function = (args, source) => 
 			{
-				string name = FunctionProcessor.Convert<string>(args[0]);
-				string value = FunctionProcessor.Convert<string>(args[1]);
+				string? name = FunctionProcessor.Convert<string>(args![0]);
+				object? value = FunctionProcessor.ConvertUnknown(args[1]);
 
 				if (name == null || value == null)
 				{
 					return null;
 				}
 			
-				VariableManager.SetVariable(name, value, source);
+				VariableManager.SetVariable(name, value, source!);
 				return null;
 			}
 		},
@@ -381,7 +380,7 @@ public static class FunctionDefs
 			parameters = [typeof(uint)],
 			function = (args, source) => 
 			{
-				uint? line = FunctionProcessor.Convert<uint?>(args[0]);
+				uint? line = FunctionProcessor.Convert<uint>(args![0]);
 
 				if (!line.HasValue)
 				{
@@ -398,15 +397,15 @@ public static class FunctionDefs
 			parameters = [typeof(object), typeof(uint)],
 			function = (args, source) =>
 			{
-				var item1 = (PostfixEquation<bool?>)args[0];
-				var item2 = FunctionProcessor.Convert<uint?>(args[1]);
+				var item1 = (PostfixEquation<bool>)args![0];
+				uint? item2 = FunctionProcessor.Convert<uint>(args[1]);
 
-				if (item1 == null || !item2.HasValue)
+				if (item1 == null || item2 == null)
 				{
 					return null;
 				}
 
-				if (!item1.Evaluate(source, out bool? result) || !result.HasValue || !result.Value)
+				if (!item1.Evaluate(source!, out Optional<bool> result) || !result.HasValue || !result.Value)
 				{
 					return null;
 				}
@@ -421,8 +420,8 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(bool)],
 			function = (args, _) =>
 			{
-				var item1 = FunctionProcessor.Convert<string>(args[0]);
-				var item2 = FunctionProcessor.Convert<bool?>(args[1]);
+				string? item1 = FunctionProcessor.Convert<string>(args![0]);
+				bool? item2 = FunctionProcessor.Convert<bool>(args[1]);
 
 				if (item1 == null || !item2.HasValue)
 				{
@@ -441,10 +440,10 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(RelativeVariable<float>), typeof(RelativeVariable<float>), typeof(float)],
 			function = (args, _) =>
 			{
-				var item1 = FunctionProcessor.Convert<string>(args[0]);
+				string? item1 = FunctionProcessor.Convert<string>(args![0]);
 				var item2 = FunctionProcessor.RelativeConvert<float>(args[1]);
 				var item3 = FunctionProcessor.RelativeConvert<float>(args[2]);
-				var item4 = FunctionProcessor.Convert<float?>(args[3]);
+				float? item4 = FunctionProcessor.Convert<float>(args[3]);
 
 				if (item1 == null || !item2.HasValue || !item3.HasValue || !item4.HasValue)
 				{
@@ -469,7 +468,7 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(RelativeVariable<float>), typeof(RelativeVariable<float>)],
 			function = (args, _) =>
 			{
-				var item1 = FunctionProcessor.Convert<string>(args[0]);
+				string? item1 = FunctionProcessor.Convert<string>(args![0]);
 				var item2 = FunctionProcessor.RelativeConvert<float>(args[1]);
 				var item3 = FunctionProcessor.RelativeConvert<float>(args[2]);
 
@@ -490,7 +489,7 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(Direction)],
 			function = (args, _) => 
 			{
-				var item1 = FunctionProcessor.Convert<string>(args[0]);
+				var item1 = FunctionProcessor.Convert<string>(args![0]);
 				var item2 = FunctionProcessor.Convert<Direction>(args[1]);
 
 				if (item1 == null || item2 == Direction.None)
@@ -509,7 +508,7 @@ public static class FunctionDefs
 			parameters = [typeof(float)],
 			function = (args, _) =>
 			{
-				var item1 = FunctionProcessor.Convert<float?>(args[0]);
+				float? item1 = FunctionProcessor.Convert<float>(args![0]);
 
 				if (!item1.HasValue)
 				{
@@ -575,20 +574,32 @@ public static class FunctionDefs
 		string extension_dir = user_folder + "\\.vscode\\extensions\\scene-syntax-highlighting\\syntaxes\\";
 
 		string json = File.ReadAllText(extension_dir + "scene.tmLanguageBase.json");
-		JObject jsonObj = JsonConvert.DeserializeObject(json) as JObject;
+		JObject? jsonObj = JsonConvert.DeserializeObject(json) as JObject;
 
-		foreach (JToken pattern in jsonObj.SelectToken("repository.keywords.patterns")) 
+		if (jsonObj == null)
+		{
+			return;
+		}
+
+		JToken? token = jsonObj.SelectToken("repository.keywords.patterns");
+
+		if (token == null)
+		{
+			return;
+		}
+
+		foreach (JToken pattern in token) 
 		{
 			switch (pattern.Value<string>("name"))
 			{
 				case "keyword":
 					var match1 = pattern.Value<string>("match");
-					pattern.SelectToken("match").Replace(match1 + $"|\\b({string.Join('|', VariableManager.KeywordNames)})\\b");
+					pattern.SelectToken("match")?.Replace(match1 + $"|\\b({string.Join('|', VariableManager.KeywordNames)})\\b");
 					break;
 
 				case "entity.name.function":
 					var match2 = pattern.Value<string>("match");
-					pattern.SelectToken("match").Replace(match2 + $"\\b({string.Join('|', NameToFunctionDefIndex.Keys)})\\b");
+					pattern.SelectToken("match")?.Replace(match2 + $"\\b({string.Join('|', NameToFunctionDefIndex.Keys)})\\b");
 					break;
 
 				default:

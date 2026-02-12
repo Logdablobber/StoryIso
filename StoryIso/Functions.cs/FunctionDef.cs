@@ -7,8 +7,8 @@ namespace StoryIso.Functions;
 
 public class FunctionDef
 {
-	public string name;
+	public string? name;
 	public FunctionType type;
-	public Type[] parameters;
-	public Func<List<object>, Source, uint?> function;
+	public Type[]? parameters;
+	public Func<List<object>?, Source?, uint?>? function;
 }

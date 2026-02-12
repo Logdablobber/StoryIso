@@ -20,17 +20,56 @@ public static partial class FunctionProcessor
 		OperatorDefs.Initialize();
 	}
 
-	public static List<Function> Process(string obj, string funcs_string, uint start_line = 0)
+	private static string[][] ParseLines(string input)
 	{
-		List<Function> funcs = [];
-
-		var lines = (from line 
-					in TextFormatter.SplitLines(funcs_string)
+		return (from line 
+					in TextFormatter.SplitLines(input)
 					select 
 					(from match 
 					in SplitRegex().Matches(line.Trim())
 					where match.Value != ""
 					select match.Value).ToArray()).ToArray();
+	}
+
+	public static void Preprocess(string obj, string funcs_string, uint start_line = 0)
+	{
+		var lines = ParseLines(funcs_string);
+
+		for (uint i = start_line; i < lines.Length; i++)
+		{
+			var matches = lines[i];
+
+			if (matches.Length == 0)
+			{
+				continue;
+			}
+
+			if (matches[0].Trim() != ".DefineVar")
+			{
+				continue;
+			}
+
+			if (matches.Length != 4)
+			{
+				continue; // TODO: raise error
+			}
+
+			var type = VariableManager.GetVariableType(matches[1].Trim());
+
+			if (type == VariableType.None)
+			{
+				continue; // TODO: raise error
+			}
+
+			VariableManager.DefineVariable(type, matches[2].Trim(), null, new Source(i, "DefineVar", obj));
+		}
+	}
+
+	public static List<Function>? Process(string obj, string funcs_string, uint start_line = 0)
+	{
+		List<Function> funcs = [];
+
+		var lines = ParseLines(funcs_string);
 
 		bool inside_if = false;
 		bool inside_else = false;
@@ -67,7 +106,7 @@ public static partial class FunctionProcessor
 
 						string input = matches[1].Trim();
 
-						var postfix = ParameterEvaluator.Postfix<bool?>(new Source(i, null, obj), "IF", input);
+						var postfix = ParameterEvaluator.Postfix<bool>(new Source(i, null, obj), "IF", input);
 
 						uint? goto_line = null;
 
@@ -87,9 +126,14 @@ public static partial class FunctionProcessor
 							goto_line = (uint)lines.Length;
 						}
 
+						if (postfix == null)
+						{
+							continue;
+						}
+
 						funcs.Add(new Function(FunctionType.GOTOIF, 
 													[postfix, 
-													new FunctionParameter<uint?>(goto_line)], 
+													new FunctionParameter<uint>(goto_line.Value)], 
 												i));
 						continue;
 
@@ -102,7 +146,7 @@ public static partial class FunctionProcessor
 
 						string elif_input = matches[1].Trim();
 
-						var elif_postfix = ParameterEvaluator.Postfix<bool?>(new Source(i, null, obj), "ELIF", elif_input);
+						var elif_postfix = ParameterEvaluator.Postfix<bool>(new Source(i, null, obj), "ELIF", elif_input);
 
 						uint? elif_goto_line = null;
 						uint? endif_line = null;
@@ -130,7 +174,7 @@ public static partial class FunctionProcessor
 							}
 						}
 						
-						if (!endif_line.HasValue)
+						if (!endif_line.HasValue || !elif_goto_line.HasValue)
 						{
 							endif_line = (uint)lines.Length;
 
@@ -140,14 +184,19 @@ public static partial class FunctionProcessor
 							}
 						}
 
+						if (elif_postfix == null)
+						{
+							continue;
+						}
+
 						// this is the goto for the IF statement before it
 						funcs.Add(new Function(FunctionType.GOTO,
-												[new FunctionParameter<uint?>(endif_line)],
+												[new FunctionParameter<uint>(endif_line.Value)],
 												i - 1));
 
 						funcs.Add(new Function(FunctionType.GOTOIF, 
 													[elif_postfix, 
-													new FunctionParameter<uint?>(elif_goto_line)], 
+													new FunctionParameter<uint>(elif_goto_line.Value)], 
 												i));
 						continue;
 
@@ -178,7 +227,7 @@ public static partial class FunctionProcessor
 
 						// for IF statements before this one
 						funcs.Add(new Function(FunctionType.GOTO,
-												[new FunctionParameter<uint?>(else_endif_line)],
+												[new FunctionParameter<uint>(else_endif_line.Value)],
 												i - 1));
 						break;
 					
@@ -230,13 +279,13 @@ public static partial class FunctionProcessor
 
 			FunctionDef functionDef = FunctionDefs.Get(func);
 
-			if (string_parameters.Count != functionDef.parameters.Length)
+			if (string_parameters.Count != functionDef.parameters!.Length)
 			{
-				DebugConsole.Raise(new ParameterError(new Source(i, first_value, obj), functionDef.name, string_parameters.Count, functionDef.parameters.Length));
+				DebugConsole.Raise(new ParameterError(new Source(i, first_value, obj), functionDef.name!, string_parameters.Count, functionDef.parameters.Length));
 				return null;
 			}
 			
-			List<object> args = ParameterProcessor.ProcessParameters(new Source(i, functionDef.name, obj), functionDef.name, string_parameters, functionDef.parameters);
+			List<object>? args = ParameterProcessor.ProcessParameters(new Source(i, functionDef.name!, obj), functionDef.name!, string_parameters, functionDef.parameters);
 
 			if (args == null)
 			{
@@ -249,7 +298,7 @@ public static partial class FunctionProcessor
 		return funcs;
 	}
 
-	private static void RunFunctsThread(List<Function> funcs, string obj, Source source, bool is_scene)
+	private static void RunFunctsThread(List<Function> funcs, string obj, Source? source, bool is_scene)
 	{
 		if (is_scene)
 		{
@@ -265,7 +314,7 @@ public static partial class FunctionProcessor
  
 			var func = funcs[i];
 
-			uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.function).name, obj, source));
+			uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.function).name!, obj, source));
 
 			if (!goto_line.HasValue || goto_line.Value == func.line)
 			{
@@ -297,9 +346,9 @@ public static partial class FunctionProcessor
 		}
 	}
 
-	public static void RunFuncts(List<Function> funcs, string obj, Source source = null, bool sync = false, bool is_scene = false)
+	public static void RunFuncts(List<Function> funcs, string obj, Source? source = null, bool sync = false, bool is_scene = false)
 	{
-		if (funcs?.Count == 0)
+		if (funcs.Count == 0)
 		{
 			return;
 		}
@@ -310,7 +359,7 @@ public static partial class FunctionProcessor
 			{
 				var func = funcs[i];
 
-				uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.function).name, obj, source));
+				uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.function).name!, obj, source));
 
 				if (!goto_line.HasValue || goto_line.Value == func.line)
 				{
@@ -347,18 +396,17 @@ public static partial class FunctionProcessor
 		t.Start();
 	}
 
-	private static uint? RunFunct(Function func, Source source)
+	private static uint? RunFunct(Function func, Source? source)
 	{
 		FunctionDef functionDef = FunctionDefs.Get(func.function);
 
-		return functionDef.function(func.parameters, source);
+		return functionDef.function!(func.parameters, source);
 	}
 
 	// splits based on commas
 	// and ignores commas inside of brackets or quotes
 	// also separates functions (starting with .) and control operators (starting with #)
 	// really f**king complicated s**t
-	// TODO: actually implement this
 	[GeneratedRegex(@"\s*(//.*)|([.#][^\s]+\b)|(([^"",]*([[][^[]+])[^"",]*)|(([^"",]*(""(\\""|[^""])*"")?[^"",]*)+))", RegexOptions.Compiled | RegexOptions.Singleline)]
 	private static partial Regex SplitRegex();
 }

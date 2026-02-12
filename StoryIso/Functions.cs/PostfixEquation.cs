@@ -1,9 +1,10 @@
 using System;
 using StoryIso.Debugging;
+using StoryIso.Misc;
 
 namespace StoryIso.Functions;
 
-public class PostfixEquation<T>
+public class PostfixEquation<T> where T : notnull
 {
 	private (object, Type)[] equation;
 
@@ -12,7 +13,7 @@ public class PostfixEquation<T>
 		this.equation = equation;
 	}
 
-	public bool Evaluate(Source source, out T result)
+	public bool Evaluate(Source source, out Optional<T> result)
 	{
 		return ParameterEvaluator.Evaluate(source, equation, out result);
 	}

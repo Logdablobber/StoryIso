@@ -14,7 +14,7 @@
 	.Print "The Fourth Worked"
 #ENDIF
 
-#IF testint == 72:
+#IF testint == 72
 	.Print "MATH WORKS!!!"
 #ENDIF
 

@@ -74,7 +74,7 @@ public class TilemapRoom
 	// but I'll probably be confused by it later anyways :\
 	public void ToggleCollider(string name, Source source)
 	{
-		if (_collisionRectangles.TryGetValue(name, out Collider col))
+		if (_collisionRectangles.TryGetValue(name, out Collider? col))
 		{
 			col.ToggleEnabled();
 		}
@@ -86,7 +86,7 @@ public class TilemapRoom
 
 	public void SetCollider(string name, bool enabled, Source source)
 	{
-		if (_collisionRectangles.TryGetValue(name, out Collider col))
+		if (_collisionRectangles.TryGetValue(name, out Collider? col))
 		{
 			col.SetEnabled(enabled);
 		}

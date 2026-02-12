@@ -23,11 +23,11 @@ public class Trigger
 
 	private bool previous_state = false;
 
-	private readonly List<Function> _onEnter;
-	private readonly List<Function> _onExit;
-	private readonly List<Function> _onStay;
+	private readonly List<Function>? _onEnter;
+	private readonly List<Function>? _onExit;
+	private readonly List<Function>? _onStay;
 
-	public Trigger(int id, Rectangle hitbox, List<Function> onEnter, List<Function> onExit, List<Function> onStay, Color color)
+	public Trigger(int id, Rectangle hitbox, List<Function>? onEnter, List<Function>? onExit, List<Function>? onStay, Color color)
 	{
 		this.id = id;
 		triggerHitbox = hitbox;
@@ -61,16 +61,31 @@ public class Trigger
 
 	private void RunOnEnter()
 	{
+		if (_onEnter == null)
+		{
+			return;
+		}
+
 		FunctionProcessor.RunFuncts(_onEnter, $"onEnter of Trigger {id}");
 	}
 
 	private void RunOnExit()
 	{
+		if (_onExit == null)
+		{
+			return;
+		}
+
 		FunctionProcessor.RunFuncts(_onExit, $"onExit of Trigger {id}");
 	}
 
 	private void RunOnStay()
 	{
+		if (_onStay == null)
+		{
+			return;
+		}
+
 		FunctionProcessor.RunFuncts(_onStay, $"onStay of Trigger {id}", sync:true);
 	}
 

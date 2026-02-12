@@ -10,7 +10,7 @@ public class Animation
 	readonly SpriteSheet _spriteSheet;
 	readonly Dictionary<string, AnimatedSprite> _animations;
 	string _currentAnimation;
-	string _overrideAnimation;
+	string? _overrideAnimation;
 
 
 	public Animation(SpriteSheet sprite_sheet, string starting_animation)

@@ -18,11 +18,11 @@ namespace StoryIso.ECS;
 
 public class PlayerSystem : EntityProcessingSystem
 {
-	private ComponentMapper<Player> _playerMapper;
-	private ComponentMapper<Character> _characterMapper;
-	private ComponentMapper<Transform2> _transformMapper;
-	private ComponentMapper<Texture2D> _textureMapper;
-	private ComponentMapper<Animation> _animationMapper;
+	private ComponentMapper<Player> _playerMapper = null!;
+	private ComponentMapper<Character> _characterMapper = null!;
+	private ComponentMapper<Transform2> _transformMapper = null!;
+	private ComponentMapper<Texture2D> _textureMapper = null!;
+	private ComponentMapper<Animation> _animationMapper = null!;
 
 	private static Vector2? _newPlayerPosition = null;
 	private static float? _newPlayerX = null;
@@ -281,13 +281,13 @@ public class PlayerSystem : EntityProcessingSystem
 		const int LEVELOFDETAIL = 5; // how many rays to shoot out from each side (must be > 1!!)
 		const float PADDING = 0.1f; // ray padding
 
-		var transform = _transformMapper.Get(entityId);
-		var texture = _textureMapper.Get(entityId);
-		var animation = _animationMapper.Get(entityId);
+		var transform = _transformMapper!.Get(entityId);
+		var texture = _textureMapper!.Get(entityId);
+		var animation = _animationMapper!.Get(entityId);
 
 		Point size = texture != null ? texture.Bounds.Size : animation.GetFrame().Bounds.Size;
 
-		Ray2[] horizontal_rays = null;
+		Ray2[]? horizontal_rays = null;
 		if (movement.X != 0)
 		{
 			float start_x = transform.Position.X + (movement.X < 0 ? 0 : size.X * transform.Scale.X);
@@ -302,7 +302,7 @@ public class PlayerSystem : EntityProcessingSystem
 			}
 		}
 
-		Ray2[] vertical_rays = null;
+		Ray2[]? vertical_rays = null;
 		if (movement.Y != 0)
 		{
 			float start_y = transform.Position.Y + (movement.Y < 0 ? 0 : size.Y * transform.Scale.Y);
@@ -338,7 +338,7 @@ public class PlayerSystem : EntityProcessingSystem
 			{
 				for (int i = 0; i < LEVELOFDETAIL; i++)
 				{
-					if (horizontal_rays[i].Intersects(boundingRect, out float near, out float _))
+					if (horizontal_rays![i].Intersects(boundingRect, out float near, out float _))
 					{
 						if (near < Math.Abs(movement.X))
 						{
@@ -358,7 +358,7 @@ public class PlayerSystem : EntityProcessingSystem
 			{
 				for (int i = 0; i < LEVELOFDETAIL; i++)
 				{
-					if (vertical_rays[i].Intersects(boundingRect, out float near, out float _))
+					if (vertical_rays![i].Intersects(boundingRect, out float near, out float _))
 					{
 						if (near < Math.Abs(movement.Y))
 						{

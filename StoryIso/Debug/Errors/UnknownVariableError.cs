@@ -5,10 +5,10 @@ namespace StoryIso.Debugging;
 public class UnknownVariableError : IError
 {
 	readonly string given;
-	public Source source { get; set; }
-	public string message { get; set; }
+	public Source? source { get; set; }
+	public string? message { get; set; }
 
-	public UnknownVariableError(Source source, string given, string message = null)
+	public UnknownVariableError(Source source, string given, string? message = null)
 	{
 		this.source = source;
 		this.given = given;
@@ -17,6 +17,6 @@ public class UnknownVariableError : IError
 
 	public string GetMessage()
 	{
-		return $"UnknownVariableError: Unknown variable '{given}'. {message}({source.Format()})";
+		return $"UnknownVariableError: Unknown variable '{given}'. {message}({source!.Format()})";
 	}
 }
