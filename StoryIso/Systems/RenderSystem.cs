@@ -14,9 +14,10 @@ public class RenderSystem : EntityDrawSystem
 	private ComponentMapper<Texture2D> _textureMapper = null!;
 	private ComponentMapper<Animation> _animationMapper = null!;
 	private ComponentMapper<Transform2> _transformMapper = null!;
+	private ComponentMapper<RenderAttributes> _renderAttributesMapper = null!;
 
 	public RenderSystem(SpriteBatch spriteBatch)
-		: base(Aspect.All(typeof(Transform2)).One(typeof(Texture2D), typeof(Animation)))
+		: base(Aspect.All(typeof(Transform2), typeof(RenderAttributes)).One(typeof(Texture2D), typeof(Animation)))
 	{
 		_spriteBatch = spriteBatch;
 	}
@@ -27,6 +28,13 @@ public class RenderSystem : EntityDrawSystem
 
 		foreach (var entityId in ActiveEntities)
 		{
+			var render_attributes = _renderAttributesMapper.Get(entityId);
+
+			if (!render_attributes.Visible)
+			{
+				continue;
+			}
+
 			var transform = _transformMapper.Get(entityId);
 
 			Texture2D texture = _textureMapper.Get(entityId);
@@ -48,5 +56,6 @@ public class RenderSystem : EntityDrawSystem
 		_textureMapper = mapperService.GetMapper<Texture2D>();
 		_transformMapper = mapperService.GetMapper<Transform2>();
 		_animationMapper = mapperService.GetMapper<Animation>();
+		_renderAttributesMapper = mapperService.GetMapper<RenderAttributes>();
 	}
 }

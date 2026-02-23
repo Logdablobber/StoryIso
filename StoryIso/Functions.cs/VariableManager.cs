@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using MonoGame.Extended;
 using StoryIso.Debugging;
 using StoryIso.Enums;
+using StoryIso.Misc;
 
 namespace StoryIso.Functions;
 
@@ -25,6 +26,24 @@ public static partial class VariableManager
 			"string" => VariableType.String,
 			_ => VariableType.None,
 		};
+	}
+
+	private static readonly Dictionary<Type, VariableType> typeToVariableType = new()
+	{
+		{typeof(int), VariableType.Int},
+		{typeof(float), VariableType.Float},
+		{typeof(bool), VariableType.Bool},
+		{typeof(string), VariableType.String}
+	};
+
+	public static VariableType? GetVariableType(Type type)
+	{
+		if (typeToVariableType.TryGetValue(type, out var variableType))
+		{
+			return variableType;
+		}
+
+		return VariableType.None;
 	}
 
 	readonly static Dictionary<string, Func<int>> _readonlyInts = new()
@@ -67,6 +86,37 @@ public static partial class VariableManager
 	];
 
 	public readonly static string[] KeywordNames = _retrievalOnlyVariables.Concat(_constantNames).ToArray();
+
+	public readonly static Dictionary<string, VariableType> VariableTypes = new();
+
+	public static void Initialize()
+	{
+		foreach (var readonly_int in _readonlyInts.Keys)
+		{
+			VariableTypes.Add(readonly_int, VariableType.Int);
+		}
+
+		foreach (var readonly_float in _readonlyFloats.Keys)
+		{
+			if (VariableTypes.ContainsKey(readonly_float))
+			{
+				VariableTypes[readonly_float] = VariableType.Float;
+				continue;
+			}
+
+			VariableTypes.Add(readonly_float, VariableType.Float);
+		}
+
+		foreach (var readonly_bool in _readonlyBools.Keys)
+		{
+			VariableTypes.Add(readonly_bool, VariableType.Bool);
+		}
+
+		foreach (var readonly_string in _readonlyStrings.Keys)
+		{
+			VariableTypes.Add(readonly_string, VariableType.String);
+		}
+	}
 
 	public static bool ValidName(string name, bool retrieval_only = false)
 	{
@@ -119,8 +169,10 @@ public static partial class VariableManager
 				break;
 
 			default:
-				break;
+				return; // don't add if type is undefined
 		}
+
+		VariableTypes.Add(name, type);
 	}
 
 	public static T? GetVariable<T>(string name, Source source) where T : notnull
@@ -192,7 +244,7 @@ public static partial class VariableManager
 		return default;
 	}
 
-	public static bool ContainsVariable(string name, out VariableType type, out object? value)
+	public static bool TryGetVariable(string name, out VariableType type, out object? value)
 	{
 		if (_readonlyInts.TryGetValue(name, out Func<int>? readonly_int_value))
 		{
@@ -255,33 +307,14 @@ public static partial class VariableManager
 		return false;
 	}
 
-	public static bool ContainsVariable(string name, out string? value)
+	public static bool ContainsVariable(string name, out VariableType type)
 	{
-		if (_intVariables.TryGetValue(name, out int? int_value))
+		if (VariableTypes.TryGetValue(name, out type))
 		{
-			value = int_value.ToString();
 			return true;
 		}
 
-		if (_floatVariables.TryGetValue(name, out float? float_value))
-		{
-			value = float_value.ToString();
-			return true;
-		}
-
-		if (_boolVariables.TryGetValue(name, out bool? bool_value))
-		{
-			value = bool_value.ToString();
-			return true;
-		}
-
-		if (_stringVariables.TryGetValue(name, out string? string_value))
-		{
-			value = string_value;
-			return true;
-		}
-
-		value = null;
+		type = VariableType.None;
 		return false;
 	}
 
@@ -299,29 +332,86 @@ public static partial class VariableManager
 
 		if (_stringVariables.ContainsKey(name))
 		{
-			_stringVariables[name] = (string?)value;
+			var string_value = (Optional<string>)value;
+
+			if (!string_value.HasValue)
+			{
+				_stringVariables[name] = null;
+			}
+
+			_stringVariables[name] = string_value.Value;
 			return;
 		}
 
 		if (_intVariables.ContainsKey(name))
 		{
-			_intVariables[name] = (int?)value;
+			Optional<int> int_value = ParseVariable<int>(value);
+
+			if (!int_value.HasValue)
+			{
+				_intVariables[name] = null;
+			}
+
+			_intVariables[name] = int_value.Value;
 			return;
 		}
 
 		if (_floatVariables.ContainsKey(name))
 		{
-			_floatVariables[name] = (float?)value;
+			Optional<float> float_value = ParseVariable<float>(value);
+
+			if (!float_value.HasValue)
+			{
+				_floatVariables[name] = null;
+			}
+
+			_floatVariables[name] = float_value.Value;
 			return;
 		}
 
 		if (_boolVariables.ContainsKey(name))
 		{
-			_boolVariables[name] = (bool?)value;
+			Optional<bool> bool_value = ParseVariable<bool>(value);
+
+			if (!bool_value.HasValue)
+			{
+				_boolVariables[name] = null;
+			}
+
+			_boolVariables[name] = bool_value.Value;
 			return;
 		}
 
 		DebugConsole.Raise(new UnknownVariableError(source, name));
+	}
+
+	private static Optional<T> ParseVariable<T>(object? value) where T : IParsable<T>
+	{
+		if (value == null)
+		{
+			return default;
+		}
+
+		if (value.GetType() == typeof(Optional<string>))
+		{
+			var string_value = (Optional<string>)value;
+
+			if (!string_value.HasValue)
+			{
+				return default;
+			}
+
+			if (T.TryParse(string_value.Value, null, out T? result))
+			{
+				return result;
+			}
+
+			throw new InvalidCastException();
+		}
+
+		var final_value = (Optional<T>)value;
+
+		return final_value;
 	}
 
 	public static readonly Regex VariableRegex = _variableRegex();

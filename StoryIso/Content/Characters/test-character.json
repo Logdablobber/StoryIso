@@ -1,4 +1,5 @@
 {
 	"name": "test",
-	"animation": "player-animation"
+	"animation": "player-animation",
+	"room": "Map1"
 }

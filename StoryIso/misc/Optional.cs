@@ -24,6 +24,7 @@ public struct Optional<T>
 	public Optional(T value)
 	{
 		this.value = value;
+		this.HasValue = true;
 	}
 
 	public static explicit operator T(Optional<T> optional)

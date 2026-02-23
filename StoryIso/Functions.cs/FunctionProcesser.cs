@@ -314,7 +314,7 @@ public static partial class FunctionProcessor
  
 			var func = funcs[i];
 
-			uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.function).name!, obj, source));
+			uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.function).name, obj, source));
 
 			if (!goto_line.HasValue || goto_line.Value == func.line)
 			{
@@ -359,7 +359,7 @@ public static partial class FunctionProcessor
 			{
 				var func = funcs[i];
 
-				uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.function).name!, obj, source));
+				uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.function).name, obj, source));
 
 				if (!goto_line.HasValue || goto_line.Value == func.line)
 				{

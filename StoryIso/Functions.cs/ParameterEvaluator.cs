@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using SharpDX;
 using StoryIso.Debugging;
 using StoryIso.Enums;
 using StoryIso.Misc;
@@ -10,6 +11,9 @@ namespace StoryIso.Functions;
 
 public static partial class ParameterEvaluator
 {
+	private static readonly Regex _splitRegex = SplitRegex();
+	private static readonly Regex _operandRegex = OperandRegex();
+
 	public static bool Evaluate<T>(Source source, (object, Type)[] postfix, out Optional<T> result) where T : notnull
 	{
 		Stack<(object, Type)> stack = new();
@@ -37,26 +41,8 @@ public static partial class ParameterEvaluator
 			{
 				var param = stack.Pop();
 
-				if (operatorDef.parameters[i] == typeof(float) && param.Item2 == typeof(int))
+				if (!TryConvertParam(ref param, operatorDef.parameters[i], source, operatorDef.oper))
 				{
-					param = ((float)(int)param.Item1, typeof(float));
-				}
-
-				else if (operatorDef.parameters[i] == typeof(int) && param.Item2 == typeof(float))
-				{
-					param = ((int)(float)param.Item1, typeof(int));
-				}
-
-				else if (operatorDef.parameters[i] == typeof(string) && param.Item2 != typeof(string))
-				{
-					// cursed, but it works
-					// I want to find a better way to do this...
-					param = ((string)Convert.ChangeType(param.Item1, param.Item2), typeof(string));
-				}
-
-				else if (operatorDef.parameters[i] != typeof(VariableObject) && param.Item2 != operatorDef.parameters[i])
-				{
-					DebugConsole.Raise(new ParameterTypeError(source, operatorDef.oper, param.Item1.ToString() ?? "Type doesn't have a name", operatorDef.parameters[i].FullName ?? "Type doesn't have a name"));
 					result = default;
 					return false;
 				}
@@ -89,32 +75,101 @@ public static partial class ParameterEvaluator
 
 		var end_value = stack.Pop();
 
-		if (!MiscFuncs.SimilarTypes(typeof(T), end_value.Item2))
+		if (!TryConvertParam(ref end_value, typeof(T), source, "n\\a"))
 		{
-			if (typeof(T) == typeof(string) && end_value.Item2 != typeof(string))
-			{
-				result = new Optional<T>((T)(object)(FunctionProcessor.Convert<T>(end_value.Item1)?.ToString() ?? throw new InvalidOperationException("Value is null/doesn't convert to string")));
-				return true;
-			}
-
-			if (typeof(T) == typeof(float) && end_value.Item2 == typeof(int)) // if return type is int and has float, convert
-			{
-				result = new Optional<T>((T)(object)(int)FunctionProcessor.Convert<float>(end_value.Item1));
-				return true;
-			}
-
-			if (typeof(T) == typeof(int) && end_value.Item2 == typeof(float)) // if return type is int and has float, convert
-			{
-				result = new Optional<T>((T)(object)(float)FunctionProcessor.Convert<int>(end_value.Item1));
-				return true;
-			}
-
-			DebugConsole.Raise(new ParameterProcessError(source));
 			result = default;
-			return false;	
+			return false;
 		}
 
-		result = new Optional<T>(FunctionProcessor.Convert<T>(end_value.Item1) ?? throw new InvalidOperationException("Value is null/doesn't convert to string"));
+		var final = (Optional<T>)end_value.Item1;
+
+		if (!final.HasValue)
+		{
+			throw new InvalidOperationException($"Value is null/doesn't convert to {typeof(T).Name}");
+		}
+
+		result = final;
+		return true;
+	}
+
+	private static bool TryConvertParam(ref (object, Type) param, Type result_type, Source source, string oper)
+	{
+		if (param.Item2 == typeof(FunctionParameter<float>))
+		{
+			param = (FunctionProcessor.Convert<float>(param.Item1), typeof(float));
+		}
+
+		else if (param.Item2 == typeof(FunctionParameter<int>))
+		{
+			param = (FunctionProcessor.Convert<int>(param.Item1), typeof(int));
+		}
+
+		else if (param.Item2 == typeof(FunctionParameter<bool>))
+		{
+			param = (FunctionProcessor.Convert<bool>(param.Item1), typeof(bool));
+		}
+
+		else if (param.Item2 == typeof(FunctionParameter<string>))
+		{
+			var value = FunctionProcessor.Convert<string>(param.Item1);
+
+			if (!value.HasValue)
+			{
+				DebugConsole.Raise(new ParameterTypeError(source, oper, param.Item2.Name ?? "Type doesn't have a name", result_type.FullName ?? "Type doesn't have a name"));
+				return false;
+			}
+
+			param = (value, typeof(string));
+		}
+
+		if (result_type == typeof(float) && param.Item2 == typeof(int))
+		{
+			var param_value = (Optional<int>)param.Item1;
+
+			if (!param_value.HasValue)
+			{
+				param = (new Optional<float>(), typeof(float));
+				return true;
+			}
+
+			param = (new Optional<float>(param_value.Value), typeof(float));
+			return true;
+		}
+
+		else if (result_type == typeof(int) && param.Item2 == typeof(float))
+		{
+			var param_value = (Optional<float>)param.Item1;
+
+			if (!param_value.HasValue)
+			{
+				param = (new Optional<int>(), typeof(int));
+				return true;
+			}
+
+			param = (new Optional<int>((int)param_value.Value), typeof(int));
+			return true;
+		}
+
+		else if (result_type == typeof(string) && param.Item2 != typeof(string))
+		{
+			var param_value = FunctionProcessor.ConvertByTypeToString(param.Item1, param.Item2);
+
+			if (param_value == null)
+			{
+				param = (new Optional<string>(), typeof(string));
+				return true;
+			}
+
+			param = (new Optional<string>(param_value), typeof(string));
+			return true;
+		}
+
+		else if (result_type != typeof(VariableObject) && param.Item2 != result_type)
+		{
+			DebugConsole.Raise(new ParameterTypeError(source, oper, param.Item2.Name ?? "Type doesn't have a name", result_type.FullName ?? "Type doesn't have a name"));
+			return false;
+		}
+
 		return true;
 	}
 
@@ -137,7 +192,7 @@ public static partial class ParameterEvaluator
 	public static PostfixEquation<T>? Postfix<T>(Source source, string function, string value) where T : notnull
 	{
 		string[] infix = (from match in
-								SplitRegex().Matches(value)
+								_splitRegex.Matches(value)
 								select match.Value).ToArray();
 
 		List<(object, Type)> res = [];
@@ -150,7 +205,7 @@ public static partial class ParameterEvaluator
 				continue;
 			}
 
-			if (OperandRegex().IsMatch(item))
+			if (_operandRegex.IsMatch(item))
 			{
 				var operand = ParameterProcessor.ProcessUnknownParameter(item, source, function);
 

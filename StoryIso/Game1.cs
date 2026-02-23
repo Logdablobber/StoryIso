@@ -39,6 +39,7 @@ public class Game1 : Game
 	// to eliminate flashing
 	private const float PAUSE_TIME = 0.05f;
 	private static float _pauseRenderTimer = 0f;
+	private static readonly System.Threading.Lock _pauseRenderTimerLock = new();
 
 	public static SceneManager sceneManager = null!;
 
@@ -65,9 +66,12 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
+		VariableManager.Initialize();
 		var viewportAdapter = new BoxingViewportAdapter(Window, GraphicsDevice, 800, 480);
-		camera = new OrthographicCamera(viewportAdapter);
-		camera.Zoom = 4f;
+		camera = new OrthographicCamera(viewportAdapter)
+		{
+			Zoom = 4f
+		};
 		FunctionProcessor.Initialize();
 
 		base.Initialize();
@@ -108,8 +112,9 @@ public class Game1 : Game
 		player = _world.CreateEntity();
 		player.Attach(player_animation);
 		player.Attach(new Player(speed:100f));
-		player.Attach(new Character("Player", Direction.Down, visibility:true));
+		player.Attach(new Character("Player", Direction.Down, room:"#any#"));
 		player.Attach(new Transform2(new Vector2(190, 150), 0, characterScale));
+		player.Attach(new RenderAttributes(true, Color.White));
 
 		sceneManager.RunScene("startup", new Source(0, null, "startup"));
     }
@@ -131,15 +136,21 @@ public class Game1 : Game
 
 	public static void PauseRendering()
 	{
-		_pauseRenderTimer = PAUSE_TIME;
+		lock (_pauseRenderTimerLock)
+		{
+			_pauseRenderTimer = PAUSE_TIME;
+		}
 	}
 
     protected override void Draw(GameTime gameTime)
 	{
-		if (_pauseRenderTimer > 0)
+		lock (_pauseRenderTimerLock)
 		{
-			_pauseRenderTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
-			return;
+			if (_pauseRenderTimer > 0)
+			{
+				_pauseRenderTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+				return;
+			}
 		}
 
 		Transform2 playerTransform = player.Get<Transform2>();
@@ -161,9 +172,9 @@ public class Game1 : Game
 	
 		if (debug)
 		{
-			_spriteBatch!.Begin(samplerState: SamplerState.PointClamp, blendState:BlendState.AlphaBlend, transformMatrix: camera.GetViewMatrix());
+			_spriteBatch.Begin(samplerState: SamplerState.PointClamp, blendState:BlendState.AlphaBlend, transformMatrix: camera.GetViewMatrix());
 
-			foreach (var trigger in tiledManager.currentRoom.triggers)
+			foreach (var trigger in tiledManager.currentRoom.Triggers)
 			{
 				trigger.Draw(_spriteBatch);
 			}
@@ -171,7 +182,7 @@ public class Game1 : Game
 			_spriteBatch.End();
 		}
 
-		_spriteBatch!.Begin(samplerState: SamplerState.PointWrap, transformMatrix:camera.GetViewMatrix());
+		_spriteBatch.Begin(samplerState: SamplerState.PointWrap, transformMatrix:camera.GetViewMatrix());
 
 		sceneManager.Draw(_spriteBatch);
 

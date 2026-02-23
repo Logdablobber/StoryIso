@@ -32,14 +32,14 @@ public static class FunctionDefs
 			parameters = [typeof(string)],
 			function = (args, _) => 
 			{
-				string? arg = FunctionProcessor.Convert<string>(args![0]);
+				Optional<string> arg = FunctionProcessor.Convert<string>(args![0]);
 
-				if (arg == null)
+				if (!arg.HasValue)
 				{
 					return null;
 				}
 
-				DebugConsole.WriteLine(arg[1..^1], Color.Black);
+				DebugConsole.WriteLine(arg.Value[1..^1], Color.Black);
 
 				return null;
 			}
@@ -72,12 +72,12 @@ public static class FunctionDefs
 			{
 				var item1 = FunctionProcessor.Convert<Direction>(args![0]);
 
-				if (item1 == Direction.None)
+				if (item1.Value == Direction.None)
 				{
 					return null;
 				}
 
-				CharacterSystem.SetPlayerDirection(item1);
+				CharacterSystem.SetPlayerDirection(item1.Value);
 				return null;
 			}
 		},
@@ -88,8 +88,8 @@ public static class FunctionDefs
 			parameters = [typeof(float), typeof(float)],
 			function = (args, _) => 
 			{
-				float? x = FunctionProcessor.Convert<float>(args![0]);
-				float? y = FunctionProcessor.Convert<float>(args[1]);
+				Optional<float> x = FunctionProcessor.Convert<float>(args![0]);
+				Optional<float> y = FunctionProcessor.Convert<float>(args[1]);
 				if (!x.HasValue || !y.HasValue)
 				{
 					return null;
@@ -108,7 +108,7 @@ public static class FunctionDefs
 			{
 				var item1 = FunctionProcessor.RelativeConvert<float>(args![0]);
 				var item2 = FunctionProcessor.RelativeConvert<float>(args[1]);
-				float? item3 = FunctionProcessor.Convert<float>(args[2]);
+				Optional<float> item3 = FunctionProcessor.Convert<float>(args[2]);
 
 				if (!item1.HasValue || !item2.HasValue || !item3.HasValue)
 				{
@@ -133,17 +133,17 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(RelativeVariable<int>), typeof(RelativeVariable<int>)],
 			function = (args, _) => 
 			{
-				string? map_name = FunctionProcessor.Convert<string>(args![0]);
+				Optional<string> map_name = FunctionProcessor.Convert<string>(args![0]);
 				var x = FunctionProcessor.RelativeConvert<int>(args[1]);
 				var y = FunctionProcessor.RelativeConvert<int>(args[2]);
 
-				if (map_name == null || !x.HasValue || !y.HasValue)
+				if (!map_name.HasValue || !x.HasValue || !y.HasValue)
 				{
 					return null;
 				}
 
 				Game1.PauseRendering();
-				Game1.tiledManager.LoadMapThread(map_name[1..^1]);
+				Game1.tiledManager.LoadMapThread(map_name.Value[1..^1]);
 				CharacterSystem.SetPlayerPosition(Game1.tiledManager.TilePosToWorldPos(x.Value, y.Value));
 				return null;
 			}
@@ -156,16 +156,16 @@ public static class FunctionDefs
 			function = (args, _) => 
 			{
 				var layer_type = FunctionProcessor.Convert<TileLayerType>(args![0]);
-				uint? guid = FunctionProcessor.Convert<uint>(args[1]);
-				ushort? x = FunctionProcessor.Convert<ushort>(args[2]);
-				ushort? y = FunctionProcessor.Convert<ushort>(args[3]);
+				Optional<uint> guid = FunctionProcessor.Convert<uint>(args[1]);
+				Optional<ushort> x = FunctionProcessor.Convert<ushort>(args[2]);
+				Optional<ushort> y = FunctionProcessor.Convert<ushort>(args[3]);
 
-				if (layer_type == TileLayerType.None || !guid.HasValue || !x.HasValue || !y.HasValue)
+				if (layer_type.Value == TileLayerType.None || !guid.HasValue || !x.HasValue || !y.HasValue)
 				{
 					return null;
 				}
 			
-				Game1.tiledManager.currentRoom.SetTile(x.Value, y.Value, guid.Value, layer_type);
+				Game1.tiledManager.currentRoom.SetTile(x.Value, y.Value, guid.Value, layer_type.Value);
 				return null;
 			}
 		},
@@ -177,18 +177,18 @@ public static class FunctionDefs
 			function = (args, _) => 
 			{
 				var item1 = FunctionProcessor.Convert<TileLayerType>(args![0]);
-				ushort? item2 = FunctionProcessor.Convert<ushort>(args[1]);
-				ushort? item3 = FunctionProcessor.Convert<ushort>(args[2]);
+				Optional<ushort> item2 = FunctionProcessor.Convert<ushort>(args[1]);
+				Optional<ushort> item3 = FunctionProcessor.Convert<ushort>(args[2]);
 				var item4 = FunctionProcessor.ArrayConvert<uint>(args[3]);
 
-				if (item1 == TileLayerType.None || !item2.HasValue || !item3.HasValue || item4 == null)
+				if (item1.Value == TileLayerType.None || !item2.HasValue || !item3.HasValue || item4 == null)
 				{
 					return null;
 				}
 			
 				for (int i = 0; i < item4.Length; i++)
 				{
-					Game1.tiledManager.currentRoom.SetTile((ushort)(item2.Value + i), item3.Value, item4[i], item1);
+					Game1.tiledManager.currentRoom.SetTile((ushort)(item2.Value + i), item3.Value, item4[i], item1.Value);
 				}
 				
 				return null;
@@ -202,18 +202,18 @@ public static class FunctionDefs
 			function = (args, _) => 
 			{
 				var item1 = FunctionProcessor.Convert<TileLayerType>(args![0]);
-				ushort? item2 = FunctionProcessor.Convert<ushort>(args[1]);
-				ushort? item3 = FunctionProcessor.Convert<ushort>(args[2]);
+				Optional<ushort> item2 = FunctionProcessor.Convert<ushort>(args[1]);
+				Optional<ushort> item3 = FunctionProcessor.Convert<ushort>(args[2]);
 				var item4 = FunctionProcessor.ArrayConvert<uint>(args[3]);
 
-				if (item1 == TileLayerType.None || !item2.HasValue || !item3.HasValue || item4 == null)
+				if (item1.Value == TileLayerType.None || !item2.HasValue || !item3.HasValue || item4 == null)
 				{
 					return null;
 				}
 			
 				for (int i = 0; i < item4.Length; i++)
 				{
-					Game1.tiledManager.currentRoom.SetTile(item2.Value, (ushort)(item3.Value + i), item4[i], item1);
+					Game1.tiledManager.currentRoom.SetTile(item2.Value, (ushort)(item3.Value + i), item4[i], item1.Value);
 				}
 				
 				return null;
@@ -227,15 +227,15 @@ public static class FunctionDefs
 			function = (args, _) => 
 			{
 				var layer_type = FunctionProcessor.Convert<TileLayerType>(args![0]);
-				ushort? x = FunctionProcessor.Convert<ushort>(args[1]);
-				ushort? y = FunctionProcessor.Convert<ushort>(args[2]);
+				Optional<ushort> x = FunctionProcessor.Convert<ushort>(args[1]);
+				Optional<ushort> y = FunctionProcessor.Convert<ushort>(args[2]);
 
-				if (layer_type == TileLayerType.None || !x.HasValue || !y.HasValue)
+				if (layer_type.Value == TileLayerType.None || !x.HasValue || !y.HasValue)
 				{
 					return null;
 				}
 			
-				Game1.tiledManager.currentRoom.SetTile(x.Value, y.Value, 0, layer_type);
+				Game1.tiledManager.currentRoom.SetTile(x.Value, y.Value, 0, layer_type.Value);
 				return null;
 			}
 		},
@@ -246,14 +246,14 @@ public static class FunctionDefs
 			parameters = [typeof(string)],
 			function = (args, source) =>
 			{
-				string? collider_name = FunctionProcessor.Convert<string>(args![0]);
+				Optional<string> collider_name = FunctionProcessor.Convert<string>(args![0]);
 
-				if (collider_name == null)
+				if (!collider_name.HasValue)
 				{
 					return null;
 				}
 
-				Game1.tiledManager.currentRoom.ToggleCollider(collider_name[1..^1], source!);
+				Game1.tiledManager.currentRoom.ToggleCollider(collider_name.Value[1..^1], source!);
 				return null;
 			}
 		},
@@ -264,15 +264,15 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(bool)],
 			function = (args, source) => 
 			{
-				string? collider_name = FunctionProcessor.Convert<string>(args![0]);
-				bool? state = FunctionProcessor.Convert<bool>(args[1]);
+				Optional<string> collider_name = FunctionProcessor.Convert<string>(args![0]);
+				Optional<bool> state = FunctionProcessor.Convert<bool>(args[1]);
 
-				if (collider_name == null || !state.HasValue)
+				if (!collider_name.HasValue || !state.HasValue)
 				{
 					return null;
 				}
 
-				Game1.tiledManager.currentRoom.SetCollider(collider_name[1..^1], state.Value, source!);
+				Game1.tiledManager.currentRoom.SetCollider(collider_name.Value[1..^1], state.Value, source!);
 				return null;
 			}
 		},
@@ -294,14 +294,14 @@ public static class FunctionDefs
 			parameters = [typeof(string)],
 			function = (args, source) => 
 			{
-				string? dialogue_name = FunctionProcessor.Convert<string>(args![0]);
+				Optional<string> dialogue_name = FunctionProcessor.Convert<string>(args![0]);
 
-				if (dialogue_name == null)
+				if (!dialogue_name.HasValue)
 				{
 					return null;
 				}
 
-				Game1.sceneManager.dialogueManager.RunDialogue(dialogue_name[1..^1], source!);
+				Game1.sceneManager.dialogueManager.RunDialogue(dialogue_name.Value[1..^1], source!);
 				return null;
 			}
 		},
@@ -323,14 +323,14 @@ public static class FunctionDefs
 			parameters = [typeof(string)],
 			function = (args, source) => 
 			{
-				string? scene_name = FunctionProcessor.Convert<string>(args![0]);
+				Optional<string> scene_name = FunctionProcessor.Convert<string>(args![0]);
 
-				if (scene_name == null)
+				if (!scene_name.HasValue)
 				{
 					return null;
 				}
 			
-				Game1.sceneManager.RunScene(scene_name[1..^1], source!);
+				Game1.sceneManager.RunScene(scene_name.Value[1..^1], source!);
 				return null;
 			}
 		},
@@ -342,15 +342,15 @@ public static class FunctionDefs
 			function = (args, source) => 
 			{
 				// variables are defined at startup
-				string? name = FunctionProcessor.Convert<string>(args![1]);
+				Optional<string> name = FunctionProcessor.Convert<string>(args![1]);
 				object? value = FunctionProcessor.ConvertUnknown(args[2]);
 
-				if (name == null || value == null)
+				if (!name.HasValue || value == null)
 				{
 					return null;
 				}
 			
-				VariableManager.SetVariable(name, value, source!);
+				VariableManager.SetVariable(name.Value, value, source!);
 				return null;
 			}
 		},
@@ -361,15 +361,15 @@ public static class FunctionDefs
 			parameters = [typeof(object), typeof(VariableObject)], // the last value is string because it will be parsed later
 			function = (args, source) => 
 			{
-				string? name = FunctionProcessor.Convert<string>(args![0]);
+				Optional<string> name = FunctionProcessor.Convert<string>(args![0]);
 				object? value = FunctionProcessor.ConvertUnknown(args[1]);
 
-				if (name == null || value == null)
+				if (!name.HasValue || value == null)
 				{
 					return null;
 				}
 			
-				VariableManager.SetVariable(name, value, source!);
+				VariableManager.SetVariable(name.Value, value, source!);
 				return null;
 			}
 		},
@@ -380,7 +380,7 @@ public static class FunctionDefs
 			parameters = [typeof(uint)],
 			function = (args, source) => 
 			{
-				uint? line = FunctionProcessor.Convert<uint>(args![0]);
+				Optional<uint> line = FunctionProcessor.Convert<uint>(args![0]);
 
 				if (!line.HasValue)
 				{
@@ -398,19 +398,19 @@ public static class FunctionDefs
 			function = (args, source) =>
 			{
 				var item1 = (PostfixEquation<bool>)args![0];
-				uint? item2 = FunctionProcessor.Convert<uint>(args[1]);
+				Optional<uint> item2 = FunctionProcessor.Convert<uint>(args[1]);
 
-				if (item1 == null || item2 == null)
+				if (item1 == null || !item2.HasValue)
 				{
 					return null;
 				}
 
-				if (!item1.Evaluate(source!, out Optional<bool> result) || !result.HasValue || !result.Value)
+				if (!item1.Evaluate(source!, out Optional<bool> result) || !result.HasValue || result.Value)
 				{
 					return null;
 				}
 
-				return item2;
+				return item2.Value;
 			}
 		},
 		new FunctionDef // SetVisible
@@ -420,15 +420,15 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(bool)],
 			function = (args, _) =>
 			{
-				string? item1 = FunctionProcessor.Convert<string>(args![0]);
-				bool? item2 = FunctionProcessor.Convert<bool>(args[1]);
+				Optional<string> item1 = FunctionProcessor.Convert<string>(args![0]);
+				Optional<bool> item2 = FunctionProcessor.Convert<bool>(args[1]);
 
-				if (item1 == null || !item2.HasValue)
+				if (!item1.HasValue || !item2.HasValue)
 				{
 					return null;
 				}
 
-				CharacterSystem.SetCharacterVisibility(item1, item2.Value);
+				CharacterSystem.SetCharacterVisibility(item1.Value, item2.Value);
 
 				return null;
 			}
@@ -440,12 +440,12 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(RelativeVariable<float>), typeof(RelativeVariable<float>), typeof(float)],
 			function = (args, _) =>
 			{
-				string? item1 = FunctionProcessor.Convert<string>(args![0]);
+				Optional<string> item1 = FunctionProcessor.Convert<string>(args![0]);
 				var item2 = FunctionProcessor.RelativeConvert<float>(args[1]);
 				var item3 = FunctionProcessor.RelativeConvert<float>(args[2]);
-				float? item4 = FunctionProcessor.Convert<float>(args[3]);
+				Optional<float> item4 = FunctionProcessor.Convert<float>(args[3]);
 
-				if (item1 == null || !item2.HasValue || !item3.HasValue || !item4.HasValue)
+				if (!item1.HasValue || !item2.HasValue || !item3.HasValue || !item4.HasValue)
 				{
 					return null;
 				}
@@ -456,7 +456,7 @@ public static class FunctionDefs
 					speed = item4.Value
 				};
 
-				CharacterSystem.MoveCharacter(item1, movement);
+				CharacterSystem.MoveCharacter(item1.Value, movement);
 
 				return null;
 			}
@@ -468,16 +468,16 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(RelativeVariable<float>), typeof(RelativeVariable<float>)],
 			function = (args, _) =>
 			{
-				string? item1 = FunctionProcessor.Convert<string>(args![0]);
+				Optional<string> item1 = FunctionProcessor.Convert<string>(args![0]);
 				var item2 = FunctionProcessor.RelativeConvert<float>(args[1]);
 				var item3 = FunctionProcessor.RelativeConvert<float>(args[2]);
 
-				if (item1 == null || !item2.HasValue || !item3.HasValue)
+				if (!item1.HasValue || !item2.HasValue || !item3.HasValue)
 				{
 					return null;
 				}
 
-				CharacterSystem.SetCharacterPosition(item1, Game1.tiledManager.TilePosToWorldPos(item2.Value, item3.Value));
+				CharacterSystem.SetCharacterPosition(item1.Value, Game1.tiledManager.TilePosToWorldPos(item2.Value, item3.Value));
 
 				return null;
 			}
@@ -492,12 +492,31 @@ public static class FunctionDefs
 				var item1 = FunctionProcessor.Convert<string>(args![0]);
 				var item2 = FunctionProcessor.Convert<Direction>(args[1]);
 
-				if (item1 == null || item2 == Direction.None)
+				if (!item1.HasValue || item2.Value == Direction.None)
 				{
 					return null;
 				}
 
-				CharacterSystem.SetCharacterDirection(item1, item2);
+				CharacterSystem.SetCharacterDirection(item1.Value, item2.Value);
+				return null;
+			}
+		},
+		new FunctionDef // SetCharacterDirection
+		{
+			name = "SetCharacterRoom",
+			type = FunctionType.SetCharacterRoom,
+			parameters = [typeof(string), typeof(string)],
+			function = (args, _) => 
+			{
+				var item1 = FunctionProcessor.Convert<string>(args![0]);
+				var item2 = FunctionProcessor.Convert<string>(args[1]);
+
+				if (!item1.HasValue || !item2.HasValue)
+				{
+					return null;
+				}
+
+				CharacterSystem.SetCharacterRoom(item1.Value, item2.Value);
 				return null;
 			}
 		},
@@ -508,7 +527,7 @@ public static class FunctionDefs
 			parameters = [typeof(float)],
 			function = (args, _) =>
 			{
-				float? item1 = FunctionProcessor.Convert<float>(args![0]);
+				Optional<float> item1 = FunctionProcessor.Convert<float>(args![0]);
 
 				if (!item1.HasValue)
 				{

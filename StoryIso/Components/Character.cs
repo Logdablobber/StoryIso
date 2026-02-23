@@ -21,13 +21,15 @@ public class Character
 			moving = value;
 		}
 	}
-	public bool Visible;
+	public string Room;
 
-	public Character(string name, Direction start_direction, bool visibility)
+	public bool? Visible = null;
+
+	public Character(string name, Direction start_direction, string room)
 	{
 		Name = name;
 		Direction = start_direction;
 		Movement = null;
-		Visible = visibility;
+		Room = room;
 	}
 }

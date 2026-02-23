@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using StoryIso.Misc;
 
 namespace StoryIso.Functions;
 
@@ -24,20 +25,20 @@ public struct ArrayParameter<T> where T : notnull
 
 		for (int i = 0; i < values.Length; i++)
 		{
-			T? value = values[i].Value;
+			Optional<T> value = values[i].Value;
 
-			if (value == null)
+			if (!value.HasValue)
 			{
 				return null;
 			}
 
-			res[i] = value;
+			res[i] = value.Value;
 		} 
 
 		return res;
 	}
 
-	public readonly T? Get(int index)
+	public readonly Optional<T> Get(int index)
 	{
 		return values[index].Value;
 	}

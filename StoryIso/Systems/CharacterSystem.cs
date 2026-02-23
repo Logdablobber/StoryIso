@@ -19,16 +19,23 @@ public class CharacterSystem : EntityUpdateSystem
 	private ComponentMapper<Transform2> _transformMapper = null!;
 	private ComponentMapper<Animation> _animationMapper = null!;
 	private ComponentMapper<Texture2D> _texture2DMapper = null!;
+	private ComponentMapper<RenderAttributes> _renderAttributesMapper = null!;
 
 	static readonly Dictionary<string, Movement> _movements = [];
 	static readonly Dictionary<string, bool> _visibilityChanges = [];
 	static readonly Dictionary<string, RelativeVector2> _positionChanges = [];
 	static readonly Dictionary<string, Direction> _directionChanges = [];
+	static readonly Dictionary<string, string> _roomChanges = [];
+	static readonly System.Threading.Lock _movementLock = new();
+	static readonly System.Threading.Lock _visibilityChangesLock = new();
+	static readonly System.Threading.Lock _positionChangesLock = new();
+	static readonly System.Threading.Lock _directionChangesLock = new();
+	static readonly System.Threading.Lock _roomChangesLock = new();
 
 	const float DEFAULT_MOVEMENT_SPEED = 100f;
 	const float MOVEMENT_THRESHOLD = 1f;
 
-	public CharacterSystem() : base(Aspect.All(typeof(Character), typeof(Transform2)).One(typeof(Animation), typeof(Texture2D))) { }
+	public CharacterSystem() : base(Aspect.All(typeof(Character), typeof(Transform2), typeof(RenderAttributes)).One(typeof(Animation), typeof(Texture2D))) { }
 
 	public override void Update(GameTime gameTime)
 	{
@@ -38,30 +45,54 @@ public class CharacterSystem : EntityUpdateSystem
 		{
 			var character = _characterMapper.Get(entityId);
 			var transform = _transformMapper.Get(entityId);
+			var render_attributes = _renderAttributesMapper.Get(entityId);
 
-			if (_visibilityChanges.TryGetValue(character.Name, out var visibility))
+			lock (_roomChangesLock)
 			{
-				character.Visible = visibility;
-				_visibilityChanges.Remove(character.Name);
+				if (_roomChanges.TryGetValue(character.Name, out var new_room))
+				{
+					character.Room = new_room;
+					_roomChanges.Remove(character.Name);
+				}
 			}
 
-			if (_positionChanges.TryGetValue(character.Name, out var position))
+			lock (_visibilityChangesLock)
 			{
-				transform.Position = position.ToAbsolute(transform.Position);
-				_positionChanges.Remove(character.Name);
+				if (_visibilityChanges.TryGetValue(character.Name, out var visibility))
+				{
+					character.Visible = visibility;
+					_visibilityChanges.Remove(character.Name);
+				}
 			}
 
-			if (_movements.TryGetValue(character.Name, out var move))
+			lock (_positionChangesLock)
 			{
-				character.Movement = move.ToAbsolute(transform.Position);
-				_movements.Remove(character.Name);
+				if (_positionChanges.TryGetValue(character.Name, out var position))
+				{
+					transform.Position = position.ToAbsolute(transform.Position);
+					_positionChanges.Remove(character.Name);
+				}
 			}
 
-			if (_directionChanges.TryGetValue(character.Name, out var direction))
+			lock (_movementLock)
 			{
-				character.Direction = direction;
-				_directionChanges.Remove(character.Name);
+				if (_movements.TryGetValue(character.Name, out var move))
+				{
+					character.Movement = move.ToAbsolute(transform.Position);
+					_movements.Remove(character.Name);
+				}
 			}
+
+			lock (_directionChangesLock)
+			{
+				if (_directionChanges.TryGetValue(character.Name, out var direction))
+				{
+					character.Direction = direction;
+					_directionChanges.Remove(character.Name);
+				}
+			}
+
+			render_attributes.Visible = (character.Visible ?? true) && (character.Room == "#any#" || character.Room == Game1.tiledManager.currentRoomName);
 
 			UpdateAnimation(entityId);
 
@@ -113,13 +144,15 @@ public class CharacterSystem : EntityUpdateSystem
 			return;
 		}
 
-		var character = _characterMapper.Get(entityId);
+		var render_attributes = _renderAttributesMapper.Get(entityId);
 
-		if (!character.Visible)
+		if (!render_attributes.Visible)
 		{
 			return;
 		}
 
+		var character = _characterMapper.Get(entityId);
+		
 		if (character.Moving)
 		{
 			switch (character.Direction)
@@ -176,11 +209,15 @@ public class CharacterSystem : EntityUpdateSystem
 		_transformMapper = mapperService.GetMapper<Transform2>();
 		_animationMapper = mapperService.GetMapper<Animation>();
 		_texture2DMapper = mapperService.GetMapper<Texture2D>();
+		_renderAttributesMapper = mapperService.GetMapper<RenderAttributes>();
 	}
 
 	public static void SetCharacterPosition(string character, RelativeVector2 position)
 	{
-		_positionChanges[character.Trim('"')] = position;
+		lock (_positionChangesLock)
+		{
+			_positionChanges[character.Trim('"')] = position;
+		}
 	}
 
 	public static void SetPlayerPosition(RelativeVector2 position)
@@ -190,7 +227,10 @@ public class CharacterSystem : EntityUpdateSystem
 
 	public static void SetCharacterVisibility(string character, bool visibility)
 	{
-		_visibilityChanges[character.Trim('"')] = visibility;
+		lock (_visibilityChangesLock)
+		{
+			_visibilityChanges[character.Trim('"')] = visibility;
+		}
 	}
 
 	public static void SetPlayerVisibility(bool visibility)
@@ -200,7 +240,10 @@ public class CharacterSystem : EntityUpdateSystem
 
 	public static void MoveCharacter(string character, Movement movement)
 	{
-		_movements[character.Trim('"')] = movement;
+		lock (_movementLock)
+		{
+			_movements[character.Trim('"')] = movement;
+		}
 	}
 
 	public static void MovePlayer(Movement movement)
@@ -210,11 +253,22 @@ public class CharacterSystem : EntityUpdateSystem
 
 	public static void SetCharacterDirection(string character, Direction direction)
 	{
-		_directionChanges[character.Trim('"')] = direction;
+		lock (_directionChangesLock)
+		{
+			_directionChanges[character.Trim('"')] = direction;
+		}
 	}
 
 	public static void SetPlayerDirection(Direction direction)
 	{
 		SetCharacterDirection("Player", direction);
+	}
+
+	public static void SetCharacterRoom(string character, string room)
+	{
+		lock (_roomChangesLock)
+		{
+			_roomChanges[character.Trim('"')] = room;
+		}
 	}
 }

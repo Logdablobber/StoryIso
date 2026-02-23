@@ -80,6 +80,14 @@ public static partial class ParameterProcessor
 
 	public static FunctionParameter<T>? ParseEquation<T>(string value, Source source, string function) where T : notnull, IParsable<T>
 	{
+		if (typeof(T) == typeof(float) || typeof(T) == typeof(int))
+		{
+			if (FloatRegex.IsMatch(value))
+			{
+				return ParseParameterVariable<T>(value, source, function);
+			}
+		}
+
 		if (OperatorDefs.OperatorRegex == null)
 		{
 			throw new NullReferenceException("Operator regex is null :(");
@@ -126,26 +134,10 @@ public static partial class ParameterProcessor
 
 	public static (object, Type)? ProcessUnknownParameter(string value, Source source, string function)
 	{
-		if (OperatorDefs.OperatorRegex == null)
-		{
-			throw new NullReferenceException("Operator Regex is null :(");
-		}
-
-		if (OperatorDefs.OperatorRegex.IsMatch(value))
-		{
-			var equation = ParseEquation<string>(value, source, function);
-
-			if (!equation.HasValue)
-			{
-				return null;
-			}
-
-			return (equation.Value, typeof(PostfixEquation<string>));
-		}
 
 		if (StringRegex.IsMatch(value))
 		{
-			return (new FunctionParameter<string>(value: value), typeof(string));
+			return (new FunctionParameter<string>(value: value), typeof(FunctionParameter<string>));
 		}
 
 		if (FloatRegex.IsMatch(value))
@@ -157,7 +149,7 @@ public static partial class ParameterProcessor
 				return null;
 			}
 
-			return (parameter.Value, typeof(float));
+			return (parameter.Value, typeof(FunctionParameter<float>));
 		}
 
 		if (BoolRegex.IsMatch(value))
@@ -169,10 +161,10 @@ public static partial class ParameterProcessor
 				return null;
 			}
 
-			return (parameter.Value, typeof(bool));
+			return (parameter.Value, typeof(FunctionParameter<bool>));
 		}
 
-		if (VariableManager.ContainsVariable(value, out VariableType type, out _))
+		if (VariableManager.ContainsVariable(value, out VariableType type))
 		{
 			switch (type)
 			{
@@ -191,6 +183,23 @@ public static partial class ParameterProcessor
 				default:
 					break;
 			}
+		}
+
+		if (OperatorDefs.OperatorRegex == null)
+		{
+			throw new NullReferenceException("Operator Regex is null :(");
+		}
+
+		if (OperatorDefs.OperatorRegex.IsMatch(value))
+		{
+			var equation = ParseEquation<string>(value, source, function);
+
+			if (!equation.HasValue)
+			{
+				return null;
+			}
+
+			return (equation.Value, typeof(FunctionParameter<string>));
 		}
 
 		DebugConsole.Raise(new ParameterTypeError(source, function, value, "n\\a", "Unable to parse down to type or variable"));
@@ -232,6 +241,7 @@ public static partial class ParameterProcessor
 					if (StringRegex.IsMatch(inputs[j].Trim()))
 					{
 						args.Add(new FunctionParameter<string>(value: inputs[j].Trim()));
+						break;
 					}
 
 					var string_param = ParseEquation<string>(inputs[j], source, function_name);

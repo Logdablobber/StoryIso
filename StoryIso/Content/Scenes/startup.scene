@@ -1,22 +1,51 @@
 #startup
-.DefineVar string, testvar, "Hello, World!"
-.DefineVar int, testint, 12 + 3 * 2
-.Print testvar
-.SetVar testvar, "New testvar!"
-.Print testvar
-#IF ("Hello, World!" == "Hello, World!") && ((2 + 2) ^ 2 != 16)
-	.Print "It worked!"
-#ELIF (1 != 1)
-	.Print "The second one worked..."
-#ELIF true
-	.Print "The third worked"
+.DefineVar int, testInt, 12 + 3 * 2
+.DefineVar bool, testSuccess, true
+
+.DefineVar string, testString, "Starting tests!"
+.Print testString
+
+.SetVar testString, "String variable setting & retrieval successful!"
+#IF !(testString == "String variable setting & retrieval successful!") 
+	.Print "Variable Setting Failed"
+	.SetVar testSuccess, false
 #ELSE
-	.Print "The Fourth Worked"
+	.Print testString
 #ENDIF
 
-#IF testint == 72
-	.Print "MATH WORKS!!!"
+#IF !("Hello, World!" == "Hello, World!")
+	.Print "String Equality Failed"
+	.SetVar testSuccess, false
 #ENDIF
 
-.Print "This is the end"
-// dsafdsaf
+#IF !((3 + 3) ^ 3 != 16)
+	.Print "Math or Int Inequalities Failed"
+	.SetVar testSuccess, false
+#ENDIF
+
+#IF (1 != 1)
+	.Print "Inequalities Failed"
+	.SetVar testSuccess, false
+#ENDIF
+
+#IF false
+	.Print "Boolean Logic Failed"
+	.SetVar testSuccess, false
+#ENDIF
+
+#IF !true
+	.Print "Negation Failed"
+	.SetVar testSuccess, false
+#ENDIF
+
+#IF testInt != 18
+	.Print "Variable retrieval failed"
+	.SetVar testSuccess, false
+#ENDIF
+
+#IF testSuccess
+	.Print "All tests successful!"
+#ENDIF
+
+.Print "End of tests"
+// comment example

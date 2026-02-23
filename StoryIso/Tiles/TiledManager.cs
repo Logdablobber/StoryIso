@@ -21,7 +21,7 @@ public class TiledManager
 {
 	private Dictionary<string, TilemapRoom>? _rooms;
 
-	private string? currentRoomName;
+	public string? currentRoomName;
 	public TilemapRoom currentRoom
 	{
 		get
@@ -41,6 +41,9 @@ public class TiledManager
 	private bool refresh_map = false;
 
 	private readonly TiledMapRenderer _tiledMapRenderer;
+
+	private readonly System.Threading.Lock _mapLoadLock = new();
+	private readonly System.Threading.Lock _refreshMapLock = new();
 
 	public TiledManager(GraphicsDevice graphics, ContentManager content, string start_room)
 	{
@@ -75,7 +78,10 @@ public class TiledManager
 
 	public void LoadMapThread(string map_name)
 	{
-		map_to_load = map_name;
+		lock (_mapLoadLock)
+		{
+			map_to_load = map_name;
+		}
 	}
 
 	public void LoadMap(string map_name)
@@ -94,13 +100,19 @@ public class TiledManager
 
 	private void CheckLoadMap()
 	{
-		if (map_to_load == null)
+		string new_map;
+		lock (_mapLoadLock)
 		{
-			return;
+			if (map_to_load == null)
+			{
+				return;
+			}
+
+			new_map = map_to_load;
+			map_to_load = null;
 		}
 
-		LoadMap(map_to_load);
-		map_to_load = null;
+		LoadMap(new_map);
 	}
 
 	public void RefreshMap()
@@ -110,14 +122,22 @@ public class TiledManager
 
 	public void RefreshMapThread()
 	{
-		refresh_map = true;
+		lock (_refreshMapLock)
+		{
+			refresh_map = true;
+		}
 	}
 
 	private void CheckRefreshMap()
 	{
-		if (!refresh_map)
+		lock (_refreshMapLock)
 		{
-			return;
+			if (!refresh_map)
+			{
+				return;
+			}
+
+			refresh_map = false;
 		}
 
 		RefreshMap();
@@ -306,8 +326,6 @@ public class TiledManager
 		return new TilemapRoom(map, layer_indices, collision_rectangles, interaction_tiles, triggers);
 	}
 
-	
-
 	public Vector2 TilePosToWorldPos(Point tile)
 	{
 		return TilePosToWorldPos(tile.X, tile.Y);
@@ -330,15 +348,15 @@ public class TiledManager
 
 	public RelativeVector2 TilePosToWorldPos(RelativeVariable<FunctionParameter<int>> x, RelativeVariable<FunctionParameter<int>> y)
 	{
-		int? x_value = x.Value.Value;
-		int? y_value = y.Value.Value;
+		Optional<int> x_value = x.Value.Value;
+		Optional<int> y_value = y.Value.Value;
 
 		if (!x_value.HasValue || !y_value.HasValue)
 		{
 			return new RelativeVector2(new RelativeVariable<float>(0, x.Relative), new RelativeVariable<float>(0, y.Relative));
 		}
 
-		return new RelativeVector2(new RelativeVariable<float>(x.Value.Value * currentRoom.map.TileWidth, x.Relative), new RelativeVariable<float>(y.Value.Value * currentRoom.map.TileHeight, y.Relative));
+		return new RelativeVector2(new RelativeVariable<float>(x_value.Value * currentRoom.map.TileWidth, x.Relative), new RelativeVariable<float>(y_value.Value * currentRoom.map.TileHeight, y.Relative));
 	}
 
 	public Point WorldPosToTilePos(Point point)

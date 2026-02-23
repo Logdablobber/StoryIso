@@ -8,12 +8,37 @@ namespace StoryIso.Tiled;
 
 public class TilemapRoom
 {
-	public TiledMap map;
+	private TiledMap _map;
+	public TiledMap map
+	{
+		get
+		{
+			lock (_mapLock)
+			{
+				return _map;
+			}
+		}
+	}
 	public LayerIndices layerIndices;
-	private Dictionary<string, Collider> _collisionRectangles;
+	
 	public List<InteractionTile> interactionTiles;
-	public List<Trigger> triggers;
-	public List<Collider> Colliders { get { return _collisionRectangles.Values.ToList(); } }
+
+	public List<Trigger> Triggers;
+
+	private Dictionary<string, Collider> _collisionRectangles;
+	public List<Collider> Colliders 
+	{ 
+		get 
+		{ 
+			lock (_colliderLock)
+			{
+				return _collisionRectangles.Values.ToList(); 
+			}
+		} 
+	}
+
+	private readonly System.Threading.Lock _colliderLock = new();
+	private readonly System.Threading.Lock _mapLock = new();
 
 	public TilemapRoom(TiledMap map, 
 						LayerIndices layer_indices, 
@@ -21,11 +46,11 @@ public class TilemapRoom
 						List<InteractionTile> interaction_tiles,
 						List<Trigger> triggers)
 	{
-		this.map = map;
+		_map = map;
 		layerIndices = layer_indices;
 		_collisionRectangles = collision_rectangles;
 		interactionTiles = interaction_tiles;
-		this.triggers = triggers;
+		Triggers = triggers;
 	}
 
 	public void SetTile(ushort x, ushort y, uint guid, TileLayerType layer)
@@ -38,7 +63,10 @@ public class TilemapRoom
 					return;
 				}
 
-				map.TileLayers[layerIndices.floorTileLayerIndex.Value].SetTile(x, y, guid);
+				lock (_mapLock)
+				{
+					map.TileLayers[layerIndices.floorTileLayerIndex.Value].SetTile(x, y, guid);
+				}
 				break;
 
 			case TileLayerType.WallLayer:
@@ -47,7 +75,10 @@ public class TilemapRoom
 					return;
 				}
 				
-				map.TileLayers[layerIndices.wallTileLayerIndex.Value].SetTile(x, y, guid);
+				lock (_mapLock)
+				{
+					map.TileLayers[layerIndices.wallTileLayerIndex.Value].SetTile(x, y, guid);
+				}
 				break;
 
 			case TileLayerType.InteractionLayer:
@@ -56,7 +87,10 @@ public class TilemapRoom
 					return;
 				}
 
-				map.TileLayers[layerIndices.interactionTileLayerIndex.Value].SetTile(x, y, guid);
+				lock (_mapLock)
+				{
+					map.TileLayers[layerIndices.interactionTileLayerIndex.Value].SetTile(x, y, guid);
+				}
 				break;
 
 			default:
@@ -74,25 +108,31 @@ public class TilemapRoom
 	// but I'll probably be confused by it later anyways :\
 	public void ToggleCollider(string name, Source source)
 	{
-		if (_collisionRectangles.TryGetValue(name, out Collider? col))
+		lock (_colliderLock)
 		{
-			col.ToggleEnabled();
-		}
-		else
-		{
-			DebugConsole.Raise(new UnknownColliderError(source, "ToggleCollider", name));
+			if (_collisionRectangles.TryGetValue(name, out Collider? col))
+			{
+				col.ToggleEnabled();
+			}
+			else
+			{
+				DebugConsole.Raise(new UnknownColliderError(source, "ToggleCollider", name));
+			}
 		}
 	}
 
 	public void SetCollider(string name, bool enabled, Source source)
 	{
-		if (_collisionRectangles.TryGetValue(name, out Collider? col))
+		lock (_colliderLock)
 		{
-			col.SetEnabled(enabled);
-		}
-		else
-		{
-			DebugConsole.Raise(new UnknownColliderError(source, "SetCollider", name));
+			if (_collisionRectangles.TryGetValue(name, out Collider? col))
+			{
+				col.SetEnabled(enabled);
+			}
+			else
+			{
+				DebugConsole.Raise(new UnknownColliderError(source, "SetCollider", name));
+			}
 		}
 	}
 }

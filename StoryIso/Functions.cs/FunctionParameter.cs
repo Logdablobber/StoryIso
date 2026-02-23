@@ -9,38 +9,61 @@ public struct FunctionParameter<T> where T : notnull
 	private readonly T? _value;
 	private readonly string? _variableName;
 	private readonly PostfixEquation<T>? _postfixEquation;
-	public readonly T? Value 
+	private readonly ReturnType _returnType;
+	public readonly Optional<T> Value 
 	{ 
 		get
 		{
-			if (_value != null)
+			switch (_returnType)
 			{
-				return _value;
-			}
-
-			if (_variableName != null)
-			{
-				if (typeof(T) == typeof(object))
-				{
-					if (VariableManager.ContainsVariable(_variableName, out var _, out object? value))
+				case ReturnType.value:
+					if (_value == null)
 					{
-						return (T?)value;
+						return default;
 					}
 
-					return default;
-				}
+					return _value;
 
-				object? variable_value = VariableManager.GetVariable<T>(_variableName, new Source(0, "GetVariable", "VariableManager"));
+				case ReturnType.variable:
+					if (_variableName == null)
+					{
+						return default;
+					}
 
-				return (T?)variable_value;
+					if (typeof(T) == typeof(object))
+					{
+						if (VariableManager.TryGetVariable(_variableName, out var _, out object? value))
+						{
+							if (value == null)
+							{
+								return default;
+							}
+
+							return (T)value;
+						}
+
+						return default;
+					}
+
+					object? variable_value = VariableManager.GetVariable<T>(_variableName, new Source(0, "GetVariable", "VariableManager"));
+
+					if (variable_value == null)
+					{
+						return default;
+					}
+
+					return (T)variable_value;
+
+				case ReturnType.equation:
+					if (_postfixEquation == null || !_postfixEquation.Evaluate(new Source(0, "Evaluate Parameter", ""), out Optional<T> res))
+					{
+						return default;
+					}
+
+					return res;
 			}
 
-			if (_postfixEquation == null || !_postfixEquation.Evaluate(new Source(0, "Evaluate Parameter", ""), out Optional<T> res))
-			{
-				return default;
-			}
-
-			return res.Value;
+			return default;
 		}
 	}
 
@@ -56,6 +79,7 @@ public struct FunctionParameter<T> where T : notnull
 		_value = value;
 		_variableName = null;
 		_postfixEquation = null;
+		_returnType = ReturnType.value;
 	}
 
 	public FunctionParameter(string variable_name)
@@ -63,6 +87,7 @@ public struct FunctionParameter<T> where T : notnull
 		_value = default;
 		_variableName = variable_name;
 		_postfixEquation = null;
+		_returnType = ReturnType.variable;
 	}
 
 	public FunctionParameter(PostfixEquation<T> equation)
@@ -70,10 +95,23 @@ public struct FunctionParameter<T> where T : notnull
 		_value = default;
 		_variableName = null;
 		_postfixEquation = equation;
+		_returnType = ReturnType.equation;
 	}
 
 	public static explicit operator T?(FunctionParameter<T> parameter)
 	{
-		return parameter.Value;
+		if (parameter.Value.HasValue)
+		{
+			return parameter.Value.Value;
+		}
+
+		return default;
 	} 
 }
+
+enum ReturnType
+{
+	value = 1,
+	variable = 2,
+	equation = 3
+} 

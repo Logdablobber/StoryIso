@@ -26,6 +26,7 @@ public enum FunctionType
 	MoveCharacter, // moves a character to a tile, takes in a string for the character name, two floats for the tile x and y, and a float for speed
 	SetCharacterPos, // sets a character's position, takes in a string for the character name and two floats for the tile x and y
 	SetCharacterDirection, // sets a character's direction, takes in a string for the character and the direction as an enum
+	SetCharacterRoom, // sets the room a character is in, takes in a string for the character and a string for the room ('#any#' makes the character render in ALL rooms)
 	Wait, // waits a set amount of time, takes in the amount of time in seconds as a float (DO NOT USE ON SYNCHRONOUS SCRIPTS!!!)
 	UnlockPlayerMovement, // unlocks the player's movement. It is locked by default when a script starts.
 	LockPlayerMovement, // locks a player's movement. It is locked by default when a script starts.

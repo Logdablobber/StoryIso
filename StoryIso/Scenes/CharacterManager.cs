@@ -36,7 +36,8 @@ public static class CharacterManager
 			var new_character = world.CreateEntity();
 			new_character.Attach(animation);
 			new_character.Attach(new Transform2(new Vector2(0, 0), 0, Game1.characterScale));
-			new_character.Attach(new Character(data.name, Direction.Down, false));
+			new_character.Attach(new Character(data.name, Direction.Down, data.room));
+			new_character.Attach(new RenderAttributes(data.visible, Color.White));
 		}
 	}
 }

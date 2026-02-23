@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using Microsoft.Toolkit.HighPerformance;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -29,6 +30,11 @@ public class PlayerSystem : EntityProcessingSystem
 	private static float? _newPlayerY = null;
 	private static Vector2? _deltaPlayerPosition = null;
 	private static Vector2 _playerVelocity = Vector2.Zero;
+	private static readonly System.Threading.Lock _positionLock = new();
+	private static readonly System.Threading.Lock _xLock = new();
+	private static readonly System.Threading.Lock _yLock = new();
+	private static readonly System.Threading.Lock _deltaPositionLock = new();
+	private static readonly System.Threading.Lock _velocityLock = new();
 
 	private bool _collidingUp = false;
 
@@ -43,67 +49,6 @@ public class PlayerSystem : EntityProcessingSystem
 		_animationMapper = mapperService.GetMapper<Animation>();
 	}
 
-	private void UpdateAnimation(int entityId)
-	{
-		var animation = _animationMapper.Get(entityId);
-
-		if (animation == null)
-		{
-			return;
-		}
-
-		var character = _characterMapper.Get(entityId);
-
-		if (character.Moving) 
-		{
-			switch (character.Direction)
-			{
-				case Direction.Up:
-					animation.SetAnimation("Walking Up");
-					break;
-
-				case Direction.Down:
-					animation.SetAnimation("Walking Down");
-					break;
-
-				case Direction.Left:
-					animation.SetAnimation("Walking Left");
-					break;
-				
-				case Direction.Right:
-					animation.SetAnimation("Walking Right");
-					break;
-
-				default:
-					break;
-			}
-		}
-		else
-		{
-			switch (character.Direction)
-			{
-				case Direction.Up:
-					animation.SetAnimation("Standing Up");
-					break;
-				
-				case Direction.Down:
-					animation.SetAnimation("Standing Down");
-					break;
-
-				case Direction.Left:
-					animation.SetAnimation("Standing Left");
-					break;
-
-				case Direction.Right:
-					animation.SetAnimation("Standing Right");
-					break;
-
-				default:
-					break;
-			}
-		}
-	}
-
 	public override void Process(GameTime gameTime, int entityId)
 	{
 		var player = _playerMapper.Get(entityId);
@@ -114,34 +59,49 @@ public class PlayerSystem : EntityProcessingSystem
 
 		float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-		if (_playerVelocity != Vector2.Zero)
+		lock (_velocityLock)
 		{
-			transform.Position += _playerVelocity * deltaTime;
-			_playerVelocity = Vector2.Zero;
+			if (_playerVelocity != Vector2.Zero)
+			{
+				transform.Position += _playerVelocity * deltaTime;
+				_playerVelocity = Vector2.Zero;
+			}
 		}
 
-		if (_deltaPlayerPosition.HasValue)
+		lock (_deltaPositionLock)
 		{
-			transform.Position += _deltaPlayerPosition.Value;
-			_deltaPlayerPosition = null;
+			if (_deltaPlayerPosition.HasValue)
+			{
+				transform.Position += _deltaPlayerPosition.Value;
+				_deltaPlayerPosition = null;
+			}
 		}
 
-		if (_newPlayerPosition.HasValue)
+		lock (_positionLock)
 		{
-			transform.Position = _newPlayerPosition.Value;
-			_newPlayerPosition = null;
+			if (_newPlayerPosition.HasValue)
+			{
+				transform.Position = _newPlayerPosition.Value;
+				_newPlayerPosition = null;
+			}
 		}
 
-		if (_newPlayerX.HasValue)
+		lock (_xLock)
 		{
-			transform.Position = new Vector2(_newPlayerX.Value,  transform.Position.Y);
-			_newPlayerX = null;
+			if (_newPlayerX.HasValue)
+			{
+				transform.Position = new Vector2(_newPlayerX.Value,  transform.Position.Y);
+				_newPlayerX = null;
+			}
 		}
 
-		if (_newPlayerY.HasValue)
+		lock (_yLock)
 		{
-			transform.Position = new Vector2(transform.Position.X, _newPlayerY.Value);
-			_newPlayerY = null;
+			if (_newPlayerY.HasValue)
+			{
+				transform.Position = new Vector2(transform.Position.X, _newPlayerY.Value);
+				_newPlayerY = null;
+			}
 		}
 
 		var keystate = Keyboard.GetState();
@@ -209,7 +169,7 @@ public class PlayerSystem : EntityProcessingSystem
 				player_hitbox = new Rectangle(transform.Position.ToPoint(), (animation.GetFrame().Bounds.Size.ToVector2() * transform.Scale).ToPoint());
 			}
 
-			foreach (var trigger in Game1.tiledManager.currentRoom.triggers)
+			foreach (var trigger in Game1.tiledManager.currentRoom.Triggers)
 			{
 				trigger.CheckCollision(gameTime, player_hitbox);
 			}
@@ -223,17 +183,26 @@ public class PlayerSystem : EntityProcessingSystem
 
 	public static void SetPlayerPosition(Vector2 new_position)
 	{
-		_newPlayerPosition = new_position;
+		lock (_positionLock)
+		{
+			_newPlayerPosition = new_position;
+		}
 	}
 
 	public static void SetPlayerX(float new_x)
 	{
-		_newPlayerX = new_x;
+		lock (_xLock)
+		{
+			_newPlayerX = new_x;
+		}
 	}
 
 	public static void SetPlayerY(float new_y)
 	{
-		_newPlayerY = new_y;
+		lock (_yLock)
+		{
+			_newPlayerY = new_y;
+		}
 	}
 
 	public static void SetPlayerPosition((RelativeVariable<float>, RelativeVariable<float>) position)
@@ -263,12 +232,18 @@ public class PlayerSystem : EntityProcessingSystem
 
 	public static void MovePlayer(Vector2 delta_position)
 	{
-		_deltaPlayerPosition = delta_position;
+		lock (_deltaPositionLock)
+		{
+			_deltaPlayerPosition = delta_position;
+		}
 	}
 
 	public static void ApplyVelocity(Vector2 velocity)
 	{
-		_playerVelocity += velocity;
+		lock (_velocityLock)
+		{
+			_playerVelocity += velocity;
+		}
 	}
 
 	private void Move(int entityId, Vector2 movement)
@@ -281,9 +256,9 @@ public class PlayerSystem : EntityProcessingSystem
 		const int LEVELOFDETAIL = 5; // how many rays to shoot out from each side (must be > 1!!)
 		const float PADDING = 0.1f; // ray padding
 
-		var transform = _transformMapper!.Get(entityId);
-		var texture = _textureMapper!.Get(entityId);
-		var animation = _animationMapper!.Get(entityId);
+		var transform = _transformMapper.Get(entityId);
+		var texture = _textureMapper.Get(entityId);
+		var animation = _animationMapper.Get(entityId);
 
 		Point size = texture != null ? texture.Bounds.Size : animation.GetFrame().Bounds.Size;
 
