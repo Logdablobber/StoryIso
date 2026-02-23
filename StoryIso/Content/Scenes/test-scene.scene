@@ -9,3 +9,8 @@
 .UnlockPlayerMovement
 .Wait 2
 .SetCharacterDirection "test", Left
+.SetAttr "Player", "speed", 300
+.Print "Player is now 3x speed"
+.Wait 3
+.SetAttr "Player", "speed", 100
+.Print "Player is now normal speed"

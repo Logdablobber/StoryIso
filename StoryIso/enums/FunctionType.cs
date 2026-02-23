@@ -30,5 +30,6 @@ public enum FunctionType
 	Wait, // waits a set amount of time, takes in the amount of time in seconds as a float (DO NOT USE ON SYNCHRONOUS SCRIPTS!!!)
 	UnlockPlayerMovement, // unlocks the player's movement. It is locked by default when a script starts.
 	LockPlayerMovement, // locks a player's movement. It is locked by default when a script starts.
+	SetAttr, // sets an attribute, takes in the character's name as a string, the attribute name as a string, and the value
 	None
 }

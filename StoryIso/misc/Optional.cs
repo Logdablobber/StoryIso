@@ -50,4 +50,9 @@ public struct Optional<T>
         else
             return HasValue == other.HasValue;
     }
+
+	public readonly Type GetUnderlyingType()
+	{
+		return typeof(T);
+	}
 }

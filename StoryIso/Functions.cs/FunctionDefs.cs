@@ -501,7 +501,7 @@ public static class FunctionDefs
 				return null;
 			}
 		},
-		new FunctionDef // SetCharacterDirection
+		new FunctionDef // SetCharacterRoom
 		{
 			name = "SetCharacterRoom",
 			type = FunctionType.SetCharacterRoom,
@@ -560,6 +560,26 @@ public static class FunctionDefs
 			{
 				Game1.sceneManager.Active = true;
 
+				return null;
+			}
+		},
+		new FunctionDef // SetAttr
+		{
+			name = "SetAttr",
+			type = FunctionType.SetAttr,
+			parameters = [typeof(string), typeof(string), typeof(VariableObject)],
+			function = (args, source) => 
+			{
+				var item1 = FunctionProcessor.Convert<string>(args![0]);
+				var item2 = FunctionProcessor.Convert<string>(args[1]);
+				var item3 = FunctionProcessor.ConvertUnknown(args[2], out _, out Type type);
+
+				if (!item1.HasValue || !item2.HasValue || item3 == null)
+				{
+					return null;
+				}
+
+				CharacterSystem.SetAttribute(source!, item1.Value, item2.Value, item3, type);
 				return null;
 			}
 		},

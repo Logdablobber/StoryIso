@@ -1,14 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection.Metadata;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
-using StoryIso.Debugging;
-using StoryIso.ECS;
-using StoryIso.Enums;
 using StoryIso.Functions;
 
 namespace StoryIso.Tiled;

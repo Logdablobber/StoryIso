@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AsepriteDotNet;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using MonoGame.Extended.ECS;
 using MonoGame.Extended.ECS.Systems;
+using StoryIso.Debugging;
 using StoryIso.Entities;
 using StoryIso.Enums;
+using StoryIso.Functions;
 using StoryIso.Misc;
 using StoryIso.Scenes;
+using StoryIso.Tiled;
 
 namespace StoryIso.ECS;
 
@@ -26,11 +30,13 @@ public class CharacterSystem : EntityUpdateSystem
 	static readonly Dictionary<string, RelativeVector2> _positionChanges = [];
 	static readonly Dictionary<string, Direction> _directionChanges = [];
 	static readonly Dictionary<string, string> _roomChanges = [];
+	static readonly Dictionary<string, List<(string, object)>> _attributeChanges = [];
 	static readonly System.Threading.Lock _movementLock = new();
 	static readonly System.Threading.Lock _visibilityChangesLock = new();
 	static readonly System.Threading.Lock _positionChangesLock = new();
 	static readonly System.Threading.Lock _directionChangesLock = new();
 	static readonly System.Threading.Lock _roomChangesLock = new();
+	static readonly System.Threading.Lock _attributeChangesLock = new();
 
 	const float DEFAULT_MOVEMENT_SPEED = 100f;
 	const float MOVEMENT_THRESHOLD = 1f;
@@ -46,6 +52,59 @@ public class CharacterSystem : EntityUpdateSystem
 			var character = _characterMapper.Get(entityId);
 			var transform = _transformMapper.Get(entityId);
 			var render_attributes = _renderAttributesMapper.Get(entityId);
+
+			lock (_attributeChangesLock)
+			{
+				if (_attributeChanges.TryGetValue(character.Name, out var attr_changes) && attr_changes.Count > 0)
+				{
+					foreach (var (attr, value) in attr_changes)
+					{
+						switch (attr.ToLower())
+						{
+							case "x":
+								transform.Position.SetX(Game1.tiledManager.TileXToWorldX((float)value));
+								break;
+
+							case "y":
+								transform.Position.SetY(Game1.tiledManager.TileYToWorldY((float)value));
+								break;
+
+							case "room":
+								character.Room = (string)value;
+								break;
+
+							case "visible":
+								character.Visible = (bool)value;
+								break;
+
+							case "direction":
+								var direction = ParameterProcessor.GetDirection((string)value);
+
+								if (direction == Direction.None)
+								{
+									break;
+								}
+
+								character.Direction = direction;
+								break;
+
+							case "speed":
+								if (character.Name != "Player")
+								{
+									break;
+								}
+
+								Game1.player.Get<Player>().Speed = ((Optional<float>)value).Value;
+								break;
+
+							default:
+								throw new NotImplementedException();
+						}
+					}
+
+					_attributeChanges[character.Name].Clear();
+				}
+			}
 
 			lock (_roomChangesLock)
 			{
@@ -269,6 +328,78 @@ public class CharacterSystem : EntityUpdateSystem
 		lock (_roomChangesLock)
 		{
 			_roomChanges[character.Trim('"')] = room;
+		}
+	}
+
+	private static readonly Dictionary<string, Type> _allCharacterAttributes = new() 
+	{
+		{"x", typeof(float)},
+		{"y", typeof(float)},
+		{"direction", typeof(string)},
+		{"visible", typeof(bool)},
+	};
+
+	private static readonly Dictionary<string, Type> _characterOnlyAttributes = new()
+	{
+		{"room", typeof(string)}
+	};
+
+	private static readonly Dictionary<string, Type> _playerOnlyAttributes = new()
+	{
+		{"speed", typeof(float)}
+	};
+
+	private static readonly Dictionary<string, Type> _playerAttributes = _allCharacterAttributes.Union(_playerOnlyAttributes).ToDictionary();
+	private static readonly Dictionary<string, Type> _characterAttributes = _allCharacterAttributes.Union(_characterOnlyAttributes).ToDictionary();
+
+	public static void SetAttribute(Source source, string character, string attribute, object value, Type type)
+	{
+		character = character.Trim('"');
+		attribute = attribute.ToLower().Trim('"');
+
+		var attributes_dict = character == "Player" ? _playerAttributes : _characterAttributes;
+
+		if (attributes_dict.TryGetValue(attribute, out var attr_type))
+		{
+			if (attr_type == type)
+			{
+				SetAttributeChange(character, attribute, value);
+				return;
+			}
+
+			// convert between floats and ints
+			if (attr_type == typeof(int) && type == typeof(float))
+			{
+				SetAttributeChange(character, attribute, (int)(float)value);
+				return;
+			}
+
+			if (attr_type == typeof(float) && type == typeof(int))
+			{
+				SetAttributeChange(character, attribute, (float)(int)value);
+				return;
+			}
+
+			DebugConsole.Raise(new WrongVariableTypeError(source, attribute, attr_type.Name, $"Type of '{type.Name}' was inputted for attribute '{attribute}' of character '{character}'"));
+			return;
+		}
+
+		DebugConsole.Raise(new UnknownVariableError(source, attribute, $"character '{character}' does not have attribute '{attribute}'"));
+	}
+
+	private static void SetAttributeChange(string character, string attribute, object value)
+	{
+		lock (_attributeChangesLock)
+		{
+			if (_attributeChanges.TryGetValue(character, out var attribute_changes))
+			{
+				attribute_changes.Add((attribute, value));
+
+				_attributeChanges[character] = attribute_changes;
+				return;
+			}
+
+			_attributeChanges[character] = [(attribute, value)];
 		}
 	}
 }

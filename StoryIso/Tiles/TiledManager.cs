@@ -369,6 +369,26 @@ public class TiledManager
 		return v2 / new Vector2(currentRoom.map.TileWidth, currentRoom.map.TileHeight);
 	}
 
+	public float WorldXToTileX(float x)
+	{
+		return x / currentRoom.map.TileWidth;
+	}
+
+	public float WorldYToTileY(float y)
+	{
+		return y / currentRoom.map.TileHeight;
+	}
+
+	public float TileXToWorldX(float x)
+	{
+		return x * currentRoom.map.TileWidth;
+	}
+
+	public float TileYToWorldY(float y)
+	{
+		return y * currentRoom.map.TileHeight;
+	}
+
 	public void Draw()
 	{
 		_tiledMapRenderer.Draw(Game1.camera.GetViewMatrix());

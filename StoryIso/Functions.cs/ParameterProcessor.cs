@@ -1,9 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO.Compression;
-using System.Net.Http.Headers;
-using System.Reflection.PortableExecutable;
 using System.Text.RegularExpressions;
 using StoryIso.Debugging;
 using StoryIso.Enums;
@@ -24,7 +20,7 @@ public static partial class ParameterProcessor
 		};
 	}
 
-	private static Direction GetDirection(string name)
+	public static Direction GetDirection(string name)
 	{
 		return name.ToLower() switch
 		{

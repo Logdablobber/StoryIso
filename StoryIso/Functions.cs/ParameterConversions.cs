@@ -15,11 +15,67 @@ public partial class FunctionProcessor
 
 	public static object? ConvertUnknown(object param, out string? string_value, out Type type)
 	{
-		type = param.GetType();
-
-		if (type == typeof(FunctionParameter<string>))
+		if (param is Optional<string> optional_string)
 		{
-			var value = Convert<string>(param);
+			type = typeof(string);
+
+			if (!optional_string.HasValue)
+			{
+				string_value = null;
+				return null;
+			}
+
+			string_value = optional_string.Value;
+			return new Optional<string>(string_value);
+		}
+
+		if (param is Optional<float> optional_float)
+		{
+			type = typeof(float);
+
+			if (!optional_float.HasValue)
+			{
+				string_value = null;
+				return null;
+			}
+
+			string_value = optional_float.Value.ToString();
+			return optional_float;
+		}
+
+		if (param is Optional<int> optional_int)
+		{
+			type = typeof(int);
+
+			if (!optional_int.HasValue)
+			{	
+				string_value = null;
+				return null;
+			}
+
+			string_value = optional_int.Value.ToString();
+
+			return optional_int;
+		}
+
+		if (param is Optional<bool> optional_bool)
+		{
+			type = typeof(bool);
+
+			if (!optional_bool.HasValue)
+			{
+				string_value = null;
+				return null;
+			}
+
+			string_value = optional_bool.Value.ToString();
+			return optional_bool;
+		}
+
+		if (param is FunctionParameter<string> string_param)
+		{
+			type = typeof(string);
+			var value = string_param.Value;
 
 			if (!value.HasValue)
 			{
@@ -31,9 +87,10 @@ public partial class FunctionProcessor
 			return new Optional<string>(string_value);
 		}
 
-		if (type == typeof(FunctionParameter<float>))
-		{
-			Optional<float> value = Convert<float>(param);
+		if (param is FunctionParameter<float> float_param)
+		{	
+			type = typeof(float);
+			Optional<float> value = float_param.Value;
 
 			if (!value.HasValue)
 			{
@@ -45,9 +102,10 @@ public partial class FunctionProcessor
 			return value;
 		}
 
-		if (type == typeof(FunctionParameter<int>))
+		if (param is FunctionParameter<int> int_param)
 		{
-			Optional<int> value = Convert<int>(param);
+			type = typeof(int);
+			Optional<int> value = int_param.Value;
 
 			if (!value.HasValue)
 			{	
@@ -64,70 +122,10 @@ public partial class FunctionProcessor
 			return value;
 		}
 
-		if (type == typeof(FunctionParameter<bool>))
+		if (param is FunctionParameter<bool> bool_param)
 		{
-			Optional<bool> value = Convert<bool>(param);
-
-			if (!value.HasValue)
-			{
-				string_value = null;
-				return null;
-			}
-
-			string_value = value.Value.ToString();
-			return value;
-		}
-
-		if (type == typeof(Optional<string>))
-		{
-			var value = (Optional<string>)param;
-
-			if (!value.HasValue)
-			{
-				string_value = null;
-				return null;
-			}
-
-			string_value = value.Value;
-			return new Optional<string>(string_value);
-		}
-
-		if (type == typeof(Optional<float>))
-		{
-			var value = (Optional<float>)param;
-
-			if (!value.HasValue)
-			{
-				string_value = null;
-				return null;
-			}
-
-			string_value = value.Value.ToString();
-			return value;
-		}
-
-		if (type == typeof(Optional<int>))
-		{
-			var value = (Optional<int>)param;
-
-			if (!value.HasValue)
-			{	
-				string_value = null;
-				return null;
-			}
-
-			string_value = value.Value.ToString();
-			if (string_value == null)
-			{
-				return null;
-			}
-
-			return value;
-		}
-
-		if (type == typeof(Optional<bool>))
-		{
-			var value = (Optional<bool>)param;
+			type = typeof(bool);
+			Optional<bool> value = bool_param.Value;
 
 			if (!value.HasValue)
 			{

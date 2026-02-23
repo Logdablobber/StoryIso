@@ -48,14 +48,14 @@ public static partial class VariableManager
 
 	readonly static Dictionary<string, Func<int>> _readonlyInts = new()
 	{
-		{"playerX", () => (int)Game1.tiledManager.WorldPosToTilePos(Game1.player.Get<Transform2>().Position).X},
-		{"playerY", () => (int)Game1.tiledManager.WorldPosToTilePos(Game1.player.Get<Transform2>().Position).Y}
+		{"playerX", () => (int)Game1.tiledManager.WorldXToTileX(Game1.player.Get<Transform2>().Position.X)},
+		{"playerY", () => (int)Game1.tiledManager.WorldYToTileY(Game1.player.Get<Transform2>().Position.Y)}
 	};
 
 	readonly static Dictionary<string, Func<float>> _readonlyFloats = new()
 	{
-		{"playerX", () => Game1.tiledManager.WorldPosToTilePos(Game1.player.Get<Transform2>().Position).X},
-		{"playerY", () => Game1.tiledManager.WorldPosToTilePos(Game1.player.Get<Transform2>().Position).Y}
+		{"playerX", () => Game1.tiledManager.WorldXToTileX(Game1.player.Get<Transform2>().Position.X)},
+		{"playerY", () => Game1.tiledManager.WorldYToTileY(Game1.player.Get<Transform2>().Position.Y)}
 	};
 
 	readonly static Dictionary<string, Func<string>> _readonlyStrings = new()
@@ -392,10 +392,8 @@ public static partial class VariableManager
 			return default;
 		}
 
-		if (value.GetType() == typeof(Optional<string>))
+		if (value is Optional<string> string_value)
 		{
-			var string_value = (Optional<string>)value;
-
 			if (!string_value.HasValue)
 			{
 				return default;
