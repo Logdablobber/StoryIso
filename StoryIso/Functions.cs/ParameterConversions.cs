@@ -15,129 +15,120 @@ public partial class FunctionProcessor
 
 	public static object? ConvertUnknown(object param, out string? string_value, out Type type)
 	{
-		if (param is Optional<string> optional_string)
+		string_value = null;
+		type = null!;
+
+		switch (param)
 		{
-			type = typeof(string);
+			case Optional<string> optional_string:
+				type = typeof(string);
 
-			if (!optional_string.HasValue)
-			{
-				string_value = null;
-				return null;
-			}
+				if (!optional_string.HasValue)
+				{
+					string_value = null;
+					return null;
+				}
 
-			string_value = optional_string.Value;
-			return new Optional<string>(string_value);
+				string_value = optional_string.Value;
+				return new Optional<string>(string_value);
+
+			case Optional<float> optional_float:
+				type = typeof(float);
+
+				if (!optional_float.HasValue)
+				{
+					string_value = null;
+					return null;
+				}
+
+				string_value = optional_float.Value.ToString();
+				return optional_float;
+
+			case Optional<int> optional_int:
+				type = typeof(int);
+
+				if (!optional_int.HasValue)
+				{	
+					string_value = null;
+					return null;
+				}
+
+				string_value = optional_int.Value.ToString();
+
+				return optional_int;
+
+			case Optional<bool> optional_bool:
+				type = typeof(bool);
+
+				if (!optional_bool.HasValue)
+				{
+					string_value = null;
+					return null;
+				}
+
+				string_value = optional_bool.Value.ToString();
+				return optional_bool;
+
+			case FunctionParameter<string> string_param:
+				type = typeof(string);
+				Optional<string> value = string_param.Value;
+
+				if (!value.HasValue)
+				{
+					string_value = null;
+					return null;
+				}
+
+				string_value = value.Value;
+				return new Optional<string>(string_value);
+
+			case FunctionParameter<float> float_param:
+				type = typeof(float);
+				Optional<float> float_value = float_param.Value;
+
+				if (!float_value.HasValue)
+				{
+					string_value = null;
+					return null;
+				}
+
+				string_value = float_value.Value.ToString();
+				return float_value;
+
+			case FunctionParameter<int> int_param:
+				type = typeof(int);
+				Optional<int> int_value = int_param.Value;
+
+				if (!int_value.HasValue)
+				{	
+					string_value = null;
+					return null;
+				}
+
+				string_value = int_value.Value.ToString();
+				if (string_value == null)
+				{
+					return null;
+				}
+
+				return int_value;
+
+			case FunctionParameter<bool> bool_param:
+				type = typeof(bool);
+				Optional<bool> bool_value = bool_param.Value;
+
+				if (!bool_value.HasValue)
+				{
+					string_value = null;
+					return null;
+				}
+
+				string_value = bool_value.Value.ToString();
+				return bool_value;
+
+			default:
+				throw new NotImplementedException();
 		}
-
-		if (param is Optional<float> optional_float)
-		{
-			type = typeof(float);
-
-			if (!optional_float.HasValue)
-			{
-				string_value = null;
-				return null;
-			}
-
-			string_value = optional_float.Value.ToString();
-			return optional_float;
-		}
-
-		if (param is Optional<int> optional_int)
-		{
-			type = typeof(int);
-
-			if (!optional_int.HasValue)
-			{	
-				string_value = null;
-				return null;
-			}
-
-			string_value = optional_int.Value.ToString();
-
-			return optional_int;
-		}
-
-		if (param is Optional<bool> optional_bool)
-		{
-			type = typeof(bool);
-
-			if (!optional_bool.HasValue)
-			{
-				string_value = null;
-				return null;
-			}
-
-			string_value = optional_bool.Value.ToString();
-			return optional_bool;
-		}
-
-		if (param is FunctionParameter<string> string_param)
-		{
-			type = typeof(string);
-			var value = string_param.Value;
-
-			if (!value.HasValue)
-			{
-				string_value = null;
-				return null;
-			}
-
-			string_value = value.Value;
-			return new Optional<string>(string_value);
-		}
-
-		if (param is FunctionParameter<float> float_param)
-		{	
-			type = typeof(float);
-			Optional<float> value = float_param.Value;
-
-			if (!value.HasValue)
-			{
-				string_value = null;
-				return null;
-			}
-
-			string_value = value.Value.ToString();
-			return value;
-		}
-
-		if (param is FunctionParameter<int> int_param)
-		{
-			type = typeof(int);
-			Optional<int> value = int_param.Value;
-
-			if (!value.HasValue)
-			{	
-				string_value = null;
-				return null;
-			}
-
-			string_value = value.Value.ToString();
-			if (string_value == null)
-			{
-				return null;
-			}
-
-			return value;
-		}
-
-		if (param is FunctionParameter<bool> bool_param)
-		{
-			type = typeof(bool);
-			Optional<bool> value = bool_param.Value;
-
-			if (!value.HasValue)
-			{
-				string_value = null;
-				return null;
-			}
-
-			string_value = value.Value.ToString();
-			return value;
-		}
-
-		throw new NotImplementedException();
 	}
 
 	public static object? ConvertUnknown(object param, out string? string_value)

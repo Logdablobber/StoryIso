@@ -54,6 +54,7 @@ public class TiledManager
 
 	private void LoadMaps(ContentManager content)
 	{
+		// TODO: Make this load from a stream rather than using content pipeline
 		_rooms = new Dictionary<string, TilemapRoom>();
 
 		string[] files = Directory.GetFiles("Content/Tiled/Maps/", "*.xnb");
