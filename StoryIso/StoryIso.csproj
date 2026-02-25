@@ -27,6 +27,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DotTiled" Version="1.0.0" />
     <PackageReference Include="MonoGame.Aseprite" Version="6.3.0" />
     <PackageReference Include="MonoGame.Extended" Version="4.0.0" />
     <PackageReference Include="MonoGame.Extended.Content.Pipeline" Version="4.0.0" />

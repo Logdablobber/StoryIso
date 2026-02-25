@@ -165,7 +165,7 @@ public static class FunctionDefs
 					return null;
 				}
 			
-				Game1.tiledManager.currentRoom.SetTile(x.Value, y.Value, guid.Value, layer_type.Value);
+				Game1.tiledManager.currentRoom?.SetTile(x.Value, y.Value, guid.Value, layer_type.Value);
 				return null;
 			}
 		},
@@ -188,7 +188,7 @@ public static class FunctionDefs
 			
 				for (int i = 0; i < item4.Length; i++)
 				{
-					Game1.tiledManager.currentRoom.SetTile((ushort)(item2.Value + i), item3.Value, item4[i], item1.Value);
+					Game1.tiledManager.currentRoom?.SetTile((ushort)(item2.Value + i), item3.Value, item4[i], item1.Value);
 				}
 				
 				return null;
@@ -213,7 +213,7 @@ public static class FunctionDefs
 			
 				for (int i = 0; i < item4.Length; i++)
 				{
-					Game1.tiledManager.currentRoom.SetTile(item2.Value, (ushort)(item3.Value + i), item4[i], item1.Value);
+					Game1.tiledManager.currentRoom?.SetTile(item2.Value, (ushort)(item3.Value + i), item4[i], item1.Value);
 				}
 				
 				return null;
@@ -235,7 +235,7 @@ public static class FunctionDefs
 					return null;
 				}
 			
-				Game1.tiledManager.currentRoom.SetTile(x.Value, y.Value, 0, layer_type.Value);
+				Game1.tiledManager.currentRoom?.SetTile(x.Value, y.Value, 0, layer_type.Value);
 				return null;
 			}
 		},
@@ -253,7 +253,7 @@ public static class FunctionDefs
 					return null;
 				}
 
-				Game1.tiledManager.currentRoom.ToggleCollider(collider_name.Value[1..^1], source!);
+				Game1.tiledManager.currentRoom?.ToggleCollider(collider_name.Value[1..^1], source!);
 				return null;
 			}
 		},
@@ -272,21 +272,10 @@ public static class FunctionDefs
 					return null;
 				}
 
-				Game1.tiledManager.currentRoom.SetCollider(collider_name.Value[1..^1], state.Value, source!);
+				Game1.tiledManager.currentRoom?.SetCollider(collider_name.Value[1..^1], state.Value, source!);
 				return null;
 			}
-		},
-		new FunctionDef // RefreshMap 
-		{
-			name = "RefreshMap",
-			type = FunctionType.RefreshMap,
-			parameters = [],
-			function = (_, _) => 
-			{
-				Game1.tiledManager.RefreshMapThread();
-				return null;
-			}
-		},
+		}, 
 		new FunctionDef // RunDialogue 
 		{
 			name = "RunDialogue",

@@ -9,7 +9,7 @@ namespace StoryIso.Tiled;
 
 public class Trigger
 {
-	public int id;
+	public uint id;
 	const float TRIGGERALPHA = 0.40f;
 	private Color _debugColor;
 
@@ -21,7 +21,7 @@ public class Trigger
 	private readonly List<Function>? _onExit;
 	private readonly List<Function>? _onStay;
 
-	public Trigger(int id, Rectangle hitbox, List<Function>? onEnter, List<Function>? onExit, List<Function>? onStay, Color color)
+	public Trigger(uint id, Rectangle hitbox, List<Function>? onEnter, List<Function>? onExit, List<Function>? onStay, Color color)
 	{
 		this.id = id;
 		triggerHitbox = hitbox;

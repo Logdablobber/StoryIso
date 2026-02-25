@@ -127,17 +127,14 @@
 /build:Textures/name-box.png
 
 #begin Tiled/Maps/test-tilemap.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
-/build:Tiled/Maps/test-tilemap.tmx
+/copy:Tiled/Maps/test-tilemap.tmx
 
 #begin Tiled/Maps/test-tilemap2.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
-/build:Tiled/Maps/test-tilemap2.tmx
+/copy:Tiled/Maps/test-tilemap2.tmx
+
+#begin Tiled/Tiles/tiles.png
+/copy:Tiled/Tiles/tiles.png
 
 #begin Tiled/tileset-atlas.tsx
-/importer:TiledMapTilesetImporter
-/processor:TiledMapTilesetProcessor
-/build:Tiled/tileset-atlas.tsx
+/copy:Tiled/tileset-atlas.tsx
 

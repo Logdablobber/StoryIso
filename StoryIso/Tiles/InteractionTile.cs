@@ -13,7 +13,7 @@ namespace StoryIso.Tiled;
 
 public class InteractionTile
 {
-	public int id;
+	public uint id;
 	Rectangle interactionHitbox;
 	List<Function>? onInteract;
 	List<Function>? onUninteract;
@@ -26,7 +26,7 @@ public class InteractionTile
 	const float INTERACTIONRANGE = 2f;
 	const int LEVELOFDETAIL = 5;
 
-	public InteractionTile(int id,
+	public InteractionTile(uint id,
 							Rectangle rect, 
 							List<Function>? on_interact = null, 
 							List<Function>? on_uninteract = null, 

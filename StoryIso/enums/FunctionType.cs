@@ -14,7 +14,6 @@ public enum FunctionType
 	RemoveTile, // removes a tile, takes in the layer name as an enum and the x and y as 2 ints
 	ToggleCollider, // toggles a collider, takes in the collider name as a string
 	SetCollider, // sets the state of a collider (enabled/disable), takes in the colliders name as a string and new state as a boolean
-	RefreshMap, // refreshes tilemap
 	RunDialogue, // runs dialogue sequence, takes in the name of the dialogue as a string
 	EndDialogue, // ends currently running dialogue sequence
 	RunScene, // runs scene, takes in scene name as a string

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using MonoGame.Extended.Tiled;
+using DotTiled;
 using StoryIso.Debugging;
 using StoryIso.Enums;
 
@@ -8,8 +8,8 @@ namespace StoryIso.Tiled;
 
 public class TilemapRoom
 {
-	private TiledMap _map;
-	public TiledMap map
+	private Map _map;
+	public Map map
 	{
 		get
 		{
@@ -40,7 +40,7 @@ public class TilemapRoom
 	private readonly System.Threading.Lock _colliderLock = new();
 	private readonly System.Threading.Lock _mapLock = new();
 
-	public TilemapRoom(TiledMap map, 
+	public TilemapRoom(Map map, 
 						LayerIndices layer_indices, 
 						Dictionary<string, Collider> collision_rectangles,
 						List<InteractionTile> interaction_tiles,
@@ -53,49 +53,30 @@ public class TilemapRoom
 		Triggers = triggers;
 	}
 
+	private void _setTile(ushort x, ushort y, uint guid, int layer_index)
+	{
+		lock (_mapLock)
+		{
+			((TileLayer)_map.Layers[layer_index]).Data.Value.GlobalTileIDs.Value[x + map.Width * y] = guid;
+		}
+	}
+
 	public void SetTile(ushort x, ushort y, uint guid, TileLayerType layer)
 	{
-		switch (layer)
+		int? index = layer switch
 		{
-			case TileLayerType.FloorLayer:
-				if (!layerIndices.floorTileLayerIndex.HasValue)
-				{
-					return;
-				}
+			TileLayerType.FloorLayer => layerIndices.floorTileLayerIndex,
+			TileLayerType.WallLayer => layerIndices.wallTileLayerIndex,
+			TileLayerType.InteractionLayer => layerIndices.interactionTileLayerIndex,
+			_ => null
+		};
 
-				lock (_mapLock)
-				{
-					map.TileLayers[layerIndices.floorTileLayerIndex.Value].SetTile(x, y, guid);
-				}
-				break;
-
-			case TileLayerType.WallLayer:
-				if (!layerIndices.wallTileLayerIndex.HasValue)
-				{
-					return;
-				}
-				
-				lock (_mapLock)
-				{
-					map.TileLayers[layerIndices.wallTileLayerIndex.Value].SetTile(x, y, guid);
-				}
-				break;
-
-			case TileLayerType.InteractionLayer:
-				if (!layerIndices.interactionTileLayerIndex.HasValue)
-				{
-					return;
-				}
-
-				lock (_mapLock)
-				{
-					map.TileLayers[layerIndices.interactionTileLayerIndex.Value].SetTile(x, y, guid);
-				}
-				break;
-
-			default:
-				break;
+		if (index == null)
+		{
+			return;
 		}
+
+		_setTile(x, y, guid, index.Value);
 	}
 
 	public void RemoveTile(ushort x, ushort y, TileLayerType layer)
@@ -145,4 +126,12 @@ public struct LayerIndices
 	public int? floorTileLayerIndex;
 	public int? wallTileLayerIndex;
 	public int? interactionTileLayerIndex;
+
+	public bool allLayersDefined() =>
+				floorTileLayerIndex.HasValue &&
+				wallTileLayerIndex.HasValue &&
+				interactionTileLayerIndex.HasValue &&
+				collisionLayerIndex.HasValue &&
+				triggerLayerIndex.HasValue &&
+				interactionLayerIndex.HasValue;
 }

@@ -161,16 +161,15 @@ public class Game1 : Game
 
 		GraphicsDevice.Clear(Color.Black);
 
-		BlendState previous_blend_state = GraphicsDevice.BlendState;
-		GraphicsDevice.BlendState = BlendState.AlphaBlend;
+		_spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: camera.GetViewMatrix());
 
-		tiledManager.Draw();
+		tiledManager.Draw(_spriteBatch);
 
-		GraphicsDevice.BlendState = previous_blend_state;
+		_spriteBatch.End();
 
 		_world.Draw(gameTime);
 	
-		if (debug)
+		if (debug && tiledManager.currentRoom != null)
 		{
 			_spriteBatch.Begin(samplerState: SamplerState.PointClamp, blendState:BlendState.AlphaBlend, transformMatrix: camera.GetViewMatrix());
 

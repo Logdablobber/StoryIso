@@ -169,6 +169,11 @@ public class PlayerSystem : EntityProcessingSystem
 				player_hitbox = new Rectangle(transform.Position.ToPoint(), (animation.GetFrame().Bounds.Size.ToVector2() * transform.Scale).ToPoint());
 			}
 
+			if (Game1.tiledManager.currentRoom == null)
+			{
+				return;
+			}
+
 			foreach (var trigger in Game1.tiledManager.currentRoom.Triggers)
 			{
 				trigger.CheckCollision(gameTime, player_hitbox);
@@ -248,7 +253,7 @@ public class PlayerSystem : EntityProcessingSystem
 
 	private void Move(int entityId, Vector2 movement)
 	{
-		if (movement == Vector2.Zero)
+		if (movement == Vector2.Zero || Game1.tiledManager.currentRoom == null)
 		{
 			return;
 		}
