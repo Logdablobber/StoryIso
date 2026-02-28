@@ -19,6 +19,4 @@
 // disable collider
 .SetCollider "removable1", false
 
-.RefreshMap
-
 .RunDialogue "wall open"

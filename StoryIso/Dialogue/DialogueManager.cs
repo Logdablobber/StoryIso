@@ -2,7 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
+using System.Text.RegularExpressions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -125,14 +129,34 @@ public class DialogueManager
 
 	private void LoadDialogues(string directory)
 	{
-		DirectoryInfo dir = new DirectoryInfo(directory);
+		var dir = new DirectoryInfo(directory);
 
-		FileInfo[] files = dir.GetFiles("*.json");
+		var files = dir.GetFiles("*.json");
 
 		foreach (var file in files)
 		{
+			if (file.Name == "DialogueSchema.json")
+			{
+				continue;
+			}
+
 			LoadDialogue(file.FullName);
 		}
+
+		#if DEBUG
+
+		JsonNode schema = Game1.DeserializeOptions.GetJsonSchemaAsNode(typeof(DialogueSequence));
+
+		var path = Path.GetFullPath("./");
+
+		var src_path = Regex.Replace(path, @"bin.+", string.Empty);
+
+		using (var f = new StreamWriter(Path.Combine(src_path, directory, "DialogueSchema.json")))
+		{
+			f.Write(schema.ToJsonString(Game1.DeserializeOptions));
+		}
+
+		#endif
 	}
 
 	private void LoadDialogue(string path)
@@ -245,7 +269,7 @@ public class DialogueManager
 		Vector2 top_left = _screenPosition + (new Vector2(LEFTMARGIN, TOPMARGIN) - new Vector2(0, DialogueBox.Height)) * Scale;
 		float text_scale = FontScale * scale_mult * Scale;
 
-		var color = current_step.color?.Get() ?? Color.Black;
+		var color = current_step.color ?? Color.Black;
 
 		for (int i = 0; i < fitted_text.Count; i++)
 		{

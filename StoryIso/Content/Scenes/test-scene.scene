@@ -3,12 +3,12 @@
 .MoveTo ~-2, ~0, 1
 .RunDialogue "test part2"
 .SetCharacterPos "test", 9, 10
-.SetVisible "test", true
+.SetAttr "test", "visible", true
 .Wait 3
 .MoveCharacter "test", playerX, playerY + 1, 1
-.UnlockPlayerMovement
+.SetAttr "Player", "movement_locked", false
 .Wait 2
-.SetCharacterDirection "test", Left
+.SetAttr "test", "direction", "left"
 .SetAttr "Player", "speed", 300
 .Print "Player is now 3x speed"
 .Wait 3

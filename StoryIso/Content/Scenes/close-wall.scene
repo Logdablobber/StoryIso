@@ -17,6 +17,4 @@
 // enable collider
 .SetCollider "removable1", true
 
-.RefreshMap
-
 .RunDialogue "wall close"

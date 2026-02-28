@@ -28,6 +28,11 @@ public static partial class ParameterEvaluator
 
 			var operatorDef = (OperatorDef)item.Item1;
 
+			if (operatorDef.function == null)
+			{
+				throw new ArgumentNullException("function doesn't exist");
+			}
+
 			if (stack.Count < operatorDef.parameters.Length)
 			{
 				DebugConsole.Raise(new ParameterError(source, item.Item1.ToString() ?? "Type doesn't have a name", stack.Count, operatorDef.parameters.Length));
@@ -37,7 +42,7 @@ public static partial class ParameterEvaluator
 
 			List<object> parameters = [];
 
-			for (int i = 0; i < operatorDef.parameters.Length; i++)
+			for (int i = operatorDef.parameters.Length - 1; i >= 0; i--)
 			{
 				var param = stack.Pop();
 
@@ -50,9 +55,9 @@ public static partial class ParameterEvaluator
 				parameters.Add(param.Item1);
 			}
 
-			if (operatorDef.function == null)
+			if (parameters.Count > 0)
 			{
-				throw new ArgumentNullException("function doesn't exist");
+				parameters.Reverse();
 			}
 
 			object? new_value = operatorDef.function(parameters, source);
@@ -96,22 +101,22 @@ public static partial class ParameterEvaluator
 	{
 		if (param.Item2 == typeof(FunctionParameter<float>))
 		{
-			param = (FunctionProcessor.Convert<float>(param.Item1), typeof(float));
+			param = (ParameterProcessor.Convert<float>(param.Item1), typeof(float));
 		}
 
 		else if (param.Item2 == typeof(FunctionParameter<int>))
 		{
-			param = (FunctionProcessor.Convert<int>(param.Item1), typeof(int));
+			param = (ParameterProcessor.Convert<int>(param.Item1), typeof(int));
 		}
 
 		else if (param.Item2 == typeof(FunctionParameter<bool>))
 		{
-			param = (FunctionProcessor.Convert<bool>(param.Item1), typeof(bool));
+			param = (ParameterProcessor.Convert<bool>(param.Item1), typeof(bool));
 		}
 
 		else if (param.Item2 == typeof(FunctionParameter<string>))
 		{
-			var value = FunctionProcessor.Convert<string>(param.Item1);
+			var value = ParameterProcessor.Convert<string>(param.Item1);
 
 			if (!value.HasValue)
 			{
@@ -152,7 +157,7 @@ public static partial class ParameterEvaluator
 
 		else if (result_type == typeof(string) && param.Item2 != typeof(string))
 		{
-			var param_value = FunctionProcessor.ConvertByTypeToString(param.Item1, param.Item2);
+			var param_value = ParameterProcessor.ConvertByTypeToString(param.Item1, param.Item2);
 
 			if (param_value == null)
 			{
@@ -175,11 +180,15 @@ public static partial class ParameterEvaluator
 
 	private static int precedence(string oper)
 	{
+		if (OperatorDefs.InlineFunctions.Contains(oper))
+		{
+			return 7;
+		}
+
 		return oper switch
 		{
-			"!" => 7,
-			"^" => 6,
-			"," or "'" => 5, // floor and ceiling operators
+			"!" => 6,
+			"^" => 5,
 			"*" or "/" or "%" => 4,
 			"+" or "-" => 3,
 			"!=" or "==" or ">" or "=" or "<" or ">=" or "<=" => 2,
@@ -205,7 +214,7 @@ public static partial class ParameterEvaluator
 				continue;
 			}
 
-			if (_operandRegex.IsMatch(item))
+			if (_operandRegex.IsMatch(item) && !OperatorDefs.InlineFunctions.Contains(item))
 			{
 				var operand = ParameterProcessor.ProcessUnknownParameter(item, source, function);
 
@@ -221,6 +230,22 @@ public static partial class ParameterEvaluator
 			if (item == "(")
 			{
 				stack.Push("(");
+				continue;
+			}
+
+			if (item == ",")
+			{
+				while (stack.Count > 0 && stack.Peek() != "(")
+				{
+					res.Add((OperatorDefs.Get(stack.Pop()), typeof(OperatorDef)));
+				}
+
+				if (stack.Count == 0)
+				{
+					DebugConsole.Raise(new MissingParenthesisError(source, value, "Missing opening parenthesis"));
+					return null;
+				}
+
 				continue;
 			}
 
@@ -254,7 +279,7 @@ public static partial class ParameterEvaluator
 		return new PostfixEquation<T>(res.ToArray());
 	}
 
-	[GeneratedRegex(@"("".+?"")|&&|\|\||==|!=|>=|<=|[()!<>+*/-]|((?:(?!(&&|\|\||==|!=|>=|<=|[()""!><+*/ -]))).)+", RegexOptions.Compiled)]
+	[GeneratedRegex(@"("".+?"")|&&|\|\||==|!=|>=|<=|[()!<>+*/,-]|((?:(?!(&&|\|\||==|!=|>=|<=|[()""!><+*/ ,-]))).)+", RegexOptions.Compiled)]
 	private static partial Regex SplitRegex();
 
 	[GeneratedRegex(@"^("".+?"")|([A-Za-z0-9.]+)$", RegexOptions.Compiled)]

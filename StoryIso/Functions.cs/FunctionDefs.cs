@@ -6,6 +6,7 @@ using System.Threading;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using StoryIso.Audio;
 using StoryIso.Debugging;
 using StoryIso.ECS;
 using StoryIso.Enums;
@@ -32,7 +33,7 @@ public static class FunctionDefs
 			parameters = [typeof(string)],
 			function = (args, _) => 
 			{
-				Optional<string> arg = FunctionProcessor.Convert<string>(args![0]);
+				Optional<string> arg = ParameterProcessor.Convert<string>(args![0]);
 
 				if (!arg.HasValue)
 				{
@@ -51,8 +52,8 @@ public static class FunctionDefs
 			parameters = [typeof(RelativeVariable<float>), typeof(RelativeVariable<float>)],
 			function = (args, _) => 
 			{
-				var x = FunctionProcessor.RelativeConvert<float>(args![0]);
-				var y = FunctionProcessor.RelativeConvert<float>(args[1]);
+				var x = ParameterProcessor.RelativeConvert<float>(args![0]);
+				var y = ParameterProcessor.RelativeConvert<float>(args[1]);
 
 				if (!x.HasValue || !y.HasValue)
 				{
@@ -63,24 +64,6 @@ public static class FunctionDefs
 				return null;
 			}
 		},
-		new FunctionDef // SetPlayerDirection
-		{
-			name = "SetPlayerDirection",
-			type = FunctionType.SetPlayerDirection,
-			parameters = [typeof(Direction)],
-			function = (args, _) => 
-			{
-				var item1 = FunctionProcessor.Convert<Direction>(args![0]);
-
-				if (item1.Value == Direction.None)
-				{
-					return null;
-				}
-
-				CharacterSystem.SetPlayerDirection(item1.Value);
-				return null;
-			}
-		},
 		new FunctionDef // Move 
 		{
 			name = "Move",
@@ -88,8 +71,8 @@ public static class FunctionDefs
 			parameters = [typeof(float), typeof(float)],
 			function = (args, _) => 
 			{
-				Optional<float> x = FunctionProcessor.Convert<float>(args![0]);
-				Optional<float> y = FunctionProcessor.Convert<float>(args[1]);
+				Optional<float> x = ParameterProcessor.Convert<float>(args![0]);
+				Optional<float> y = ParameterProcessor.Convert<float>(args[1]);
 				if (!x.HasValue || !y.HasValue)
 				{
 					return null;
@@ -106,9 +89,9 @@ public static class FunctionDefs
 			parameters = [typeof(RelativeVariable<float>), typeof(RelativeVariable<float>), typeof(float)],
 			function = (args, _) => 
 			{
-				var item1 = FunctionProcessor.RelativeConvert<float>(args![0]);
-				var item2 = FunctionProcessor.RelativeConvert<float>(args[1]);
-				Optional<float> item3 = FunctionProcessor.Convert<float>(args[2]);
+				var item1 = ParameterProcessor.RelativeConvert<float>(args![0]);
+				var item2 = ParameterProcessor.RelativeConvert<float>(args[1]);
+				Optional<float> item3 = ParameterProcessor.Convert<float>(args[2]);
 
 				if (!item1.HasValue || !item2.HasValue || !item3.HasValue)
 				{
@@ -133,9 +116,9 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(RelativeVariable<int>), typeof(RelativeVariable<int>)],
 			function = (args, _) => 
 			{
-				Optional<string> map_name = FunctionProcessor.Convert<string>(args![0]);
-				var x = FunctionProcessor.RelativeConvert<int>(args[1]);
-				var y = FunctionProcessor.RelativeConvert<int>(args[2]);
+				Optional<string> map_name = ParameterProcessor.Convert<string>(args![0]);
+				var x = ParameterProcessor.RelativeConvert<int>(args[1]);
+				var y = ParameterProcessor.RelativeConvert<int>(args[2]);
 
 				if (!map_name.HasValue || !x.HasValue || !y.HasValue)
 				{
@@ -155,10 +138,10 @@ public static class FunctionDefs
 			parameters = [typeof(TileLayerType), typeof(uint), typeof(ushort), typeof(ushort)],
 			function = (args, _) => 
 			{
-				var layer_type = FunctionProcessor.Convert<TileLayerType>(args![0]);
-				Optional<uint> guid = FunctionProcessor.Convert<uint>(args[1]);
-				Optional<ushort> x = FunctionProcessor.Convert<ushort>(args[2]);
-				Optional<ushort> y = FunctionProcessor.Convert<ushort>(args[3]);
+				var layer_type = ParameterProcessor.Convert<TileLayerType>(args![0]);
+				Optional<uint> guid = ParameterProcessor.Convert<uint>(args[1]);
+				Optional<ushort> x = ParameterProcessor.Convert<ushort>(args[2]);
+				Optional<ushort> y = ParameterProcessor.Convert<ushort>(args[3]);
 
 				if (layer_type.Value == TileLayerType.None || !guid.HasValue || !x.HasValue || !y.HasValue)
 				{
@@ -176,10 +159,10 @@ public static class FunctionDefs
 			parameters = [typeof(TileLayerType), typeof(ushort), typeof(ushort), typeof(uint[])],
 			function = (args, _) => 
 			{
-				var item1 = FunctionProcessor.Convert<TileLayerType>(args![0]);
-				Optional<ushort> item2 = FunctionProcessor.Convert<ushort>(args[1]);
-				Optional<ushort> item3 = FunctionProcessor.Convert<ushort>(args[2]);
-				var item4 = FunctionProcessor.ArrayConvert<uint>(args[3]);
+				var item1 = ParameterProcessor.Convert<TileLayerType>(args![0]);
+				Optional<ushort> item2 = ParameterProcessor.Convert<ushort>(args[1]);
+				Optional<ushort> item3 = ParameterProcessor.Convert<ushort>(args[2]);
+				var item4 = ParameterProcessor.ArrayConvert<uint>(args[3]);
 
 				if (item1.Value == TileLayerType.None || !item2.HasValue || !item3.HasValue || item4 == null)
 				{
@@ -201,10 +184,10 @@ public static class FunctionDefs
 			parameters = [typeof(TileLayerType), typeof(ushort), typeof(ushort), typeof(uint[])],
 			function = (args, _) => 
 			{
-				var item1 = FunctionProcessor.Convert<TileLayerType>(args![0]);
-				Optional<ushort> item2 = FunctionProcessor.Convert<ushort>(args[1]);
-				Optional<ushort> item3 = FunctionProcessor.Convert<ushort>(args[2]);
-				var item4 = FunctionProcessor.ArrayConvert<uint>(args[3]);
+				var item1 = ParameterProcessor.Convert<TileLayerType>(args![0]);
+				Optional<ushort> item2 = ParameterProcessor.Convert<ushort>(args[1]);
+				Optional<ushort> item3 = ParameterProcessor.Convert<ushort>(args[2]);
+				var item4 = ParameterProcessor.ArrayConvert<uint>(args[3]);
 
 				if (item1.Value == TileLayerType.None || !item2.HasValue || !item3.HasValue || item4 == null)
 				{
@@ -226,9 +209,9 @@ public static class FunctionDefs
 			parameters = [typeof(TileLayerType), typeof(ushort), typeof(ushort)],
 			function = (args, _) => 
 			{
-				var layer_type = FunctionProcessor.Convert<TileLayerType>(args![0]);
-				Optional<ushort> x = FunctionProcessor.Convert<ushort>(args[1]);
-				Optional<ushort> y = FunctionProcessor.Convert<ushort>(args[2]);
+				var layer_type = ParameterProcessor.Convert<TileLayerType>(args![0]);
+				Optional<ushort> x = ParameterProcessor.Convert<ushort>(args[1]);
+				Optional<ushort> y = ParameterProcessor.Convert<ushort>(args[2]);
 
 				if (layer_type.Value == TileLayerType.None || !x.HasValue || !y.HasValue)
 				{
@@ -246,7 +229,7 @@ public static class FunctionDefs
 			parameters = [typeof(string)],
 			function = (args, source) =>
 			{
-				Optional<string> collider_name = FunctionProcessor.Convert<string>(args![0]);
+				Optional<string> collider_name = ParameterProcessor.Convert<string>(args![0]);
 
 				if (!collider_name.HasValue)
 				{
@@ -264,8 +247,8 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(bool)],
 			function = (args, source) => 
 			{
-				Optional<string> collider_name = FunctionProcessor.Convert<string>(args![0]);
-				Optional<bool> state = FunctionProcessor.Convert<bool>(args[1]);
+				Optional<string> collider_name = ParameterProcessor.Convert<string>(args![0]);
+				Optional<bool> state = ParameterProcessor.Convert<bool>(args[1]);
 
 				if (!collider_name.HasValue || !state.HasValue)
 				{
@@ -283,7 +266,7 @@ public static class FunctionDefs
 			parameters = [typeof(string)],
 			function = (args, source) => 
 			{
-				Optional<string> dialogue_name = FunctionProcessor.Convert<string>(args![0]);
+				Optional<string> dialogue_name = ParameterProcessor.Convert<string>(args![0]);
 
 				if (!dialogue_name.HasValue)
 				{
@@ -312,7 +295,7 @@ public static class FunctionDefs
 			parameters = [typeof(string)],
 			function = (args, source) => 
 			{
-				Optional<string> scene_name = FunctionProcessor.Convert<string>(args![0]);
+				Optional<string> scene_name = ParameterProcessor.Convert<string>(args![0]);
 
 				if (!scene_name.HasValue)
 				{
@@ -331,8 +314,8 @@ public static class FunctionDefs
 			function = (args, source) => 
 			{
 				// variables are defined at startup
-				Optional<string> name = FunctionProcessor.Convert<string>(args![1]);
-				object? value = FunctionProcessor.ConvertUnknown(args[2]);
+				Optional<string> name = ParameterProcessor.Convert<string>(args![1]);
+				object? value = ParameterProcessor.ConvertUnknown(args[2]);
 
 				if (!name.HasValue || value == null)
 				{
@@ -350,8 +333,8 @@ public static class FunctionDefs
 			parameters = [typeof(object), typeof(VariableObject)], // the last value is string because it will be parsed later
 			function = (args, source) => 
 			{
-				Optional<string> name = FunctionProcessor.Convert<string>(args![0]);
-				object? value = FunctionProcessor.ConvertUnknown(args[1]);
+				Optional<string> name = ParameterProcessor.Convert<string>(args![0]);
+				object? value = ParameterProcessor.ConvertUnknown(args[1]);
 
 				if (!name.HasValue || value == null)
 				{
@@ -369,7 +352,7 @@ public static class FunctionDefs
 			parameters = [typeof(uint)],
 			function = (args, source) => 
 			{
-				Optional<uint> line = FunctionProcessor.Convert<uint>(args![0]);
+				Optional<uint> line = ParameterProcessor.Convert<uint>(args![0]);
 
 				if (!line.HasValue)
 				{
@@ -387,7 +370,7 @@ public static class FunctionDefs
 			function = (args, source) =>
 			{
 				var item1 = (PostfixEquation<bool>)args![0];
-				Optional<uint> item2 = FunctionProcessor.Convert<uint>(args[1]);
+				Optional<uint> item2 = ParameterProcessor.Convert<uint>(args[1]);
 
 				if (item1 == null || !item2.HasValue)
 				{
@@ -402,26 +385,6 @@ public static class FunctionDefs
 				return item2.Value;
 			}
 		},
-		new FunctionDef // SetVisible
-		{
-			name = "SetVisible",
-			type = FunctionType.SetVisible,
-			parameters = [typeof(string), typeof(bool)],
-			function = (args, _) =>
-			{
-				Optional<string> item1 = FunctionProcessor.Convert<string>(args![0]);
-				Optional<bool> item2 = FunctionProcessor.Convert<bool>(args[1]);
-
-				if (!item1.HasValue || !item2.HasValue)
-				{
-					return null;
-				}
-
-				CharacterSystem.SetCharacterVisibility(item1.Value, item2.Value);
-
-				return null;
-			}
-		},
 		new FunctionDef // MoveCharacter
 		{
 			name = "MoveCharacter",
@@ -429,10 +392,10 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(RelativeVariable<float>), typeof(RelativeVariable<float>), typeof(float)],
 			function = (args, _) =>
 			{
-				Optional<string> item1 = FunctionProcessor.Convert<string>(args![0]);
-				var item2 = FunctionProcessor.RelativeConvert<float>(args[1]);
-				var item3 = FunctionProcessor.RelativeConvert<float>(args[2]);
-				Optional<float> item4 = FunctionProcessor.Convert<float>(args[3]);
+				Optional<string> item1 = ParameterProcessor.Convert<string>(args![0]);
+				var item2 = ParameterProcessor.RelativeConvert<float>(args[1]);
+				var item3 = ParameterProcessor.RelativeConvert<float>(args[2]);
+				Optional<float> item4 = ParameterProcessor.Convert<float>(args[3]);
 
 				if (!item1.HasValue || !item2.HasValue || !item3.HasValue || !item4.HasValue)
 				{
@@ -457,9 +420,9 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(RelativeVariable<float>), typeof(RelativeVariable<float>)],
 			function = (args, _) =>
 			{
-				Optional<string> item1 = FunctionProcessor.Convert<string>(args![0]);
-				var item2 = FunctionProcessor.RelativeConvert<float>(args[1]);
-				var item3 = FunctionProcessor.RelativeConvert<float>(args[2]);
+				Optional<string> item1 = ParameterProcessor.Convert<string>(args![0]);
+				var item2 = ParameterProcessor.RelativeConvert<float>(args[1]);
+				var item3 = ParameterProcessor.RelativeConvert<float>(args[2]);
 
 				if (!item1.HasValue || !item2.HasValue || !item3.HasValue)
 				{
@@ -471,44 +434,6 @@ public static class FunctionDefs
 				return null;
 			}
 		},
-		new FunctionDef // SetCharacterDirection
-		{
-			name = "SetCharacterDirection",
-			type = FunctionType.SetCharacterDirection,
-			parameters = [typeof(string), typeof(Direction)],
-			function = (args, _) => 
-			{
-				var item1 = FunctionProcessor.Convert<string>(args![0]);
-				var item2 = FunctionProcessor.Convert<Direction>(args[1]);
-
-				if (!item1.HasValue || item2.Value == Direction.None)
-				{
-					return null;
-				}
-
-				CharacterSystem.SetCharacterDirection(item1.Value, item2.Value);
-				return null;
-			}
-		},
-		new FunctionDef // SetCharacterRoom
-		{
-			name = "SetCharacterRoom",
-			type = FunctionType.SetCharacterRoom,
-			parameters = [typeof(string), typeof(string)],
-			function = (args, _) => 
-			{
-				var item1 = FunctionProcessor.Convert<string>(args![0]);
-				var item2 = FunctionProcessor.Convert<string>(args[1]);
-
-				if (!item1.HasValue || !item2.HasValue)
-				{
-					return null;
-				}
-
-				CharacterSystem.SetCharacterRoom(item1.Value, item2.Value);
-				return null;
-			}
-		},
 		new FunctionDef // Wait
 		{
 			name = "Wait",
@@ -516,7 +441,7 @@ public static class FunctionDefs
 			parameters = [typeof(float)],
 			function = (args, _) =>
 			{
-				Optional<float> item1 = FunctionProcessor.Convert<float>(args![0]);
+				Optional<float> item1 = ParameterProcessor.Convert<float>(args![0]);
 
 				if (!item1.HasValue)
 				{
@@ -528,30 +453,6 @@ public static class FunctionDefs
 				return null;
 			}
 		},
-		new FunctionDef // UnlockPlayerMovement
-		{
-			name = "UnlockPlayerMovement",
-			type = FunctionType.UnlockPlayerMovement,
-			parameters = [],
-			function = (_, _) =>
-			{
-				Game1.sceneManager.Active = false;
-
-				return null;
-			}
-		},
-		new FunctionDef // LockPlayerMovement
-		{
-			name = "LockPlayerMovement",
-			type = FunctionType.LockPlayerMovement,
-			parameters = [],
-			function = (_, _) =>
-			{
-				Game1.sceneManager.Active = true;
-
-				return null;
-			}
-		},
 		new FunctionDef // SetAttr
 		{
 			name = "SetAttr",
@@ -559,9 +460,9 @@ public static class FunctionDefs
 			parameters = [typeof(string), typeof(string), typeof(VariableObject)],
 			function = (args, source) => 
 			{
-				var item1 = FunctionProcessor.Convert<string>(args![0]);
-				var item2 = FunctionProcessor.Convert<string>(args[1]);
-				var item3 = FunctionProcessor.ConvertUnknown(args[2], out _, out Type type);
+				var item1 = ParameterProcessor.Convert<string>(args![0]);
+				var item2 = ParameterProcessor.Convert<string>(args[1]);
+				var item3 = ParameterProcessor.ConvertUnknown(args[2], out _, out Type type);
 
 				if (!item1.HasValue || !item2.HasValue || item3 == null)
 				{
@@ -570,6 +471,26 @@ public static class FunctionDefs
 
 				CharacterSystem.SetAttribute(source!, item1.Value, item2.Value, item3, type);
 				return null;
+			}
+		},
+		new FunctionDef // PlaySound
+		{
+			name = "PlaySound",
+			type = FunctionType.PlaySound,
+			parameters = [typeof(string), typeof(float), typeof(float)],
+			function = (args, source) => 
+			{
+				var item1 = ParameterProcessor.Convert<string>(args![0]);
+				var item2 = ParameterProcessor.Convert<float>(args[1]);
+				var item3 = ParameterProcessor.Convert<float>(args[2]);
+
+				if (!item1.HasValue || !item2.HasValue || !item3.HasValue)
+				{
+					return null;
+				}
+
+				AudioManager.PlaySound(source!, item1.Value, item2.Value, item3.Value);
+				return null;	
 			}
 		},
 	};

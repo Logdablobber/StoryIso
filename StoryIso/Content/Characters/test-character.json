@@ -1,4 +1,5 @@
 {
+	"$schema": "./CharacterSchema.json",
 	"name": "test",
 	"animation": "player-animation",
 	"room": "Map1"

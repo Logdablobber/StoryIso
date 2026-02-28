@@ -17,69 +17,41 @@
 #begin Aseprite/player-animation.aseprite
 /copy:Aseprite/player-animation.aseprite
 
+#begin Audio/Desolation Reigns.wav
+/copy:Audio/Desolation Reigns.wav
+
+#begin Audio/Random Battle Theme Ver 2.wav
+/copy:Audio/Random Battle Theme Ver 2.wav
+
+#begin Audio/tx0_fire1.wav
+/copy:Audio/tx0_fire1.wav
+
 #begin Characters/test-character.json
 /copy:Characters/test-character.json
 
 #begin Fonts/arial_0.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Fonts/arial_0.png
+/copy:Fonts/arial_0.png
 
 #begin Fonts/arial.fnt
-/importer:BitmapFontImporter
-/processor:BitmapFontProcessor
-/build:Fonts/arial.fnt
+/copy:Fonts/arial.fnt
 
 #begin Fonts/ibmbios_0.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Fonts/ibmbios_0.png
+/copy:Fonts/ibmbios_0.png
 
 #begin Fonts/ibmbios_1.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Fonts/ibmbios_1.png
+/copy:Fonts/ibmbios_1.png
 
 #begin Fonts/ibmbios_2.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Fonts/ibmbios_2.png
+/copy:Fonts/ibmbios_2.png
 
 #begin Fonts/ibmbios.fnt
-/importer:BitmapFontImporter
-/processor:BitmapFontProcessor
-/build:Fonts/ibmbios.fnt
+/copy:Fonts/ibmbios.fnt
 
 #begin Scenes/close-wall.scene
 /copy:Scenes/close-wall.scene
+
+#begin Scenes/Dialogue/DialogueSchema.json
+/copy:Scenes/Dialogue/DialogueSchema.json
 
 #begin Scenes/Dialogue/test-dialogue-part2.json
 /copy:Scenes/Dialogue/test-dialogue-part2.json
@@ -103,28 +75,10 @@
 /copy:Scenes/test-scene.scene
 
 #begin Textures/dialogue-box.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/dialogue-box.png
+/copy:Textures/dialogue-box.png
 
 #begin Textures/name-box.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:Textures/name-box.png
+/copy:Textures/name-box.png
 
 #begin Tiled/Maps/test-tilemap.tmx
 /copy:Tiled/Maps/test-tilemap.tmx
@@ -137,4 +91,7 @@
 
 #begin Tiled/tileset-atlas.tsx
 /copy:Tiled/tileset-atlas.tsx
+
+#begin UI/test-ui.json
+/copy:UI/test-ui.json
 

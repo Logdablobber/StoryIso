@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using MonoGame.Extended;
@@ -11,10 +12,12 @@ namespace StoryIso.Functions;
 
 public static partial class VariableManager
 {
-	private static Dictionary<string, int?> _intVariables = [];
-	private static Dictionary<string, float?> _floatVariables = [];
-	private static Dictionary<string, bool?> _boolVariables = [];
-	private static Dictionary<string, string?> _stringVariables = [];
+	private static Dictionary<string, Optional<int>> _intVariables = [];
+	private static Dictionary<string, Optional<float>> _floatVariables = [];
+	private static Dictionary<string, Optional<bool>> _boolVariables = [];
+	private static Dictionary<string, Optional<string>> _stringVariables = [];
+
+	public readonly static Dictionary<string, VariableType> _typesOfVariables = new();
 
 	public static VariableType GetVariableType(string name)
 	{
@@ -36,7 +39,7 @@ public static partial class VariableManager
 		{typeof(string), VariableType.String}
 	};
 
-	public static VariableType? GetVariableType(Type type)
+	public static VariableType GetVariableType(Type type)
 	{
 		if (typeToVariableType.TryGetValue(type, out var variableType))
 		{
@@ -87,34 +90,32 @@ public static partial class VariableManager
 
 	public readonly static string[] KeywordNames = _retrievalOnlyVariables.Concat(_constantNames).ToArray();
 
-	public readonly static Dictionary<string, VariableType> VariableTypes = new();
-
 	public static void Initialize()
 	{
 		foreach (var readonly_int in _readonlyInts.Keys)
 		{
-			VariableTypes.Add(readonly_int, VariableType.Int);
+			_typesOfVariables.Add(readonly_int, VariableType.Int);
 		}
 
 		foreach (var readonly_float in _readonlyFloats.Keys)
 		{
-			if (VariableTypes.ContainsKey(readonly_float))
+			if (_typesOfVariables.ContainsKey(readonly_float))
 			{
-				VariableTypes[readonly_float] = VariableType.Float;
+				_typesOfVariables[readonly_float] = VariableType.Float;
 				continue;
 			}
 
-			VariableTypes.Add(readonly_float, VariableType.Float);
+			_typesOfVariables.Add(readonly_float, VariableType.Float);
 		}
 
 		foreach (var readonly_bool in _readonlyBools.Keys)
 		{
-			VariableTypes.Add(readonly_bool, VariableType.Bool);
+			_typesOfVariables.Add(readonly_bool, VariableType.Bool);
 		}
 
 		foreach (var readonly_string in _readonlyStrings.Keys)
 		{
-			VariableTypes.Add(readonly_string, VariableType.String);
+			_typesOfVariables.Add(readonly_string, VariableType.String);
 		}
 	}
 
@@ -153,94 +154,129 @@ public static partial class VariableManager
 		switch (type)
 		{
 			case VariableType.Int:
-				_intVariables[name] = (int?)value;
+				_intVariables[name] = (Optional<int>)(value ?? default(Optional<int>));
 				break;
 
 			case VariableType.Float:
-				_floatVariables[name] = (float?)value;
+				_floatVariables[name] = (Optional<float>)(value ?? default(Optional<float>));
 				break;
 
 			case VariableType.String:
-				_stringVariables[name] = (string?)value;
+				_stringVariables[name] = (Optional<string>)(value ?? default(Optional<string>));
 				break;
 
 			case VariableType.Bool:
-				_boolVariables[name] = (bool?)value;
+				_boolVariables[name] = (Optional<bool>)(value ?? default(Optional<bool>));
 				break;
 
 			default:
 				return; // don't add if type is undefined
 		}
 
-		VariableTypes.Add(name, type);
+		_typesOfVariables.Add(name, type);
 	}
 
 	public static T? GetVariable<T>(string name, Source source) where T : notnull
 	{
-		if (typeof(T) == typeof(int))
+		if (_typesOfVariables.TryGetValue(name, out var type))
 		{
-			if (_readonlyInts.TryGetValue(name, out var int_function))
+			var retrieved_type = GetVariableType(typeof(T));
+
+			if (retrieved_type == VariableType.None)
 			{
-				return (T?)(object)int_function();
+				throw new NotImplementedException($"Variable type {typeof(T).Name} not implemented yet");
 			}
 
-			if (!_intVariables.TryGetValue(name, out int? int_value) || !int_value.HasValue)
+			// check if the retrieved type is the same as the actual variable type
+			// or if you can convert the variable to the retrieved type
+			if (!(retrieved_type == type ||
+				retrieved_type == VariableType.String ||
+				(retrieved_type == VariableType.Int && type == VariableType.Float) ||
+				(retrieved_type == VariableType.Float && type == VariableType.Int)))
 			{
-				DebugConsole.Raise(new UnknownVariableError(source, name));
+				DebugConsole.Raise(new WrongVariableTypeError(source, name, typeof(T).Name));
+			}
+			
+			object? get_var<T1>(Dictionary<string, Func<T1>> readonly_vars, Dictionary<string, Optional<T1>> vars) where T1 : notnull
+			{
+				if (readonly_vars.TryGetValue(name, out var function))
+				{
+					return function();
+				}
+
+				Optional<T1> value = vars[name];
+
+				if (!value.HasValue)
+				{
+					DebugConsole.Raise(new UndefinedVariableError(source, name));
+					return null;
+				}
+
+				return value.Value;
+			}
+
+			object? res = type switch
+			{
+				VariableType.Int => get_var(_readonlyInts, _intVariables),
+				VariableType.Float => get_var(_readonlyFloats, _floatVariables),
+				VariableType.String => get_var(_readonlyStrings, _stringVariables),
+				VariableType.Bool => get_var(_readonlyBools, _boolVariables),
+				_ => throw new NotImplementedException(),
+			};
+			
+			if (res == null)
+			{
 				return default;
 			}
 
-			return (T?)(object)int_value.Value;
+			if (retrieved_type == type)
+			{
+				return (T)res;
+			}
+
+			// conversions!
+			if (retrieved_type == VariableType.String)
+			{
+				switch (type)
+				{
+					case VariableType.Int:
+						int int_res = (int)res;
+
+						return (T)(object)int_res.ToString();
+
+					case VariableType.Float:
+						float float_res = (float)res;
+
+						return (T)(object)float_res.ToString();
+
+					case VariableType.Bool:
+						bool bool_res = (bool)res;
+
+						return (T)(object)bool_res.ToString();
+
+					default:
+						throw new NotImplementedException();
+				}
+			}
+
+			if (retrieved_type == VariableType.Int && type == VariableType.Float)
+			{
+				int int_res = (int)res;
+
+				return (T)(object)(float)int_res;
+			}
+
+			if (retrieved_type == VariableType.Float && type == VariableType.Int)
+			{
+				float float_res = (float)res;
+
+				return (T)(object)(int)float_res;
+			}
+
+			throw new UnreachableException("How tf did you get here?");
 		}
 
-		if (typeof(T) == typeof(float))
-		{
-			if (_readonlyFloats.TryGetValue(name, out var float_function))
-			{
-				return (T?)(object)float_function();
-			}
-
-			if (!_floatVariables.TryGetValue(name, out float? float_value) || !float_value.HasValue)
-			{
-				DebugConsole.Raise(new UnknownVariableError(source, name));
-				return default;
-			}
-
-			return (T?)(object)float_value.Value;
-		}
-
-		if (typeof(T) == typeof(string))
-		{
-			if (_readonlyStrings.TryGetValue(name, out var string_function))
-			{
-				return (T?)(object)string_function();
-			}
-
-			if (!_stringVariables.TryGetValue(name, out string? string_value) || string_value == null)
-			{
-				DebugConsole.Raise(new UnknownVariableError(source, name));
-				return default;
-			}
-
-			return (T?)(object)string_value;
-		}
-
-		if (typeof(T) == typeof(bool))
-		{
-			if (_readonlyBools.TryGetValue(name, out var bool_function))
-			{
-				return (T?)(object)bool_function();
-			}
-
-			if (!_boolVariables.TryGetValue(name, out bool? bool_value) || !bool_value.HasValue)
-			{
-				DebugConsole.Raise(new UnknownVariableError(source, name));
-				return default;
-			}
-
-			return (T?)(object)bool_value.Value;
-		}
-
+		DebugConsole.Raise(new UnknownVariableError(source, name));
 		return default;
 	}
 
@@ -253,7 +289,7 @@ public static partial class VariableManager
 			return true;
 		}
 
-		if (_intVariables.TryGetValue(name, out int? int_value))
+		if (_intVariables.TryGetValue(name, out Optional<int> int_value))
 		{
 			type = VariableType.Int;
 			value = int_value;
@@ -267,7 +303,7 @@ public static partial class VariableManager
 			return true;
 		}
 
-		if (_floatVariables.TryGetValue(name, out float? float_value))
+		if (_floatVariables.TryGetValue(name, out Optional<float> float_value))
 		{
 			type = VariableType.Float;
 			value = float_value;
@@ -281,7 +317,7 @@ public static partial class VariableManager
 			return true;
 		}
 
-		if (_boolVariables.TryGetValue(name, out bool? bool_value))
+		if (_boolVariables.TryGetValue(name, out Optional<bool> bool_value))
 		{
 			type = VariableType.Bool;
 			value = bool_value;
@@ -295,7 +331,7 @@ public static partial class VariableManager
 			return true;
 		}
 
-		if (_stringVariables.TryGetValue(name, out string? string_value))
+		if (_stringVariables.TryGetValue(name, out Optional<string> string_value))
 		{
 			type = VariableType.String;
 			value = string_value;
@@ -307,9 +343,87 @@ public static partial class VariableManager
 		return false;
 	}
 
+	public static bool TryGetVariableAsString(string name, out string? value)
+	{
+		if (_readonlyInts.TryGetValue(name, out Func<int>? readonly_int_value))
+		{
+			value = readonly_int_value().ToString();
+			return true;
+		}
+
+		if (_intVariables.TryGetValue(name, out Optional<int> int_value))
+		{
+			if (!int_value.HasValue)
+			{
+				value = null;
+				return false;
+			}
+
+			value = int_value.ToString();
+			return true;
+		}
+
+		if (_readonlyFloats.TryGetValue(name, out Func<float>? readonly_float_value))
+		{
+			value = readonly_float_value().ToString();
+			return true;
+		}
+
+		if (_floatVariables.TryGetValue(name, out Optional<float> float_value))
+		{
+			if (!float_value.HasValue)
+			{
+				value = null;
+				return false;
+			}
+
+			value = float_value.ToString();
+			return true;
+		}
+
+		if (_readonlyBools.TryGetValue(name, out Func<bool>? readonly_bool_value))
+		{
+			value = readonly_bool_value().ToString();
+			return true;
+		}
+
+		if (_boolVariables.TryGetValue(name, out Optional<bool> bool_value))
+		{
+			if (!bool_value.HasValue)
+			{
+				value = null;
+				return false;
+			}
+
+			value = bool_value.ToString();
+			return true;
+		}
+
+		if (_readonlyStrings.TryGetValue(name, out Func<string>? readonly_string_value))
+		{
+			value = readonly_string_value();
+			return true;
+		}
+
+		if (_stringVariables.TryGetValue(name, out Optional<string> string_value))
+		{
+			if (!string_value.HasValue)
+			{
+				value = null;
+				return false;
+			}
+
+			value = string_value.Value;
+			return true;
+		}
+
+		value = null;
+		return false;
+	}
+
 	public static bool ContainsVariable(string name, out VariableType type)
 	{
-		if (VariableTypes.TryGetValue(name, out type))
+		if (_typesOfVariables.TryGetValue(name, out type))
 		{
 			return true;
 		}
@@ -336,7 +450,7 @@ public static partial class VariableManager
 
 			if (!string_value.HasValue)
 			{
-				_stringVariables[name] = null;
+				_stringVariables[name] = default;
 			}
 
 			_stringVariables[name] = string_value.Value;
@@ -349,7 +463,7 @@ public static partial class VariableManager
 
 			if (!int_value.HasValue)
 			{
-				_intVariables[name] = null;
+				_intVariables[name] = default;
 			}
 
 			_intVariables[name] = int_value.Value;
@@ -362,7 +476,7 @@ public static partial class VariableManager
 
 			if (!float_value.HasValue)
 			{
-				_floatVariables[name] = null;
+				_floatVariables[name] = default;
 			}
 
 			_floatVariables[name] = float_value.Value;
@@ -375,7 +489,7 @@ public static partial class VariableManager
 
 			if (!bool_value.HasValue)
 			{
-				_boolVariables[name] = null;
+				_boolVariables[name] = default;
 			}
 
 			_boolVariables[name] = bool_value.Value;

@@ -6,10 +6,12 @@ using DotTiled;
 using DotTiled.Serialization;
 using Microsoft.Toolkit.HighPerformance;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using MonoGame.Extended.Content;
+using StoryIso.FileLoading;
 using StoryIso.Functions;
 using StoryIso.Misc;
 
@@ -60,7 +62,6 @@ public class TiledManager
 
 	private void LoadMaps(GraphicsDevice graphics, ContentManager content)
 	{
-		// TODO: Make this load from a stream rather than using content pipeline
 		_rooms = new Dictionary<string, TilemapRoom>();
 
 		var loader = Loader.Default();
@@ -82,6 +83,8 @@ public class TiledManager
 
 	private void LoadTilesetTextures(GraphicsDevice graphics, ContentManager content, Map map)
 	{
+		_tilemapRenderer.ClearTilesets();
+
 		foreach (var tileset in map.Tilesets)
 		{
 			using (var stream = content.OpenStream(".\\Tiled\\" + tileset.Image.Value.Source.Value))
@@ -114,10 +117,12 @@ public class TiledManager
 			throw new NullReferenceException("Rooms is null");
 		}
 
-		if (_rooms.TryGetValue(map_name, out TilemapRoom? room))
+		if (_rooms.ContainsKey(map_name))
 		{
+			currentRoom?.PauseMusic();
+			
 			currentRoomName = map_name;
-			//_tiledMapRenderer.LoadMap(room.map);
+			currentRoom!.PlayMusic();
 		}
 	}
 
@@ -290,7 +295,24 @@ public class TiledManager
 			}
 		}
 
-		return new TilemapRoom(map, layer_indices, collision_rectangles, interaction_tiles, triggers);
+		SoundEffectInstance? bgm = null;
+		if (map.TryGetProperty<StringProperty>("bgm", out var bgm_name))
+		{
+			var sound = AudioLoader.GetSound(bgm_name.Value);
+
+			if (sound != null)
+			{
+				if (map.TryGetProperty<FloatProperty>("bgmVolume", out var bgm_volume))
+				{
+					sound.Volume = Math.Clamp(bgm_volume.Value, 0, 1);
+				}
+
+				sound.IsLooped = true;
+				bgm = sound;
+			}
+		}
+
+		return new TilemapRoom(map, layer_indices, collision_rectangles, interaction_tiles, triggers, bgm);
 	}
 
 	public Vector2 TilePosToWorldPos(Point tile)

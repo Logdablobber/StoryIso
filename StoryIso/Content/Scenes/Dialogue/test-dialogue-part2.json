@@ -1,4 +1,5 @@
 {
+	"$schema": "./DialogueSchema.json",
 	"id": "test part2",
 	"dialogueSteps": 
 	[

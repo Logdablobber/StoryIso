@@ -25,6 +25,10 @@ public class CharacterSystem : EntityUpdateSystem
 	private ComponentMapper<Texture2D> _texture2DMapper = null!;
 	private ComponentMapper<RenderAttributes> _renderAttributesMapper = null!;
 
+	// this uses locks rather than concurrent dictionaries
+	// as I do not want the dictionaries being changes
+	// while being read, as the added values may be cleared and ignored
+	// and that would be bad
 	static readonly Dictionary<string, Movement> _movements = [];
 	static readonly Dictionary<string, bool> _visibilityChanges = [];
 	static readonly Dictionary<string, RelativeVector2> _positionChanges = [];
@@ -62,23 +66,23 @@ public class CharacterSystem : EntityUpdateSystem
 						switch (attr.ToLower())
 						{
 							case "x":
-								transform.Position.SetX(Game1.tiledManager.TileXToWorldX((float)value));
+								transform.Position.SetX(Game1.tiledManager.TileXToWorldX(((Optional<float>)value).Value));
 								break;
 
 							case "y":
-								transform.Position.SetY(Game1.tiledManager.TileYToWorldY((float)value));
+								transform.Position.SetY(Game1.tiledManager.TileYToWorldY(((Optional<float>)value).Value));
 								break;
 
 							case "room":
-								character.Room = (string)value;
+								character.Room = ((Optional<string>)value).Value;
 								break;
 
 							case "visible":
-								character.Visible = (bool)value;
+								character.Visible = ((Optional<bool>)value).Value;
 								break;
 
 							case "direction":
-								var direction = ParameterProcessor.GetDirection((string)value);
+								var direction = ParameterProcessor.GetDirection(((Optional<string>)value).Value);
 
 								if (direction == Direction.None)
 								{
@@ -95,6 +99,15 @@ public class CharacterSystem : EntityUpdateSystem
 								}
 
 								Game1.player.Get<Player>().Speed = ((Optional<float>)value).Value;
+								break;
+
+							case "movement_locked":
+								if (character.Name != "Player")
+								{
+									break;
+								}
+
+								Game1.sceneManager.Active = ((Optional<bool>)value).Value;
 								break;
 
 							default:
@@ -346,7 +359,8 @@ public class CharacterSystem : EntityUpdateSystem
 
 	private static readonly Dictionary<string, Type> _playerOnlyAttributes = new()
 	{
-		{"speed", typeof(float)}
+		{"speed", typeof(float)},
+		{"movement_locked", typeof(bool)}
 	};
 
 	private static readonly Dictionary<string, Type> _playerAttributes = _allCharacterAttributes.Union(_playerOnlyAttributes).ToDictionary();

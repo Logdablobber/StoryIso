@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "animation": {
+      "type": "string"
+    },
+    "room": {
+      "type": "string"
+    },
+    "visible": {
+      "type": "boolean"
+    },
+    "color": true
+  },
+  "required": [
+    "name",
+    "animation",
+    "room"
+  ]
+}

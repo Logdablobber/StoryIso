@@ -16,6 +16,7 @@ public static class OperatorDefs
 		new OperatorDef
 		{
 			oper = "!",
+			inlineFunc = false,
 			parameters = [typeof(bool)],
 			returnType = typeof(bool),
 			function = (args, _) =>
@@ -33,6 +34,7 @@ public static class OperatorDefs
 		new OperatorDef
 		{
 			oper = "^",
+			inlineFunc = false,
 			parameters = [typeof(float), typeof(float)],
 			returnType = typeof(float),
 			function = (args, _) =>
@@ -45,46 +47,13 @@ public static class OperatorDefs
 					return new Optional<float>();
 				}
 
-				return new Optional<float>(MathF.Pow(item2.Value, item1.Value));
-			}
-		},
-		new OperatorDef // floor
-		{
-			oper = ",",
-			parameters = [typeof(float)],
-			returnType = typeof(float),
-			function = (args, _) =>
-			{
-				var item1 = (Optional<float>)args![0];
-
-				if (!item1.HasValue)
-				{
-					return new Optional<float>();
-				}
-
-				return new Optional<float>(MathF.Floor(item1.Value));
-			}
-		},
-		new OperatorDef // ceiling
-		{
-			oper = "'",
-			parameters = [typeof(float)],
-			returnType = typeof(float),
-			function = (args, _) =>
-			{
-				var item1 = (Optional<float>)args![0];
-
-				if (!item1.HasValue)
-				{
-					return new Optional<float>();
-				}
-
-				return new Optional<float>(MathF.Ceiling(item1.Value));
+				return new Optional<float>(MathF.Pow(item1.Value, item2.Value));
 			}
 		},
 		new OperatorDef
 		{
 			oper = "*",
+			inlineFunc = false,
 			parameters = [typeof(float), typeof(float)],
 			returnType = typeof(float),
 			function = (args, _) =>
@@ -103,6 +72,7 @@ public static class OperatorDefs
 		new OperatorDef
 		{
 			oper = "/",
+			inlineFunc = false,
 			parameters = [typeof(float), typeof(float)],
 			returnType = typeof(float),
 			function = (args, _) =>
@@ -115,12 +85,13 @@ public static class OperatorDefs
 					return new Optional<float>();
 				}
 
-				return new Optional<float>(item2.Value / item1.Value);
+				return new Optional<float>(item1.Value / item2.Value);
 			}
 		},
 		new OperatorDef
 		{
 			oper = "+",
+			inlineFunc = false,
 			parameters = [typeof(float), typeof(float)],
 			returnType = typeof(float),
 			function = (args, _) =>
@@ -139,6 +110,7 @@ public static class OperatorDefs
 		new OperatorDef
 		{
 			oper = "-",
+			inlineFunc = false,
 			parameters = [typeof(float), typeof(float)],
 			returnType = typeof(float),
 			function = (args, _) =>
@@ -151,18 +123,19 @@ public static class OperatorDefs
 					return new Optional<float>();
 				}
 
-				return new Optional<float>(item2.Value - item1.Value);
+				return new Optional<float>(item1.Value - item2.Value);
 			}
 		},
 		new OperatorDef
 		{
 			oper = "!=",
+			inlineFunc = false,
 			parameters = [typeof(VariableObject), typeof(VariableObject)],
 			returnType = typeof(bool),
 			function = (args, _) =>
 			{
-				FunctionProcessor.ConvertUnknown(args![0], out var item1);
-				FunctionProcessor.ConvertUnknown(args[1], out var item2);
+				ParameterProcessor.ConvertUnknown(args![0], out var item1);
+				ParameterProcessor.ConvertUnknown(args[1], out var item2);
 
 				if (item1 == null || item2 == null)
 				{
@@ -172,15 +145,16 @@ public static class OperatorDefs
 				return new Optional<bool>(item1 != item2);
 			}
 		},
-		new OperatorDef // checks string equivalence
+		new OperatorDef
 		{
 			oper = "==",
+			inlineFunc = false,
 			parameters = [typeof(VariableObject), typeof(VariableObject)],
 			returnType = typeof(bool),
 			function = (args, _) =>
 			{
-				FunctionProcessor.ConvertUnknown(args![0], out var item1);
-				FunctionProcessor.ConvertUnknown(args[1], out var item2);
+				ParameterProcessor.ConvertUnknown(args![0], out var item1);
+				ParameterProcessor.ConvertUnknown(args[1], out var item2);
 
 				if (item1 == null || item2 == null)
 				{
@@ -193,6 +167,7 @@ public static class OperatorDefs
 		new OperatorDef
 		{
 			oper = ">",
+			inlineFunc = false,
 			parameters = [typeof(float), typeof(float)],
 			returnType = typeof(bool),
 			function = (args, _) =>
@@ -205,12 +180,13 @@ public static class OperatorDefs
 					return new Optional<bool>();
 				}
 
-				return new Optional<bool>(item2.Value > item1.Value);
+				return new Optional<bool>(item1.Value > item2.Value);
 			}
 		},
 		new OperatorDef
 		{
 			oper = "<",
+			inlineFunc = false,
 			parameters = [typeof(float), typeof(float)],
 			returnType = typeof(bool),
 			function = (args, _) =>
@@ -223,12 +199,13 @@ public static class OperatorDefs
 					return new Optional<bool>();
 				}
 
-				return new Optional<bool>(item2.Value < item1.Value);
+				return new Optional<bool>(item1.Value < item2.Value);
 			}
 		},
 		new OperatorDef
 		{
 			oper = ">=",
+			inlineFunc = false,
 			parameters = [typeof(float), typeof(float)],
 			returnType = typeof(bool),
 			function = (args, _) =>
@@ -241,12 +218,13 @@ public static class OperatorDefs
 					return new Optional<bool>();
 				}
 
-				return new Optional<bool>(item2.Value >= item1.Value);
+				return new Optional<bool>(item1.Value >= item2.Value);
 			}
 		},
 		new OperatorDef
 		{
 			oper = "<=",
+			inlineFunc = false,
 			parameters = [typeof(float), typeof(float)],
 			returnType = typeof(bool),
 			function = (args, _) =>
@@ -259,12 +237,13 @@ public static class OperatorDefs
 					return new Optional<bool>();
 				}
 
-				return new Optional<bool>(item2.Value <= item1.Value);
+				return new Optional<bool>(item1.Value <= item2.Value);
 			}
 		},
 		new OperatorDef
 		{
 			oper = "&&",
+			inlineFunc = false,
 			parameters = [typeof(bool), typeof(bool)],
 			returnType = typeof(bool),
 			function = (args, _) =>
@@ -283,6 +262,7 @@ public static class OperatorDefs
 		new OperatorDef
 		{
 			oper = "||",
+			inlineFunc = false,
 			parameters = [typeof(bool), typeof(bool)],
 			returnType = typeof(bool),
 			function = (args, _) =>
@@ -301,6 +281,7 @@ public static class OperatorDefs
 		new OperatorDef
 		{
 			oper = "%",
+			inlineFunc = false,
 			parameters = [typeof(float), typeof(float)],
 			returnType = typeof(float),
 			function = (args, _) =>
@@ -315,12 +296,69 @@ public static class OperatorDefs
 
 				return new Optional<float>(item1.Value % item2.Value);
 			}
-		}
+		},
+		new OperatorDef
+		{
+			oper = "floor",
+			inlineFunc = true,
+			parameters = [typeof(float)],
+			returnType = typeof(float),
+			function = (args, _) =>
+			{
+				var item1 = (Optional<float>)args![0];
+
+				if (!item1.HasValue)
+				{
+					return new Optional<float>();
+				}
+
+				return new Optional<float>(MathF.Floor(item1.Value));
+			}
+		},
+		new OperatorDef
+		{
+			oper = "ceil",
+			inlineFunc = true,
+			parameters = [typeof(float)],
+			returnType = typeof(float),
+			function = (args, _) =>
+			{
+				var item1 = (Optional<float>)args![0];
+
+				if (!item1.HasValue)
+				{
+					return new Optional<float>();
+				}
+
+				return new Optional<float>(MathF.Floor(item1.Value));
+			}
+		},
+		new OperatorDef
+		{
+			oper = "round",
+			inlineFunc = true,
+			parameters = [typeof(float), typeof(int)],
+			returnType = typeof(float),
+			function = (args, _) =>
+			{
+				var item1 = (Optional<float>)args![0];
+				var item2 = (Optional<int>)args[1];
+
+				if (!item1.HasValue || !item2.HasValue)
+				{
+					return new Optional<float>();
+				}
+
+				return new Optional<float>(MathF.Round(item1.Value, item2.Value));
+			}
+		},
 	];
 
 	public static readonly Dictionary<string, OperatorDef> OperatorsFromString = [];
-	public static string[]? Operators;
-	public static Regex? OperatorRegex;
+	public static string[] Operators = null!;
+	public static string[] InlineFunctions = null!;
+
+	public static Regex OperatorRegex = null!;
 
 	public static void Initialize()
 	{
@@ -329,7 +367,8 @@ public static class OperatorDefs
 			OperatorsFromString.Add(oper.oper, oper);
 		}
 
-		Operators = OperatorsFromString.Keys.ToArray();
+		InlineFunctions = OperatorsFromString.Where((oper) => oper.Value.inlineFunc).ToDictionary().Keys.ToArray();
+		Operators = OperatorsFromString.Where((oper) => !oper.Value.inlineFunc).ToDictionary().Keys.ToArray();
 		HashSet<char> characters = new HashSet<char>();
 		foreach (var oper in Operators)
 		{
@@ -338,7 +377,7 @@ public static class OperatorDefs
 
 		characters.Remove('-'); // '-' has to be at end b/c of regex stuff
 
-		string regex_string = @$"[{string.Join("", from c in characters select $"{c}")}-]";
+		string regex_string = @$"[{string.Join("", from c in characters select $"{c}")}-]|{string.Join("|", InlineFunctions)}";
 		Debug.WriteLine(regex_string);
 
 		OperatorRegex = new Regex(regex_string, RegexOptions.Compiled | RegexOptions.NonBacktracking);

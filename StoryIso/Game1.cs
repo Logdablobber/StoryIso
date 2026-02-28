@@ -1,24 +1,35 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System.Timers;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using MonoGame.Extended.BitmapFonts;
+using MonoGame.Extended.Content;
 using MonoGame.Extended.ECS;
+using MonoGame.Extended.Serialization.Json;
 using MonoGame.Extended.ViewportAdapters;
 using StoryIso.Debugging;
 using StoryIso.ECS;
 using StoryIso.Entities;
 using StoryIso.Enums;
+using StoryIso.FileLoading;
 using StoryIso.Functions;
 using StoryIso.Misc;
 using StoryIso.Scenes;
 using StoryIso.Tiled;
+using StoryIso.UI;
 
 namespace StoryIso;
 
 public class Game1 : Game
 {
+	public static JsonSerializerOptions DeserializeOptions = null!;
+
     private GraphicsDeviceManager _graphics;
 	private SpriteBatch _spriteBatch = null!;
 
@@ -57,17 +68,31 @@ public class Game1 : Game
 		}
 	}
 
+	public const int ScreenHeight = 480;
+	public const int ScreenWidth = 800;
+
+	private bool qPressedPreviousFrame = false;
+
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
+
+		DeserializeOptions = new (JsonSerializerOptions.Default)
+		{
+			PropertyNameCaseInsensitive = true,
+			WriteIndented = true
+		};
+
+		DeserializeOptions.Converters.Add(new ColorJsonConverter());
+		DeserializeOptions.Converters.Add(new Vector2JsonConverter());
     }
 
     protected override void Initialize()
     {
 		VariableManager.Initialize();
-		var viewportAdapter = new BoxingViewportAdapter(Window, GraphicsDevice, 800, 480);
+		var viewportAdapter = new BoxingViewportAdapter(Window, GraphicsDevice, ScreenWidth, ScreenHeight);
 		camera = new OrthographicCamera(viewportAdapter)
 		{
 			Zoom = 4f
@@ -81,16 +106,16 @@ public class Game1 : Game
     {
 		_spriteBatch = new SpriteBatch(GraphicsDevice);
 
-		AsepriteLoader.LoadAsefiles(GraphicsDevice, "./Content/Aseprite/");
+		FileLoadingManager.LoadAll(GraphicsDevice);
 
 		tiledManager = new TiledManager(GraphicsDevice, Content, "Map1");
 
-		DebugConsole.Font = Content.Load<BitmapFont>("Fonts/arial");
+		DebugConsole.Font = FontLoader.GetFont("arial");
 		DebugConsole.Scale = 0.125f;
 
-		sceneManager = new SceneManager(Content.Load<Texture2D>("Textures/dialogue-box"),
-										Content.Load<Texture2D>("Textures/name-box"),
-										Content.Load<BitmapFont>("Fonts/ibmbios"),
+		sceneManager = new SceneManager(TextureLoader.GetTexture("dialogue-box")!,
+										TextureLoader.GetTexture("name-box")!,
+										FontLoader.GetFont("ibmbios")!,
 										"./Content/Scenes/");
 
 		_world = new WorldBuilder()
@@ -98,7 +123,10 @@ public class Game1 : Game
 					.AddSystem(new PlayerSystem())
 					.AddSystem(new AnimationSystem())
 					.AddSystem(new CharacterSystem())
+					.AddSystem(new UISystem())
 					.Build();
+
+		UIManager.LoadAll("./Content/UI/", _world);
 
 		CharacterManager.LoadCharacters("./Content/Characters/", _world);
 
@@ -123,6 +151,22 @@ public class Game1 : Game
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
+
+		if (Keyboard.GetState().IsKeyDown(Keys.Q))
+		{
+			if (!qPressedPreviousFrame)
+			{
+				SoundEffectInstance sfx = AudioLoader.GetSound("tx0_fire1") ?? throw new NullReferenceException();
+
+				sfx.Play();
+			}
+			
+			qPressedPreviousFrame = true;
+		}
+		else
+		{
+			qPressedPreviousFrame = false;
+		}
 
 		_world.Update(gameTime);
 

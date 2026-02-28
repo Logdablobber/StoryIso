@@ -22,6 +22,11 @@ public class TilemapRenderer
 		_tilesetTextures.TryAdd(name, texture);
 	}
 
+	public void ClearTilesets()
+	{
+		_tilesetTextures.Clear();
+	}
+
 	public void Update(GameTime gameTime)
 	{
 		

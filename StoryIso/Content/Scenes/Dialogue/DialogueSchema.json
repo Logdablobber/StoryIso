@@ -1,0 +1,49 @@
+{
+  "type": [
+    "object",
+    "null"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "dialogueSteps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "speaker": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "speedMultiplier": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "color": true,
+          "preventSkip": {
+            "type": "boolean"
+          },
+          "duration": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "speaker",
+          "text"
+        ]
+      }
+    }
+  },
+  "required": [
+    "id",
+    "dialogueSteps"
+  ]
+}

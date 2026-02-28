@@ -1,0 +1,81 @@
+{
+  "type": "object",
+  "properties": {
+    "Name": {
+      "type": "string"
+    },
+    "Visible": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "Parts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "Content": {
+            "type": "object",
+            "required": [
+              "$type"
+            ],
+            "anyOf": [
+              {
+                "properties": {
+                  "$type": {
+                    "const": "image"
+                  },
+                  "image": {
+                    "type": "string"
+                  },
+                  "color": true
+                },
+                "required": [
+                  "image"
+                ]
+              },
+              {
+                "properties": {
+                  "$type": {
+                    "const": "text"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "font": {
+                    "type": "string"
+                  },
+                  "Size": true,
+                  "color": true
+                },
+                "required": [
+                  "text",
+                  "font",
+                  "Size"
+                ]
+              }
+            ]
+          },
+          "Position": true,
+          "Scale": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "Content",
+          "Position"
+        ]
+      }
+    },
+    "Position": true
+  },
+  "required": [
+    "Name",
+    "Parts",
+    "Position"
+  ]
+}

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DotTiled;
+using Microsoft.Xna.Framework.Audio;
 using StoryIso.Debugging;
 using StoryIso.Enums;
 
@@ -20,6 +21,8 @@ public class TilemapRoom
 		}
 	}
 	public LayerIndices layerIndices;
+
+	private SoundEffectInstance? backgroundMusic = null;
 	
 	public List<InteractionTile> interactionTiles;
 
@@ -44,13 +47,15 @@ public class TilemapRoom
 						LayerIndices layer_indices, 
 						Dictionary<string, Collider> collision_rectangles,
 						List<InteractionTile> interaction_tiles,
-						List<Trigger> triggers)
+						List<Trigger> triggers,
+						SoundEffectInstance? bgm)
 	{
 		_map = map;
 		layerIndices = layer_indices;
 		_collisionRectangles = collision_rectangles;
 		interactionTiles = interaction_tiles;
 		Triggers = triggers;
+		backgroundMusic = bgm;
 	}
 
 	private void _setTile(ushort x, ushort y, uint guid, int layer_index)
@@ -82,6 +87,16 @@ public class TilemapRoom
 	public void RemoveTile(ushort x, ushort y, TileLayerType layer)
 	{
 		SetTile(x, y, 0, layer);
+	}
+
+	public void PauseMusic()
+	{
+		backgroundMusic?.Stop();
+	}
+
+	public void PlayMusic()
+	{
+		backgroundMusic?.Play();
 	}
 
 	// NOTE: line is only for raising errors

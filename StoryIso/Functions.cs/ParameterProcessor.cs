@@ -84,11 +84,6 @@ public static partial class ParameterProcessor
 			}
 		}
 
-		if (OperatorDefs.OperatorRegex == null)
-		{
-			throw new NullReferenceException("Operator regex is null :(");
-		}
-
 		if (OperatorDefs.OperatorRegex.IsMatch(value))
 		{
 			var postfix = ParameterEvaluator.Postfix<T>(source, function, value);
@@ -179,11 +174,6 @@ public static partial class ParameterProcessor
 				default:
 					break;
 			}
-		}
-
-		if (OperatorDefs.OperatorRegex == null)
-		{
-			throw new NullReferenceException("Operator Regex is null :(");
 		}
 
 		if (OperatorDefs.OperatorRegex.IsMatch(value))
