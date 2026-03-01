@@ -51,7 +51,7 @@ public partial class TextComponent
 		this.Size = size;
 	}
 
-	private void SetText(string text)
+	public void SetText(string text)
 	{
 		var matches = _formatRegex.Matches(text);
 

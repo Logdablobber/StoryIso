@@ -4,6 +4,12 @@
     "Name": {
       "type": "string"
     },
+    "Scale": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
     "Visible": {
       "type": [
         "boolean",
@@ -15,6 +21,9 @@
       "items": {
         "type": "object",
         "properties": {
+          "Name": {
+            "type": "string"
+          },
           "Content": {
             "type": "object",
             "required": [
@@ -63,9 +72,16 @@
               "number",
               "null"
             ]
+          },
+          "Visible": {
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         },
         "required": [
+          "Name",
           "Content",
           "Position"
         ]

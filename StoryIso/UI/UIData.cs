@@ -8,6 +8,7 @@ namespace StoryIso.UI;
 public struct UIData
 {
 	public required string Name { get; set; }
+	public float? Scale { get; set; }
 	public bool? Visible { get; set; }
 	public required UIPart[] Parts { get; set; }
 	public required Vector2 Position { get; set; }
@@ -15,11 +16,13 @@ public struct UIData
 
 public struct UIPart
 {
+	public required string Name { get; set; }
 	public required IContent Content { get; set; }
 
 	[JsonConverter(typeof(Vector2JsonConverter))]
 	public required Vector2 Position { get; set; }
 	public float? Scale { get; set; } // default = 1
+	public bool? Visible { get; set; } // default = true;
 }
 
 [JsonDerivedType(typeof(ImageContent), typeDiscriminator: "image")]

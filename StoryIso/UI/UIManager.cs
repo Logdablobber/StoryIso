@@ -4,13 +4,66 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
 using System.Text.RegularExpressions;
+using Microsoft.Xna.Framework;
 using MonoGame.Extended.ECS;
 
 namespace StoryIso.UI;
 
 public static class UIManager
 {
-	private readonly static List<UIObject> _UIObjects = [];
+	private readonly static Dictionary<string, UIObject> _UIObjects = [];
+
+	public static readonly List<string> UIElements = [];
+
+	public static void SetObjectPosition(string name, Vector2 position)
+	{
+		if (!_UIObjects.TryGetValue(name, out UIObject? obj))
+		{
+			return;
+		}
+
+		obj.UpdatePosition(position);
+	}
+
+	public static void SetObjectX(string name, float x)
+	{
+		if (!_UIObjects.TryGetValue(name, out UIObject? obj))
+		{
+			return;
+		}
+
+		obj.UpdateX(x);
+	}
+
+	public static void SetObjectY(string name, float y)
+	{
+		if (!_UIObjects.TryGetValue(name, out UIObject? obj))
+		{
+			return;
+		}
+
+		obj.UpdateY(y);
+	}
+
+	public static void SetObjectVisible(string name, bool visible)
+	{
+		if (!_UIObjects.TryGetValue(name, out UIObject? obj))
+		{
+			return;
+		}
+
+		obj.info.Visible = visible;
+	}
+
+	public static void SetObjectScale(string name, float scale)
+	{
+		if (!_UIObjects.TryGetValue(name, out UIObject? obj))
+		{
+			return;
+		}
+
+		obj.info.Scale = new Vector2(scale);
+	}
 
 	public static void LoadAll(string base_path, World world)
 	{
@@ -42,7 +95,10 @@ public static class UIManager
 
 			var ui_object = new UIObject(ui_data.Value, world);
 
-			_UIObjects.Add(ui_object);
+			_UIObjects.Add(ui_object.info.Name, ui_object);
+
+			UIElements.Add(ui_object.info.Name);
+			UIElements.AddRange(ui_object.Children);
 		}
 
 		#if DEBUG

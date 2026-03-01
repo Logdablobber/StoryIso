@@ -273,6 +273,12 @@ public static partial class ParameterEvaluator
 
 		while (stack.Count > 0)
 		{
+			if (stack.Peek() == "(")
+			{
+				stack.Pop();
+				continue;
+			}
+
 			res.Add((OperatorDefs.Get(stack.Pop()), typeof(OperatorDef)));
 		}
 

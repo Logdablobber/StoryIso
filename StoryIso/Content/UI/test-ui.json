@@ -2,10 +2,12 @@
 	"$schema": "./UISchema.json",
 	"Name": "test ui",
 	"Visible": true,
-	"Position": "-300 50",
+	"Position": "-300 10",
+	"Scale": 1,
 	"Parts": 
 	[
 		{
+			"Name": "background",
 			"Content": 
 			{
 				"$type": "image",
@@ -15,6 +17,7 @@
 			"Scale": 2
 		},
 		{
+			"Name": "xText",
 			"Content": 
 			{
 				"$type": "text",
@@ -26,6 +29,7 @@
 			"Scale": 1
 		},
 		{
+			"Name": "yText",
 			"Content": 
 			{
 				"$type": "text",

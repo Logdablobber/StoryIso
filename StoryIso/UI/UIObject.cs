@@ -1,33 +1,39 @@
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended;
 using MonoGame.Extended.ECS;
 using StoryIso.Debugging;
 using StoryIso.Entities;
 using StoryIso.FileLoading;
+using System.Linq;
 
 namespace StoryIso.UI;
 
 public class UIObject
 {
-	public string Name { get; private set; }
-	public Vector2 Position { get; set; }
+	public UIInfo info { get; private set; }
 
 	private List<Entity> Parts { get; set; }
+
+	public string[] Children
+	{
+		get
+		{
+			return (from part in Parts select part.Get<UIInfo>().Name).ToArray();
+		}
+	}
 	
 	public UIObject(UIData data, World world)
 	{
-		this.Name = data.Name;
-		this.Position = data.Position;
-
 		this.Parts = new List<Entity>();
+
+		this.info = new UIInfo(null, data.Position, new Vector2(data.Scale ?? 1f), data.Visible ?? true, data.Name);
 
 		foreach (var part in data.Parts)
 		{
 			var entity = world.CreateEntity();
 
-			Color color = Color.White;
+			Color color;
 
 			if (part.Content is TextContent textContent)
 			{
@@ -44,7 +50,7 @@ public class UIObject
 
 				if (texture == null)
 				{
-					DebugConsole.Raise(new MissingAssetError(new Source(0, null, $"Object {Name}"), imageContent.image, "Texture doesn't exist"));
+					DebugConsole.Raise(new MissingAssetError(new Source(0, null, $"Object {info.Name}"), imageContent.image, "Texture doesn't exist"));
 					return;
 				}
 
@@ -58,10 +64,9 @@ public class UIObject
 				return;
 			}
 
-			Vector2 position = part.Position + Position;
-
-			entity.Attach(new Transform2(position: position, scale: new Vector2(part.Scale ?? 1)));
+			entity.Attach(new Transform2());
 			entity.Attach(new RenderAttributes(data.Visible ?? true, color, true));
+			entity.Attach(new UIInfo(info, part.Position, new Vector2(part.Scale ?? 1f), part.Visible ?? true, part.Name));
 
 			this.Parts.Add(entity);
 		}
@@ -69,16 +74,19 @@ public class UIObject
 
 	public void UpdatePosition(Vector2 new_position)
 	{
-		Vector2 delta_position = Position - new_position;
-
-		foreach (var part in Parts)
-		{
-			var transform = part.Get<Transform2>();
-
-			transform.Position += delta_position;
-		}
+		info.LocalPosition = new_position;
 	}
 
+	public void UpdateX(float new_x)
+	{
+		info.SetX(new_x);
+	}
+
+	public void UpdateY(float new_y)
+	{
+		info.SetY(new_y);
+	}
+	
 	public void Destroy()
 	{
 		for (int i = this.Parts.Count - 1; i >= 0; i--)

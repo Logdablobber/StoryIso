@@ -48,14 +48,14 @@ public class RenderSystem : EntityDrawSystem
 			Animation animation = _animationMapper.Get(entityId);
 			if (animation != null)
 			{
-				animation.GetFrame().Draw(_spriteBatch, draw_position, render_attributes.color, transform.Rotation, Vector2.Zero, draw_scale, SpriteEffects.None, 0f);
+				animation.GetFrame().Draw(_spriteBatch, draw_position, render_attributes.color, transform.Rotation, Vector2.Zero, draw_scale, SpriteEffects.None, render_attributes.ScreenElement ? 0f : 1f);
 				continue;
 			}
 
 			Texture2D texture = _textureMapper.Get(entityId);
 			if (texture != null)
 			{
-				_spriteBatch.Draw(texture, draw_position, null, render_attributes.color, transform.Rotation, Vector2.Zero, draw_scale, SpriteEffects.None, 0f);
+				_spriteBatch.Draw(texture, draw_position, null, render_attributes.color, transform.Rotation, Vector2.Zero, draw_scale, SpriteEffects.None, render_attributes.ScreenElement ? 0f : 1f);
 				continue;
 			}
 

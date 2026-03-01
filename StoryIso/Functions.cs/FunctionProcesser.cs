@@ -98,7 +98,7 @@ public static partial class FunctionProcessor
 
 					    if (inside_if)
 						{
-							DebugConsole.Raise(new NestedIfError(new Source(i, null, obj)));
+							DebugConsole.Raise(new NestedIfError(new Source(i + 1, null, obj)));
 							return null;
 						}
 
@@ -106,7 +106,7 @@ public static partial class FunctionProcessor
 
 						string input = matches[1].Trim();
 
-						var postfix = ParameterEvaluator.Postfix<bool>(new Source(i, null, obj), "IF", input);
+						var postfix = ParameterEvaluator.Postfix<bool>(new Source(i + 1, null, obj), "IF", input);
 
 						uint? goto_line = null;
 
@@ -140,7 +140,7 @@ public static partial class FunctionProcessor
 					case "#ELIF":
 					    if (!inside_if || inside_else)
 						{
-							DebugConsole.Raise(new MissingIfError(new Source(i, null, obj)));
+							DebugConsole.Raise(new MissingIfError(new Source(i + 1, null, obj)));
 							return null;
 						}
 
@@ -203,7 +203,7 @@ public static partial class FunctionProcessor
 					case "#ELSE":
 						if (!inside_if || inside_else)
 						{
-							DebugConsole.Raise(new MissingIfError(new Source(i, null, obj)));
+							DebugConsole.Raise(new MissingIfError(new Source(i + 1, null, obj)));
 							return null;
 						}
 
@@ -246,7 +246,7 @@ public static partial class FunctionProcessor
 			//functions start with a '.' for formatting reasons
 			if (first_value[0] != '.') 
 			{
-				DebugConsole.Raise(new UnknownFunctionError(new Source(i, null, obj), first_value));
+				DebugConsole.Raise(new UnknownFunctionError(new Source(i + 1, null, obj), first_value));
 				return null;
 			}
 
@@ -254,7 +254,7 @@ public static partial class FunctionProcessor
 
 			if (func == FunctionType.None)
 			{
-				DebugConsole.Raise(new UnknownFunctionError(new Source(i, null, obj), first_value));
+				DebugConsole.Raise(new UnknownFunctionError(new Source(i + 1, null, obj), first_value));
 				return null;
 			}
 
@@ -281,11 +281,11 @@ public static partial class FunctionProcessor
 
 			if (string_parameters.Count != functionDef.parameters!.Length)
 			{
-				DebugConsole.Raise(new ParameterError(new Source(i, first_value, obj), functionDef.name!, string_parameters.Count, functionDef.parameters.Length));
+				DebugConsole.Raise(new ParameterError(new Source(i + 1, first_value, obj), functionDef.name!, string_parameters.Count, functionDef.parameters.Length, "Did you forget comma separators??"));
 				return null;
 			}
 			
-			List<object>? args = ParameterProcessor.ProcessParameters(new Source(i, functionDef.name!, obj), functionDef.name!, string_parameters, functionDef.parameters);
+			List<object>? args = ParameterProcessor.ProcessParameters(new Source(i + 1, functionDef.name!, obj), functionDef.name!, string_parameters, functionDef.parameters);
 
 			if (args == null)
 			{
