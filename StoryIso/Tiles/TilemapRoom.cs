@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DotTiled;
 using Microsoft.Xna.Framework.Audio;
+using StoryIso.Audio;
 using StoryIso.Debugging;
 using StoryIso.Enums;
 
@@ -22,7 +23,8 @@ public class TilemapRoom
 	}
 	public LayerIndices layerIndices;
 
-	private SoundEffectInstance? backgroundMusic = null;
+	private string? bgm_name = null;
+	private float? bgm_volume = null;
 	
 	public List<InteractionTile> interactionTiles;
 
@@ -48,14 +50,16 @@ public class TilemapRoom
 						Dictionary<string, Collider> collision_rectangles,
 						List<InteractionTile> interaction_tiles,
 						List<Trigger> triggers,
-						SoundEffectInstance? bgm)
+						string? bgm_name,
+						float? bgm_volume)
 	{
 		_map = map;
 		layerIndices = layer_indices;
 		_collisionRectangles = collision_rectangles;
 		interactionTiles = interaction_tiles;
 		Triggers = triggers;
-		backgroundMusic = bgm;
+		this.bgm_name = bgm_name;
+		this.bgm_volume = bgm_volume;
 	}
 
 	private void _setTile(ushort x, ushort y, uint guid, int layer_index)
@@ -89,14 +93,15 @@ public class TilemapRoom
 		SetTile(x, y, 0, layer);
 	}
 
-	public void PauseMusic()
-	{
-		backgroundMusic?.Stop();
-	}
-
 	public void PlayMusic()
 	{
-		backgroundMusic?.Play();
+		if (bgm_name == null)
+		{
+			return;
+		}
+
+		AudioManager.SetBGM(new Source(0, null, _map.Class), bgm_name, bgm_volume ?? 1f);
+		AudioManager.PlayBGM();
 	}
 
 	// NOTE: line is only for raising errors

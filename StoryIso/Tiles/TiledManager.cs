@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using MonoGame.Extended.Content;
+using StoryIso.Debugging;
 using StoryIso.FileLoading;
 using StoryIso.Functions;
 using StoryIso.Misc;
@@ -118,9 +119,7 @@ public class TiledManager
 		}
 
 		if (_rooms.ContainsKey(map_name))
-		{
-			currentRoom?.PauseMusic();
-			
+		{			
 			currentRoomName = map_name;
 			currentRoom!.PlayMusic();
 		}
@@ -295,24 +294,22 @@ public class TiledManager
 			}
 		}
 
-		SoundEffectInstance? bgm = null;
-		if (map.TryGetProperty<StringProperty>("bgm", out var bgm_name))
+		string? bgm_name = null;
+		float? bgm_volume = null;
+		if (map.TryGetProperty<StringProperty>("bgm", out var bgm_name_prop))
 		{
-			var sound = AudioLoader.GetSound(bgm_name.Value);
+			bgm_name = bgm_name_prop.Value;
 
-			if (sound != null)
+			if (bgm_name != null)
 			{
-				if (map.TryGetProperty<FloatProperty>("bgmVolume", out var bgm_volume))
+				if (map.TryGetProperty<FloatProperty>("bgmVolume", out var bgm_volume_prop))
 				{
-					sound.Volume = Math.Clamp(bgm_volume.Value, 0, 1);
+					bgm_volume = Math.Clamp(bgm_volume_prop.Value, 0, 1);
 				}
-
-				sound.IsLooped = true;
-				bgm = sound;
 			}
 		}
 
-		return new TilemapRoom(map, layer_indices, collision_rectangles, interaction_tiles, triggers, bgm);
+		return new TilemapRoom(map, layer_indices, collision_rectangles, interaction_tiles, triggers, bgm_name, bgm_volume);
 	}
 
 	public Vector2 TilePosToWorldPos(Point tile)

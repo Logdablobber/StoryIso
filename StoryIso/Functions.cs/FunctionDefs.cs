@@ -493,6 +493,82 @@ public static class FunctionDefs
 				return null;	
 			}
 		},
+		new FunctionDef // SetMusic
+		{
+			name = "SetMusic",
+			type = FunctionType.SetMusic,
+			parameters = [typeof(string), typeof(float)],
+			function = (args, source) => 
+			{
+				var item1 = ParameterProcessor.Convert<string>(args![0]);
+				var item2 = ParameterProcessor.Convert<float>(args[1]);
+
+				if (!item1.HasValue || !item2.HasValue)
+				{
+					return null;
+				}
+
+				AudioManager.SetBGM(source!, item1.Value, item2.Value);
+				AudioManager.PlayBGM();
+				return null;	
+			}
+		},
+		new FunctionDef // StopMusic
+		{
+			name = "StopMusic",
+			type = FunctionType.StopMusic,
+			parameters = [],
+			function = (_, _) => 
+			{
+				AudioManager.StopBGM();
+				return null;	
+			}
+		},
+		new FunctionDef // PauseMusic
+		{
+			name = "PauseMusic",
+			type = FunctionType.PauseMusic,
+			parameters = [],
+			function = (_, _) => 
+			{
+				AudioManager.PauseBGM();
+				return null;	
+			}
+		},
+		new FunctionDef // PlayMusic
+		{
+			name = "PlayMusic",
+			type = FunctionType.PlayMusic,
+			parameters = [],
+			function = (_, _) => 
+			{
+				AudioManager.PlayBGM();
+				return null;	
+			}
+		},
+		new FunctionDef // SetMasterVolume
+		{
+			name = "SetMasterVolume",
+			type = FunctionType.SetMasterVolume,
+			parameters = [typeof(float)],
+			function = (args, source) => 
+			{
+				var item1 = ParameterProcessor.Convert<float>(args![0]);
+
+				if (!item1.HasValue)
+				{
+					return null;
+				}
+
+				if (item1.Value < 0)
+				{
+					DebugConsole.Raise(new ParameterValueError(source!, "SetMasterVolume", item1.Value.ToString(), "Master Volume must be greater than or equal to 0"));
+				}
+
+				AudioManager.SetVolume(item1.Value);
+				return null;	
+			}
+		},
 	};
 
 	private static Dictionary<string, int> NameToFunctionDefIndex = [];

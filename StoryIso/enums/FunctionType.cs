@@ -26,5 +26,10 @@ public enum FunctionType
 	Wait, // waits a set amount of time, takes in the amount of time in seconds as a float (DO NOT USE ON SYNCHRONOUS SCRIPTS!!!)
 	SetAttr, // sets an attribute, takes in the object's name as a string, the attribute name as a string, and the value
 	PlaySound, // plays a sound, takes in the sound name as a string, volume as a float from 0 to 1, and pitch as a float from -10 to 10
+	SetMusic, // plays a sound on loop, replacing the current bgm, takes in the sound name as a string and volume as a float from 0 to 1
+	StopMusic, // stop the bgm, if it is currently playing
+	PauseMusic, // pauses the bgm, if it is currently playing
+	PlayMusic, // starts/resumes the bgm
+	SetMasterVolume, // sets master volume, takes in a float as the new value
 	None
 }

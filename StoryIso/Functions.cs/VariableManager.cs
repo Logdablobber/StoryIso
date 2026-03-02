@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using MonoGame.Extended;
+using StoryIso.Audio;
 using StoryIso.Debugging;
 using StoryIso.Enums;
 using StoryIso.Misc;
@@ -51,19 +52,19 @@ public static partial class VariableManager
 
 	readonly static Dictionary<string, Func<int>> _readonlyInts = new()
 	{
-		{"playerX", () => (int)Game1.tiledManager.WorldXToTileX(Game1.player.Get<Transform2>().Position.X)},
-		{"playerY", () => (int)Game1.tiledManager.WorldYToTileY(Game1.player.Get<Transform2>().Position.Y)}
+		
 	};
 
 	readonly static Dictionary<string, Func<float>> _readonlyFloats = new()
 	{
 		{"playerX", () => Game1.tiledManager.WorldXToTileX(Game1.player.Get<Transform2>().Position.X)},
-		{"playerY", () => Game1.tiledManager.WorldYToTileY(Game1.player.Get<Transform2>().Position.Y)}
+		{"playerY", () => Game1.tiledManager.WorldYToTileY(Game1.player.Get<Transform2>().Position.Y)},
+		{"masterVolume", AudioManager.GetVolume},
 	};
 
 	readonly static Dictionary<string, Func<string>> _readonlyStrings = new()
 	{
-		
+		{"bgmName", () => AudioManager.BGMName ?? "N/A"},
 	};
 
 	readonly static Dictionary<string, Func<bool>> _readonlyBools = new()
