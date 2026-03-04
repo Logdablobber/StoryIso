@@ -51,7 +51,7 @@ public static partial class FunctionProcessor
 
 			if (matches.Length != 4)
 			{
-				continue; // TODO: raise error
+				continue;
 			}
 
 			var type = VariableManager.GetVariableType(matches[1].Trim());
@@ -131,7 +131,7 @@ public static partial class FunctionProcessor
 							continue;
 						}
 
-						funcs.Add(new Function(FunctionType.GOTOIF, 
+						funcs.Add(new Function(FunctionDefs.GOTOIF_Index, 
 													[postfix, 
 													new FunctionParameter<uint>(goto_line.Value)], 
 												i));
@@ -190,11 +190,11 @@ public static partial class FunctionProcessor
 						}
 
 						// this is the goto for the IF statement before it
-						funcs.Add(new Function(FunctionType.GOTO,
+						funcs.Add(new Function(FunctionDefs.GetIndex("GOTO"),
 												[new FunctionParameter<uint>(endif_line.Value)],
 												i - 1));
 
-						funcs.Add(new Function(FunctionType.GOTOIF, 
+						funcs.Add(new Function(FunctionDefs.GOTOIF_Index, 
 													[elif_postfix, 
 													new FunctionParameter<uint>(elif_goto_line.Value)], 
 												i));
@@ -226,7 +226,7 @@ public static partial class FunctionProcessor
 						}		
 
 						// for IF statements before this one
-						funcs.Add(new Function(FunctionType.GOTO,
+						funcs.Add(new Function(FunctionDefs.GetIndex("GOTO"),
 												[new FunctionParameter<uint>(else_endif_line.Value)],
 												i - 1));
 						break;
@@ -250,9 +250,9 @@ public static partial class FunctionProcessor
 				return null;
 			}
 
-			FunctionType func = FunctionDefs.Get(first_value[1..]).type;
+			ushort funcIndex = FunctionDefs.GetIndex(first_value[1..]);
 
-			if (func == FunctionType.None)
+			if (funcIndex == 0) // null function
 			{
 				DebugConsole.Raise(new UnknownFunctionError(new Source(i + 1, null, obj), first_value));
 				return null;
@@ -260,7 +260,7 @@ public static partial class FunctionProcessor
 
 			if (matches.Length == 1)
 			{
-				funcs.Add(new Function(func, [], i));
+				funcs.Add(new Function(funcIndex, [], i));
 			}
 
 			List<string> string_parameters = [];
@@ -277,7 +277,7 @@ public static partial class FunctionProcessor
 				string_parameters.Add(match);
 			}
 
-			FunctionDef functionDef = FunctionDefs.Get(func);
+			FunctionDef functionDef = FunctionDefs.Get(funcIndex);
 
 			if (string_parameters.Count != functionDef.parameters!.Length)
 			{
@@ -292,7 +292,7 @@ public static partial class FunctionProcessor
 				return null;
 			}
 
-			funcs.Add(new Function(func, args, i));
+			funcs.Add(new Function(funcIndex, args, i));
 		}
 
 		return funcs;
@@ -314,7 +314,7 @@ public static partial class FunctionProcessor
  
 			var func = funcs[i];
 
-			uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.function).name, obj, source));
+			uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.functionIndex).name, obj, source));
 
 			if (!goto_line.HasValue || goto_line.Value == func.line)
 			{
@@ -359,7 +359,7 @@ public static partial class FunctionProcessor
 			{
 				var func = funcs[i];
 
-				uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.function).name, obj, source));
+				uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.functionIndex).name, obj, source));
 
 				if (!goto_line.HasValue || goto_line.Value == func.line)
 				{
@@ -398,7 +398,7 @@ public static partial class FunctionProcessor
 
 	private static uint? RunFunct(Function func, Source? source)
 	{
-		FunctionDef functionDef = FunctionDefs.Get(func.function);
+		FunctionDef functionDef = FunctionDefs.Get(func.functionIndex);
 
 		return functionDef.function!(func.parameters, source);
 	}
