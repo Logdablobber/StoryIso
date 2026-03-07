@@ -3,16 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using StoryIso.Audio;
-using StoryIso.Debugging;
-using StoryIso.ECS;
-using StoryIso.Enums;
-using StoryIso.Misc;
-using StoryIso.Scenes;
 
 namespace StoryIso.Functions;
 

@@ -1,5 +1,3 @@
-using System;
-
 namespace StoryIso.Enums;
 
 public enum VariableType

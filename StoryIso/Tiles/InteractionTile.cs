@@ -1,10 +1,7 @@
-using System;
 using System.Collections.Generic;
-using System.Data;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
-using StoryIso.Debugging;
 using StoryIso.Enums;
 using StoryIso.Functions;
 using StoryIso.Misc;

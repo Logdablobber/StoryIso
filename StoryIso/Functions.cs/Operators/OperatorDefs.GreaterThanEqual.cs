@@ -1,4 +1,3 @@
-using System;
 using StoryIso.Misc;
 
 namespace StoryIso.Functions;

@@ -41,7 +41,7 @@ public class UIObject
 
 				color = textContent.color ?? Color.Black;
 
-				entity.Attach(new TextComponent(textContent.text, textContent.font, size));
+				entity.Attach(new TextComponent(part.Name, textContent.text, textContent.font, size));
 			}
 
 			else if (part.Content is ImageContent imageContent)

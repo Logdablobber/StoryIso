@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AsepriteDotNet;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
@@ -13,7 +12,6 @@ using StoryIso.Enums;
 using StoryIso.Functions;
 using StoryIso.Misc;
 using StoryIso.Scenes;
-using StoryIso.Tiled;
 using StoryIso.UI;
 
 namespace StoryIso.ECS;

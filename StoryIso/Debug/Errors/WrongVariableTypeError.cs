@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace StoryIso.Debugging;
 
 public class WrongVariableTypeError : IError

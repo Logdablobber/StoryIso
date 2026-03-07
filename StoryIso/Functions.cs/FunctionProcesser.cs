@@ -1,14 +1,11 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Microsoft.Xna.Framework;
 using StoryIso.Debugging;
 using StoryIso.Enums;
 using StoryIso.Misc;
-using StoryIso.Scenes;
 
 namespace StoryIso.Functions;
 
@@ -74,8 +71,20 @@ public static partial class FunctionProcessor
 		bool inside_if = false;
 		bool inside_else = false;
 
+		Dictionary<string, uint> loops = [];
+
 		for (uint i = start_line; i < lines.Length; i++)
 		{
+			Source get_source() 
+			{
+				return new Source(i + 1, null, obj);
+			}
+
+			string get_loop_variable_name(string loop_name)
+			{
+				return $"Loop {loop_name} {obj}".GetHashCode().ToString();
+			}
+
 			var matches = lines[i];
 
 			if (matches.Length == 0)
@@ -98,7 +107,7 @@ public static partial class FunctionProcessor
 
 					    if (inside_if)
 						{
-							DebugConsole.Raise(new NestedIfError(new Source(i + 1, null, obj)));
+							DebugConsole.Raise(new NestedIfError(get_source()));
 							return null;
 						}
 
@@ -106,7 +115,7 @@ public static partial class FunctionProcessor
 
 						string input = matches[1].Trim();
 
-						var postfix = ParameterEvaluator.Postfix<bool>(new Source(i + 1, null, obj), "IF", input);
+						var postfix = ParameterEvaluator.Postfix<bool>(get_source(), "IF", input);
 
 						uint? goto_line = null;
 
@@ -140,13 +149,13 @@ public static partial class FunctionProcessor
 					case "#ELIF":
 					    if (!inside_if || inside_else)
 						{
-							DebugConsole.Raise(new MissingIfError(new Source(i + 1, null, obj)));
+							DebugConsole.Raise(new MissingIfError(get_source()));
 							return null;
 						}
 
 						string elif_input = matches[1].Trim();
 
-						var elif_postfix = ParameterEvaluator.Postfix<bool>(new Source(i, null, obj), "ELIF", elif_input);
+						var elif_postfix = ParameterEvaluator.Postfix<bool>(get_source(), "ELIF", elif_input);
 
 						uint? elif_goto_line = null;
 						uint? endif_line = null;
@@ -203,7 +212,7 @@ public static partial class FunctionProcessor
 					case "#ELSE":
 						if (!inside_if || inside_else)
 						{
-							DebugConsole.Raise(new MissingIfError(new Source(i + 1, null, obj)));
+							DebugConsole.Raise(new MissingIfError(get_source()));
 							return null;
 						}
 
@@ -228,12 +237,118 @@ public static partial class FunctionProcessor
 						// for IF statements before this one
 						funcs.Add(new Function(FunctionDefs.GetIndex("GOTO"),
 												[new FunctionParameter<uint>(else_endif_line.Value)],
-												i - 1));
+												i));
 						break;
 					
 					case "#ENDIF":
 					    inside_if = false;
 						inside_else = true;
+						break;
+
+					case "#LOOP": // should be in format #LOOP LOOP_NAME AMOUNT_OF_LOOPS
+						if (matches.Length < 3)
+						{
+							continue;
+						}
+
+						string loop_name = matches[1].Trim();
+
+						uint end_loop_line = 0;
+
+						for (uint j = i + 1; j < lines.Length; j++)
+						{
+							if (lines[j][0] == $"#ENDLOOP {loop_name}")
+							{
+								end_loop_line = j;
+								break;
+							}
+
+							if (j == lines.Length - 1) 
+							{
+								end_loop_line = j;
+								break;
+							}
+						}
+
+						var variable_name = get_loop_variable_name(loop_name);
+
+						var condition = ParameterEvaluator.Postfix<bool>(get_source(), "LOOP", $"{variable_name} == {string.Join(' ', matches[1..])} || {variable_name} == -1");
+
+						if (condition == null)
+						{
+							continue;
+						}
+
+						VariableManager.DefineVariable(VariableType.Int, variable_name, 0, get_source());
+						funcs.Add(new Function(FunctionDefs.GetIndex("SetVar"),
+												[new FunctionParameter<string>(value:variable_name), 
+												new FunctionParameter<int>(0)], i - 1));
+
+						funcs.Add(new Function(FunctionDefs.GOTOIF_Index,
+												[condition, end_loop_line], i));
+
+						loops.Add(loop_name, i);
+						break;
+
+					case "#ENDLOOP":
+						if (matches.Length != 2)
+						{
+							DebugConsole.Raise(new ParameterError(get_source(), "ENDLOOP", matches.Length - 1, 1));
+							continue;
+						}
+
+						string end_loop_name = matches[1].Trim();
+
+						if (!loops.TryGetValue(end_loop_name, out var loop_line))
+						{
+							DebugConsole.Raise(new MissingLoopError(get_source(), end_loop_name));
+							return null;
+						}
+
+						loops.Remove(end_loop_name);
+
+						var loop_var_name = get_loop_variable_name(end_loop_name);
+
+						var increment_var_postfix = ParameterEvaluator.Postfix<int>(get_source(), "ENDLOOP", $"{loop_var_name} + 1");
+
+						if (increment_var_postfix == null)
+						{
+							throw new UnreachableException("How tf did this break?");
+						}
+
+						funcs.Add(new Function(FunctionDefs.GetIndex("SetVar"),
+													[new FunctionParameter<string>(value:loop_var_name),
+													new FunctionParameter<int>(increment_var_postfix)], i));
+
+						funcs.Add(new Function(FunctionDefs.GetIndex("GOTO"), 
+													[new FunctionParameter<int>((int)loop_line)], i));
+						break;
+
+					case "#BREAK":
+						if (matches.Length != 2)
+						{
+							DebugConsole.Raise(new ParameterError(get_source(), "BREAK", matches.Length - 1, 1));
+							continue;
+						}
+
+						string break_loop_name = matches[1].Trim();
+
+						if (!loops.TryGetValue(break_loop_name, out var break_loop_line))
+						{
+							DebugConsole.Raise(new MissingLoopError(get_source(), break_loop_name));
+							return null;
+						}
+
+						string break_var_name = get_loop_variable_name(break_loop_name);
+
+						// set variable to -1, as this will cause the loop to end
+						funcs.Add(new Function(FunctionDefs.GetIndex("SetVar"),
+												[new FunctionParameter<string>(value: break_var_name),
+												new FunctionParameter<int>(-1)], i));
+
+						funcs.Add(new Function(FunctionDefs.GetIndex("GOTO"),
+												[new FunctionParameter<int>((int)break_loop_line)], i));
+
 						break;
 
 					default:
@@ -246,7 +361,7 @@ public static partial class FunctionProcessor
 			//functions start with a '.' for formatting reasons
 			if (first_value[0] != '.') 
 			{
-				DebugConsole.Raise(new UnknownFunctionError(new Source(i + 1, null, obj), first_value));
+				DebugConsole.Raise(new UnknownFunctionError(get_source(), first_value));
 				return null;
 			}
 
@@ -254,7 +369,7 @@ public static partial class FunctionProcessor
 
 			if (funcIndex == 0) // null function
 			{
-				DebugConsole.Raise(new UnknownFunctionError(new Source(i + 1, null, obj), first_value));
+				DebugConsole.Raise(new UnknownFunctionError(get_source(), first_value));
 				return null;
 			}
 
@@ -281,11 +396,11 @@ public static partial class FunctionProcessor
 
 			if (string_parameters.Count != functionDef.parameters!.Length)
 			{
-				DebugConsole.Raise(new ParameterError(new Source(i + 1, first_value, obj), functionDef.name!, string_parameters.Count, functionDef.parameters.Length, "Did you forget comma separators??"));
+				DebugConsole.Raise(new ParameterError(new Source(i, first_value, obj), functionDef.name!, string_parameters.Count, functionDef.parameters.Length, "Did you forget comma separators??"));
 				return null;
 			}
 			
-			List<object>? args = ParameterProcessor.ProcessParameters(new Source(i + 1, functionDef.name!, obj), functionDef.name!, string_parameters, functionDef.parameters);
+			List<object>? args = ParameterProcessor.ProcessParameters(new Source(i, functionDef.name!, obj), functionDef.name!, string_parameters, functionDef.parameters);
 
 			if (args == null)
 			{
@@ -407,6 +522,10 @@ public static partial class FunctionProcessor
 	// and ignores commas inside of brackets or quotes
 	// also separates functions (starting with .) and control operators (starting with #)
 	// really f**king complicated s**t
-	[GeneratedRegex(@"\s*(//.*)|([.#][^\s]+\b)|(([^"",]*([[][^[]+])[^"",]*)|(([^"",]*(""(\\""|[^""])*"")?[^"",]*)+))", RegexOptions.Compiled | RegexOptions.Singleline)]
+	[GeneratedRegex(@"\s*(//.*)|" + // groups comments
+					@"([.#][^\s]+\b)|" + // groups words that start with . or # until a whitespace character occurs
+					@"(([^"",]*([[][^[]+])[^"",]*)|" + // groups arrays
+					@"(([^"",]*(""(\\""|[^""])*"")?[^"",]*)+))", // groups strings & other values
+					RegexOptions.Compiled | RegexOptions.Singleline)]
 	private static partial Regex SplitRegex();
 }

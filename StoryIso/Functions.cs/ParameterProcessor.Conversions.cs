@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Data;
 using StoryIso.Enums;
 using StoryIso.Misc;
 

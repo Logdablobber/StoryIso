@@ -1,6 +1,4 @@
-using System.Diagnostics.Tracing;
 using Microsoft.Xna.Framework;
-using MonoGame.Extended;
 
 namespace StoryIso.Entities;
 

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using DotTiled;
-using Microsoft.Xna.Framework.Audio;
 using StoryIso.Audio;
 using StoryIso.Debugging;
 using StoryIso.Enums;

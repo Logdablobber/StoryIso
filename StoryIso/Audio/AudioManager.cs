@@ -1,4 +1,3 @@
-using System;
 using Microsoft.Xna.Framework.Audio;
 using StoryIso.Debugging;
 using StoryIso.FileLoading;

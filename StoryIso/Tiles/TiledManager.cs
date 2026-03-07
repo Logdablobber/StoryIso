@@ -1,18 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using DotTiled;
 using DotTiled.Serialization;
-using Microsoft.Toolkit.HighPerformance;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using MonoGame.Extended.Content;
-using StoryIso.Debugging;
-using StoryIso.FileLoading;
 using StoryIso.Functions;
 using StoryIso.Misc;
 

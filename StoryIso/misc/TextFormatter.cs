@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using MonoGame.Extended;
 using System.Text.RegularExpressions;
 using MonoGame.Extended.BitmapFonts;
-using System.Diagnostics;
 
 namespace StoryIso.Misc;
 

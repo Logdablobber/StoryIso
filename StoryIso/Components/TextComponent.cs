@@ -8,6 +8,7 @@ namespace StoryIso.Entities;
 
 public partial class TextComponent
 {
+	private string name;
 	private string _text = null!;
 	private FunctionParameter<string>[] _params = null!;
 	public string Text
@@ -44,8 +45,9 @@ public partial class TextComponent
 
 	private static Regex _formatRegex = FormatRegex();
 
-	public TextComponent(string text, string fontName, SizeF size)
+	public TextComponent(string name, string text, string fontName, SizeF size)
 	{
+		this.name = name;
 		SetText(text);
 		this.FontName = fontName;
 		this.Size = size;
@@ -68,7 +70,7 @@ public partial class TextComponent
 		{
 			text = text[..matches[i].Index] + i.ToString() + text[Math.Min(text.Length - 1, matches[i].Index + matches[i].Length + 2)..];
 
-			FunctionParameter<string>? param = ParameterProcessor.ParseEquation<string>(matches[i].Value, new Source(0, null, "TextComponent"), "TextComponent");
+			FunctionParameter<string>? param = ParameterProcessor.ParseEquation<string>(matches[i].Value, new Source(0, null, $"TextComponent {name}"), "TextComponent.Parse");
 
 			if (param == null)
 			{

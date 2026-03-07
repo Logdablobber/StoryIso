@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using SharpDX;
 using StoryIso.Debugging;
-using StoryIso.Enums;
 using StoryIso.Misc;
 
 namespace StoryIso.Functions;
@@ -30,7 +28,7 @@ public static partial class ParameterEvaluator
 
 			if (operatorDef.function == null)
 			{
-				throw new ArgumentNullException("function doesn't exist");
+				throw new ArgumentNullException($"function of operator {operatorDef.oper} doesn't exist");
 			}
 
 			if (stack.Count < operatorDef.parameters.Length)
@@ -202,17 +200,28 @@ public static partial class ParameterEvaluator
 	{
 		string[] infix = (from match in
 								_splitRegex.Matches(value)
+								where !string.IsNullOrEmpty(match.Value)
 								select match.Value).ToArray();
+
+		// check the "equation" is just a single value
+		if (infix.Length == 1 && _operandRegex.IsMatch(infix[0]) && !OperatorDefs.InlineFunctions.Contains(infix[0]))
+		{
+			var operand = ParameterProcessor.ProcessUnknownParameter(infix[0], source, function);
+
+			if (!operand.HasValue)
+			{
+				return null;
+			}
+
+			return new PostfixEquation<T>([operand.Value]);
+		}
 
 		List<(object, Type)> res = [];
 		Stack<string> stack = new();
 
-		foreach (string item in infix)
+		for (int i = 0; i < infix.Length; i++)
 		{
-			if (string.IsNullOrEmpty(item))
-			{
-				continue;
-			}
+			string item = infix[i];
 
 			if (_operandRegex.IsMatch(item) && !OperatorDefs.InlineFunctions.Contains(item))
 			{
@@ -227,25 +236,129 @@ public static partial class ParameterEvaluator
 				continue;
 			}
 
-			if (item == "(")
+			// parse inline functions:
+			if (OperatorDefs.InlineFunctions.Contains(item))
 			{
-				stack.Push("(");
-				continue;
-			}
-
-			if (item == ",")
-			{
-				while (stack.Count > 0 && stack.Peek() != "(")
+				if (i >= infix.Length - 1 || infix[i + 1] != "(")
 				{
-					res.Add((OperatorDefs.Get(stack.Pop()), typeof(OperatorDef)));
-				}
-
-				if (stack.Count == 0)
-				{
-					DebugConsole.Raise(new MissingParenthesisError(source, value, "Missing opening parenthesis"));
+					DebugConsole.Raise(new MissingParenthesisError(source, value, "Missing open parenthesis"));
 					return null;
 				}
 
+				var oper = OperatorDefs.Get(item);
+
+				List<string> parameters = [""];
+				int parenthesis_depth = 0;
+
+				for (int j = i + 2; j < infix.Length; j++)
+				{
+					if (infix[j] == ")")
+					{
+						parenthesis_depth -= 1;
+
+						if (parenthesis_depth <= 0)
+						{
+							i = j + 1;
+							break;
+						}
+						
+						parameters[^1] += ")";
+						continue;
+					}
+
+					if (j == infix.Length - 1)
+					{
+						DebugConsole.Raise(new MissingParenthesisError(source, value, "Missing closing parenthesis"));
+						return null;
+					}
+
+					if (infix[j] == "(")
+					{
+						parenthesis_depth += 1;
+						parameters[^1] += "(";
+						continue;
+					}
+
+					if (parenthesis_depth == 0 && infix[j] == ",")
+					{
+						parameters.Add("");
+						continue;
+					}
+
+					parameters[^1] += infix[j];
+				}
+
+				if (parameters.Count != oper.parameters.Length)
+				{
+					DebugConsole.Raise(new ParameterError(source, function, parameters.Count, oper.parameters.Length));
+					return null;
+				}
+
+				bool get_postfix<T1>(string param) where T1 : notnull
+				{
+					var param_equation = Postfix<T1>(source, function, param);
+
+					if (param_equation == null)
+					{
+						return false;
+					}
+
+					res.Add((new FunctionParameter<T1>(param_equation), typeof(FunctionParameter<T1>)));
+					return true;
+				}
+
+				for (int j = 0; j < oper.parameters.Length; j++)
+				{
+					if (oper.parameters[j] == typeof(int))
+					{
+						if (!get_postfix<int>(parameters[j]))
+						{
+							return null;
+						}
+
+						continue;
+					}
+
+					if (oper.parameters[j] == typeof(float))
+					{
+						if (!get_postfix<float>(parameters[j]))
+						{
+							return null;
+						}
+
+						continue;
+					}
+
+					if (oper.parameters[j] == typeof(string))
+					{
+						if (!get_postfix<string>(parameters[j]))
+						{
+							return null;
+						}
+
+						continue;
+					}
+
+					if (oper.parameters[j] == typeof(bool))
+					{
+						if (!get_postfix<bool>(parameters[j]))
+						{
+							return null;
+						}
+
+						continue;
+					}
+
+					throw new NotImplementedException();
+				}
+
+				res.Add((oper, typeof(OperatorDef)));
+				continue;
+			}
+
+			if (item == "(")
+			{
+				stack.Push("(");
 				continue;
 			}
 

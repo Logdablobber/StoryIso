@@ -51,6 +51,11 @@ public struct Optional<T>
             return HasValue == other.HasValue;
     }
 
+	public override int GetHashCode() 
+	{
+		return base.GetHashCode();
+	}
+
 	public readonly Type GetUnderlyingType()
 	{
 		return typeof(T);

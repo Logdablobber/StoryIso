@@ -31,26 +31,6 @@ public static partial class ParameterProcessor
 			_ => Direction.None,
 		};
 	}
-
-	static readonly Dictionary<Type, int> typeDict = new Dictionary<Type, int>()
-	{
-		{typeof(int), 0},
-		{typeof(float), 1},
-		{typeof(string), 2},
-		{typeof(bool), 3},
-		{typeof(TileLayerType), 4},
-		{typeof(ushort), 5},
-		{typeof(uint), 6},
-		{typeof(byte), 7},
-		{typeof(RelativeVariable<int>), 8},
-		{typeof(RelativeVariable<float>), 9},
-		{typeof(VariableType), 10},
-		{typeof(object), 11},
-		{typeof(VariableObject), 12},
-		{typeof(Direction), 13},
-		{typeof(uint[]), 14}
-	};
-
 	public static FunctionParameter<T>? ParseParameter<T>(string value, Source source, string function) where T : notnull, IParsable<T>
 	{
 		if (!T.TryParse(value, null, out T? parsed_value))
@@ -196,62 +176,61 @@ public static partial class ParameterProcessor
 	{
 		List<object> args = [];
 
+		bool parse_variable<T1>(string input, bool equation = false) where T1 : notnull, IParsable<T1> 
+		{
+			var param = equation ? ParseEquation<T1>(input, source, function_name) : ParseParameter<T1>(input, source, function_name);
+
+			if (!param.HasValue)
+			{
+				return false;
+			}
+
+			args.Add(param.Value);
+			return true;
+		}
+
 		// parse inputs
 		for (int j = 0; j < types.Length; j++)
 		{
-			switch (typeDict[types[j]])
+			byte type_indexer = TypeIndexers.GetTypeIndexer(types[j]);
+
+			switch (type_indexer)
 			{
-				case 0: // int
-					var int_param = ParseEquation<int>(inputs[j], source, function_name);
-					
-					if (!int_param.HasValue)
+				case TypeIndexers.INT:
+					if (!parse_variable<int>(inputs[j], true))
 					{
 						return null;
 					}
-
-					args.Add(int_param.Value);
 					break;
 
-				case 1: // float
-					var float_param = ParseEquation<float>(inputs[j], source, function_name);
-					
-					if (!float_param.HasValue)
+				case TypeIndexers.FLOAT:
+					if (!parse_variable<float>(inputs[j], true))
 					{
 						return null;
 					}
-
-					args.Add(float_param.Value);
 					break;
 
-				case 2: // string
+				case TypeIndexers.STRING:
 					if (StringRegex.IsMatch(inputs[j].Trim()))
 					{
 						args.Add(new FunctionParameter<string>(value: inputs[j].Trim()));
 						break;
 					}
 
-					var string_param = ParseEquation<string>(inputs[j], source, function_name);
-
-					if (!string_param.HasValue)
+					if (!parse_variable<string>(inputs[j], true))
 					{
 						return null;
 					}
-
-					args.Add(string_param);
 					break;
 
-				case 3: // bool
-					var bool_param = ParseEquation<bool>(inputs[j], source, function_name);
-					
-					if (!bool_param.HasValue)
+				case TypeIndexers.BOOL:
+					if (!parse_variable<bool>(inputs[j], true))
 					{
 						return null;
 					}
-
-					args.Add(bool_param.Value);
 					break;
 
-				case 4: // TileLayerType
+				case TypeIndexers.TILE_LAYER_TYPE: 
 					TileLayerType layer_type = GetLayerType(inputs[j]);
 					if (layer_type == TileLayerType.None)
 					{
@@ -262,40 +241,28 @@ public static partial class ParameterProcessor
 					args.Add(new FunctionParameter<TileLayerType>(layer_type));
 					break;
 
-				case 5: // ushort 
-					var ushort_param = ParseParameter<ushort>(inputs[j], source, function_name);
-					
-					if (!ushort_param.HasValue)
+				case TypeIndexers.USHORT:
+					if (!parse_variable<ushort>(inputs[j]))
 					{
 						return null;
 					}
-
-					args.Add(ushort_param.Value);
 					break;
 
-				case 6: // uint 
-					var uint_param = ParseParameter<uint>(inputs[j], source, function_name);
-					
-					if (!uint_param.HasValue)
+				case TypeIndexers.UINT:
+					if (!parse_variable<uint>(inputs[j]))
 					{
 						return null;
 					}
-
-					args.Add(uint_param.Value);
 					break;
 
-				case 7: // byte 
-					var byte_param = ParseParameter<byte>(inputs[j], source, function_name);
-					
-					if (!byte_param.HasValue)
+				case TypeIndexers.BYTE:
+					if (!parse_variable<byte>(inputs[j]))
 					{
 						return null;
 					}
-
-					args.Add(byte_param.Value);
 					break;
 
-				case 8: // relative int 
+				case TypeIndexers.RELATIVE_INT:
 					bool relative_int = inputs[j].StartsWith('~');
 
 					string relative_int_input = inputs[j][(relative_int ? 1 : 0)..];
@@ -310,7 +277,7 @@ public static partial class ParameterProcessor
 					args.Add(new RelativeVariable<FunctionParameter<int>>(relative_int_param.Value, relative_int));
 					break;
 
-				case 9: // relative float 
+				case TypeIndexers.RELATIVE_FLOAT:
 					bool relative_float = inputs[j].StartsWith('~');
 
 					string relative_float_input = inputs[j][(relative_float ? 1 : 0)..];
@@ -325,7 +292,7 @@ public static partial class ParameterProcessor
 					args.Add(new RelativeVariable<FunctionParameter<float>>(relative_float_param.Value, relative_float));
 					break;
 
-				case 10: // variable type
+				case TypeIndexers.TYPE:
 					VariableType variable_type = VariableManager.GetVariableType(inputs[j]);
 					if (variable_type == VariableType.None)
 					{
@@ -336,11 +303,11 @@ public static partial class ParameterProcessor
 					args.Add(new FunctionParameter<VariableType>(variable_type));
 					break;
 
-				case 11: // object 
+				case TypeIndexers.OBJECT:
 					args.Add(new FunctionParameter<string>(value:inputs[j]));
 					break;
 
-				case 12: // variable object
+				case TypeIndexers.VARIABLE_OBJECT:
 					var variable_parameter = ProcessUnknownParameter(inputs[j], source, function_name);
 
 					if (variable_parameter == null)
@@ -351,7 +318,7 @@ public static partial class ParameterProcessor
 					args.Add(variable_parameter.Value.Item1);
 					break;
 
-				case 13: // Direction
+				case TypeIndexers.DIRECTION:
 					Direction direction = GetDirection(inputs[j]);
 					if (direction == Direction.None)
 					{
@@ -362,15 +329,37 @@ public static partial class ParameterProcessor
 					args.Add(new FunctionParameter<Direction>(direction));
 					break;
 
-				case 14: // uint[]
-					ArrayParameter<uint>? uints = ParseArrayParameter<uint>(inputs[j], source, function_name);
-					if (!uints.HasValue)
+				case >=0b10000000: // array parameter
+					
+					bool parse_array_parameter<T1>(string input) where T1 : notnull, IParsable<T1>
 					{
-						DebugConsole.Raise(new ParameterTypeError(source, function_name, inputs[j], "uint[]"));
-						return null;
+						ArrayParameter<T1>? array = ParseArrayParameter<T1>(input, source, function_name);
+						if (!array.HasValue)
+						{
+							DebugConsole.Raise(new ParameterTypeError(source, function_name, input, typeof(T1).Name));
+							return false;
+						}
+
+						args.Add(array.Value);
+						return true;
 					}
 
-					args.Add(uints.Value);
+					// remove array marker
+					if (!((type_indexer & 0b01111111) switch
+					{
+						TypeIndexers.INT => parse_array_parameter<int>(inputs[j]),
+						TypeIndexers.FLOAT => parse_array_parameter<float>(inputs[j]),
+						TypeIndexers.STRING => parse_array_parameter<string>(inputs[j]),
+						TypeIndexers.BOOL => parse_array_parameter<bool>(inputs[j]),
+						TypeIndexers.USHORT => parse_array_parameter<ushort>(inputs[j]),
+						TypeIndexers.UINT => parse_array_parameter<uint>(inputs[j]),
+						TypeIndexers.BYTE => parse_array_parameter<byte>(inputs[j]),
+						_ => true
+					}))
+					{
+						throw new NotImplementedException();
+					}
+					
 					break;
 
 				default:

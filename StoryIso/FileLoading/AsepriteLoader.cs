@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
-using AsepriteDotNet;
 using AsepriteDotNet.Aseprite;
 using AsepriteDotNet.IO;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Aseprite;
 using StoryIso.Entities;

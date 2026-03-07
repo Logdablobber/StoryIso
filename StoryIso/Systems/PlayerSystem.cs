@@ -1,9 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-using Microsoft.Toolkit.HighPerformance;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -12,7 +7,6 @@ using MonoGame.Extended.ECS;
 using MonoGame.Extended.ECS.Systems;
 using StoryIso.Entities;
 using StoryIso.Enums;
-using StoryIso.Functions;
 using StoryIso.Misc;
 
 namespace StoryIso.ECS;

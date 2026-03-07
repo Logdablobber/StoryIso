@@ -4,7 +4,6 @@ using MonoGame.Extended;
 using MonoGame.Extended.BitmapFonts;
 using MonoGame.Extended.ECS;
 using MonoGame.Extended.ECS.Systems;
-using MonoGame.Extended.Graphics;
 using StoryIso.Entities;
 using StoryIso.FileLoading;
 
