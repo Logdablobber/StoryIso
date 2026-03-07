@@ -8,7 +8,7 @@ namespace StoryIso.Entities;
 
 public partial class TextComponent
 {
-	private string name;
+	private readonly string name;
 	private string _text = null!;
 	private FunctionParameter<string>[] _params = null!;
 	public string Text
@@ -43,7 +43,7 @@ public partial class TextComponent
 	public string FontName { get; set; }
 	public SizeF Size { get; set; }
 
-	private static Regex _formatRegex = FormatRegex();
+	private static readonly Regex _formatRegex = FormatRegex();
 
 	public TextComponent(string name, string text, string fontName, SizeF size)
 	{

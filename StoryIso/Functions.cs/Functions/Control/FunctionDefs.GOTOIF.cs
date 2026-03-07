@@ -24,7 +24,7 @@ static partial class FunctionDefs
 				return null;
 			}
 
-			if (!item1.Evaluate(source!, out Optional<bool> result) || !result.HasValue || result.Value)
+			if (!item1.Evaluate(source!, out Optional<bool> result) || !result.HasValue || !result.Value)
 			{
 				return null;
 			}

@@ -47,7 +47,7 @@
 	.Print "All tests successful!"
 #ENDIF
 
-#LOOP testLoop 3
+#LOOP testLoop, 3
 	.Print "Looped!"
 
 #ENDLOOP testLoop

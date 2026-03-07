@@ -11,7 +11,7 @@ namespace StoryIso.ECS;
 
 public class RenderSystem : EntityDrawSystem
 {
-	private SpriteBatch _spriteBatch;
+	private readonly SpriteBatch _spriteBatch;
 	private ComponentMapper<Texture2D> _textureMapper = null!;
 	private ComponentMapper<Animation> _animationMapper = null!;
 	private ComponentMapper<Transform2> _transformMapper = null!;

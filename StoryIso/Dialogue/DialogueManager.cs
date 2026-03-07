@@ -32,7 +32,7 @@ public class DialogueManager
 	public BitmapFont Font;
 	public float FontScale;
 
-	private Dictionary<string, DialogueSequence> dialogues;
+	private readonly Dictionary<string, DialogueSequence> dialogues;
 	private string? currentDialogueName;
 	const float NAME_SCALE = 0.8f;
 	private DialogueSequence? currentDialogueSequence

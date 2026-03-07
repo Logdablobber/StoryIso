@@ -2,10 +2,10 @@ namespace StoryIso.Debugging;
 
 public class Source
 {
-	uint line;
-	string? function;
-	string obj;
-	Source? source;
+	readonly uint line;
+	readonly string? function;
+	readonly string obj;
+	readonly Source? source;
 
 	public Source(uint line, string? function, string obj, Source? source = null)
 	{

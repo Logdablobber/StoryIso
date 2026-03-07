@@ -9,7 +9,7 @@ namespace StoryIso.Tiled;
 
 public class TilemapRoom
 {
-	private Map _map;
+	private readonly Map _map;
 	public Map map
 	{
 		get
@@ -22,14 +22,14 @@ public class TilemapRoom
 	}
 	public LayerIndices layerIndices;
 
-	private string? bgm_name = null;
-	private float? bgm_volume = null;
+	private readonly string? bgm_name = null;
+	private readonly float? bgm_volume = null;
 	
 	public List<InteractionTile> interactionTiles;
 
 	public List<Trigger> Triggers;
 
-	private Dictionary<string, Collider> _collisionRectangles;
+	private readonly Dictionary<string, Collider> _collisionRectangles;
 	public List<Collider> Colliders 
 	{ 
 		get 

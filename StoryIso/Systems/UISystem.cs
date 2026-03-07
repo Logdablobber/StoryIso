@@ -19,8 +19,8 @@ public class UISystem : EntityUpdateSystem
 	private ComponentMapper<TextComponent> _textComponentMapper = null!;
 	private ComponentMapper<UIInfo> _infoMapper = null!;
 
-	private static Dictionary<string, List<(string, object)>> _attributeChanges = [];
-	private static System.Threading.Lock _attributeChangesLock = new();
+	private static readonly Dictionary<string, List<(string, object)>> _attributeChanges = [];
+	private static readonly System.Threading.Lock _attributeChangesLock = new();
 
 	public UISystem() : base(Aspect.All(typeof(Transform2), typeof(RenderAttributes), typeof(UIInfo))
 									.One(typeof(TextComponent), typeof(Texture2D), typeof(Animation))) { }

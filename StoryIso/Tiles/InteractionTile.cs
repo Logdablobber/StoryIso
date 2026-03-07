@@ -12,11 +12,11 @@ public class InteractionTile
 {
 	public uint id;
 	Rectangle interactionHitbox;
-	List<Function>? onInteract;
-	List<Function>? onUninteract;
-	List<Function>? whileInteract;
-	List<Function>? onToggleOn;
-	List<Function>? onToggleOff;
+	readonly List<Function>? onInteract;
+	readonly List<Function>? onUninteract;
+	readonly List<Function>? whileInteract;
+	readonly List<Function>? onToggleOn;
+	readonly List<Function>? onToggleOff;
 	bool interactingLastFrame = false;
 	bool toggleState;
 

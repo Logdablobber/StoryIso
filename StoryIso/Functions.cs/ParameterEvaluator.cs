@@ -97,6 +97,11 @@ public static partial class ParameterEvaluator
 
 	private static bool TryConvertParam(ref (object, Type) param, Type result_type, Source source, string oper)
 	{
+		if (param.Item2 == result_type)
+		{
+			return true;
+		}
+
 		if (param.Item2 == typeof(FunctionParameter<float>))
 		{
 			param = (ParameterProcessor.Convert<float>(param.Item1), typeof(float));
@@ -219,9 +224,26 @@ public static partial class ParameterEvaluator
 		List<(object, Type)> res = [];
 		Stack<string> stack = new();
 
+		bool previously_operand = false;
+
 		for (int i = 0; i < infix.Length; i++)
 		{
 			string item = infix[i];
+
+			if (!previously_operand && item == "-" && i != infix.Length - 1 && _operandRegex.IsMatch(infix[i + 1]))
+			{
+				var operand = ParameterProcessor.ProcessUnknownParameter(item + infix[i + 1], source, function);
+				i += 1;
+
+				if (!operand.HasValue)
+				{
+					return null;
+				}
+
+				res.Add(operand.Value);
+				previously_operand = true;
+				continue;
+			}
 
 			if (_operandRegex.IsMatch(item) && !OperatorDefs.InlineFunctions.Contains(item))
 			{
@@ -233,8 +255,11 @@ public static partial class ParameterEvaluator
 				}
 
 				res.Add(operand.Value);
+				previously_operand = true;
 				continue;
 			}
+
+			previously_operand = false;
 
 			// parse inline functions:
 			if (OperatorDefs.InlineFunctions.Contains(item))
@@ -401,6 +426,6 @@ public static partial class ParameterEvaluator
 	[GeneratedRegex(@"("".+?"")|&&|\|\||==|!=|>=|<=|[()!<>+*/,-]|((?:(?!(&&|\|\||==|!=|>=|<=|[()""!><+*/ ,-]))).)+", RegexOptions.Compiled)]
 	private static partial Regex SplitRegex();
 
-	[GeneratedRegex(@"^("".+?"")|([A-Za-z0-9.]+)$", RegexOptions.Compiled)]
+	[GeneratedRegex(@"^("".+?"")|([-]?[A-Za-z0-9.]+)$", RegexOptions.Compiled)]
 	private static partial Regex OperandRegex();
 }

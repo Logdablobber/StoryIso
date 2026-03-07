@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -24,7 +25,7 @@ public static partial class FunctionProcessor
 					select 
 					(from match 
 					in SplitRegex().Matches(line.Trim())
-					where match.Value != ""
+					where !string.IsNullOrWhiteSpace(match.Value)
 					select match.Value).ToArray()).ToArray();
 	}
 
@@ -82,7 +83,7 @@ public static partial class FunctionProcessor
 
 			string get_loop_variable_name(string loop_name)
 			{
-				return $"Loop {loop_name} {obj}".GetHashCode().ToString();
+				return $"Loop{loop_name}{Math.Abs(obj.GetHashCode())}";
 			}
 
 			var matches = lines[i];
@@ -115,7 +116,7 @@ public static partial class FunctionProcessor
 
 						string input = matches[1].Trim();
 
-						var postfix = ParameterEvaluator.Postfix<bool>(get_source(), "IF", input);
+						var postfix = ParameterEvaluator.Postfix<bool>(get_source(), "IF", $"!({input})");
 
 						uint? goto_line = null;
 
@@ -155,7 +156,7 @@ public static partial class FunctionProcessor
 
 						string elif_input = matches[1].Trim();
 
-						var elif_postfix = ParameterEvaluator.Postfix<bool>(get_source(), "ELIF", elif_input);
+						var elif_postfix = ParameterEvaluator.Postfix<bool>(get_source(), "ELIF", $"!({elif_input})");
 
 						uint? elif_goto_line = null;
 						uint? endif_line = null;
@@ -248,6 +249,7 @@ public static partial class FunctionProcessor
 					case "#LOOP": // should be in format #LOOP LOOP_NAME AMOUNT_OF_LOOPS
 						if (matches.Length < 3)
 						{
+							DebugConsole.Raise(new ParameterError(get_source(), "LOOP", matches.Length - 1, 2, "LOOP should be given a name and then the amount of cycles to run. Did you forget a comma?"));
 							continue;
 						}
 
@@ -257,13 +259,18 @@ public static partial class FunctionProcessor
 
 						for (uint j = i + 1; j < lines.Length; j++)
 						{
-							if (lines[j][0] == $"#ENDLOOP {loop_name}")
+							if (j == lines.Length - 1) 
 							{
 								end_loop_line = j;
 								break;
 							}
 
-							if (j == lines.Length - 1) 
+							if (lines[j].Length == 0)
+							{
+								continue;
+							}
+
+							if (lines[j][0] == $"#ENDLOOP {loop_name}")
 							{
 								end_loop_line = j;
 								break;
@@ -271,21 +278,22 @@ public static partial class FunctionProcessor
 						}
 
 						var variable_name = get_loop_variable_name(loop_name);
+						VariableManager.DefineVariable(VariableType.Int, variable_name, new Optional<int>(0), get_source());
 
-						var condition = ParameterEvaluator.Postfix<bool>(get_source(), "LOOP", $"{variable_name} == {string.Join(' ', matches[1..])} || {variable_name} == -1");
+						var condition = ParameterEvaluator.Postfix<bool>(get_source(), "LOOP", $"({variable_name} == {string.Join(' ', matches[2])}) || ({variable_name} == -1)");
 
 						if (condition == null)
 						{
 							continue;
 						}
-
-						VariableManager.DefineVariable(VariableType.Int, variable_name, 0, get_source());
+						
 						funcs.Add(new Function(FunctionDefs.GetIndex("SetVar"),
 												[new FunctionParameter<string>(value:variable_name), 
 												new FunctionParameter<int>(0)], i - 1));
 
 						funcs.Add(new Function(FunctionDefs.GOTOIF_Index,
-												[condition, end_loop_line], i));
+												[condition, 
+												new FunctionParameter<uint>(end_loop_line)], i));
 
 						loops.Add(loop_name, i);
 						break;
@@ -321,7 +329,7 @@ public static partial class FunctionProcessor
 													new FunctionParameter<int>(increment_var_postfix)], i));
 
 						funcs.Add(new Function(FunctionDefs.GetIndex("GOTO"), 
-													[new FunctionParameter<int>((int)loop_line)], i));
+													[new FunctionParameter<uint>(loop_line)], i));
 						break;
 
 					case "#BREAK":

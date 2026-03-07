@@ -24,7 +24,7 @@ public class Game1 : Game
 {
 	public static JsonSerializerOptions DeserializeOptions = null!;
 
-    private GraphicsDeviceManager _graphics;
+    private readonly GraphicsDeviceManager _graphics;
 	private SpriteBatch _spriteBatch = null!;
 
 	public static TiledManager tiledManager = null!;

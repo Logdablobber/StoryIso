@@ -13,10 +13,10 @@ namespace StoryIso.Functions;
 
 public static partial class VariableManager
 {
-	private static Dictionary<string, Optional<int>> _intVariables = [];
-	private static Dictionary<string, Optional<float>> _floatVariables = [];
-	private static Dictionary<string, Optional<bool>> _boolVariables = [];
-	private static Dictionary<string, Optional<string>> _stringVariables = [];
+	private static readonly Dictionary<string, Optional<int>> _intVariables = [];
+	private static readonly Dictionary<string, Optional<float>> _floatVariables = [];
+	private static readonly Dictionary<string, Optional<bool>> _boolVariables = [];
+	private static readonly Dictionary<string, Optional<string>> _stringVariables = [];
 
 	public readonly static Dictionary<string, VariableType> _typesOfVariables = new();
 
@@ -171,7 +171,7 @@ public static partial class VariableManager
 				break;
 
 			default:
-				return; // don't add if type is undefined
+				throw new NotImplementedException();
 		}
 
 		_typesOfVariables.Add(name, type);

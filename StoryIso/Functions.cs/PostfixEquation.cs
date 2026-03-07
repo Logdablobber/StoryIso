@@ -6,7 +6,7 @@ namespace StoryIso.Functions;
 
 public class PostfixEquation<T> where T : notnull
 {
-	private (object, Type)[] equation;
+	private readonly (object, Type)[] equation;
 
 	public PostfixEquation((object, Type)[] equation)
 	{

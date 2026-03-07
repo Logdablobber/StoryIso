@@ -5,7 +5,7 @@ namespace StoryIso.Misc;
 public struct Optional<T>
 {
 	public bool HasValue { get; private set; } 
-	private T value;
+	private readonly T value;
 	public T Value
 	{
 		get
