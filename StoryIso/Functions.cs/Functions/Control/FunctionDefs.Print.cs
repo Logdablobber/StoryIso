@@ -25,7 +25,7 @@ static partial class FunctionDefs
 				return null;
 			}
 
-			DebugConsole.WriteLine(arg.Value[1..^1], Color.Black);
+			DebugConsole.WriteLine(arg.Value.Trim('"'), Color.Black);
 
 			return null;
 		}

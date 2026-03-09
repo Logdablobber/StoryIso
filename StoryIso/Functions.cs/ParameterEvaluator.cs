@@ -201,7 +201,7 @@ public static partial class ParameterEvaluator
 		};
 	}
 
-	public static PostfixEquation<T>? Postfix<T>(Source source, string function, string value) where T : notnull
+	public static PostfixEquation<T>? Postfix<T>(Source source, string function, string value, string? obj) where T : notnull
 	{
 		string[] infix = (from match in
 								_splitRegex.Matches(value)
@@ -211,7 +211,7 @@ public static partial class ParameterEvaluator
 		// check the "equation" is just a single value
 		if (infix.Length == 1 && _operandRegex.IsMatch(infix[0]) && !OperatorDefs.InlineFunctions.Contains(infix[0]))
 		{
-			var operand = ParameterProcessor.ProcessUnknownParameter(infix[0], source, function);
+			var operand = ParameterProcessor.ProcessUnknownParameter(infix[0], source, function, obj);
 
 			if (!operand.HasValue)
 			{
@@ -232,7 +232,7 @@ public static partial class ParameterEvaluator
 
 			if (!previously_operand && item == "-" && i != infix.Length - 1 && _operandRegex.IsMatch(infix[i + 1]))
 			{
-				var operand = ParameterProcessor.ProcessUnknownParameter(item + infix[i + 1], source, function);
+				var operand = ParameterProcessor.ProcessUnknownParameter(item + infix[i + 1], source, function, obj);
 				i += 1;
 
 				if (!operand.HasValue)
@@ -247,7 +247,7 @@ public static partial class ParameterEvaluator
 
 			if (_operandRegex.IsMatch(item) && !OperatorDefs.InlineFunctions.Contains(item))
 			{
-				var operand = ParameterProcessor.ProcessUnknownParameter(item, source, function);
+				var operand = ParameterProcessor.ProcessUnknownParameter(item, source, function, obj);
 
 				if (!operand.HasValue)
 				{
@@ -321,7 +321,7 @@ public static partial class ParameterEvaluator
 
 				bool get_postfix<T1>(string param) where T1 : notnull
 				{
-					var param_equation = Postfix<T1>(source, function, param);
+					var param_equation = Postfix<T1>(source, function, param, obj);
 
 					if (param_equation == null)
 					{

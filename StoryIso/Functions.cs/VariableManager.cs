@@ -32,6 +32,11 @@ public static partial class VariableManager
 		};
 	}
 
+	public static string GetLocalVariableName(string name, string obj)
+	{
+		return name + Math.Abs(obj.GetHashCode()).ToString();
+	}
+
 	private static readonly Dictionary<Type, VariableType> typeToVariableType = new()
 	{
 		{typeof(int), VariableType.Int},
@@ -502,29 +507,91 @@ public static partial class VariableManager
 
 	private static Optional<T> ParseVariable<T>(object? value) where T : IParsable<T>
 	{
-		if (value == null)
+		switch (value)
 		{
-			return default;
-		}
-
-		if (value is Optional<string> string_value)
-		{
-			if (!string_value.HasValue)
-			{
+			case null:
 				return default;
-			}
 
-			if (T.TryParse(string_value.Value, null, out T? result))
-			{
-				return result;
-			}
+			case Optional<string> string_value:
+				if (!string_value.HasValue)
+				{
+					return default;
+				}
 
-			throw new InvalidCastException();
+				if (T.TryParse(string_value.Value, null, out T? result))
+				{
+					return result;
+				}
+
+				throw new InvalidCastException($"Can't convert from string to {typeof(T).Name}");
+
+			case Optional<float> float_value:
+				if (!float_value.HasValue)
+				{
+					return default;
+				}
+
+				if (typeof(T) == typeof(float))
+				{
+					return new Optional<T>((T)(object)float_value.Value);
+				}
+
+				if (typeof(T) == typeof(int))
+				{
+					return new Optional<T>((T)(object)(int)float_value.Value);
+				}
+
+				if (typeof(T) == typeof(string))
+				{
+					return new Optional<T>((T)(object)float_value.Value.ToString());
+				}
+
+				throw new InvalidCastException($"Can't convert from float to {typeof(T).Name}");
+
+			case Optional<int> int_value:
+				if (!int_value.HasValue)
+				{
+					return default;
+				}
+
+				if (typeof(T) == typeof(int))
+				{
+					return new Optional<T>((T)(object)int_value.Value);
+				}
+
+				if (typeof(T) == typeof(float))
+				{
+					return new Optional<T>((T)(object)(float)int_value.Value);
+				}
+
+				if (typeof(T) == typeof(string))
+				{
+					return new Optional<T>((T)(object)int_value.Value.ToString());
+				}
+
+				throw new InvalidCastException($"Can't convert from int to {typeof(T).Name}");
+
+			case Optional<bool> bool_value:
+				if (!bool_value.HasValue)
+				{
+					return default;
+				}
+
+				if (typeof(T) == typeof(bool))
+				{
+					return new Optional<T>((T)(object)bool_value.Value);
+				}
+
+				if (typeof(T) == typeof(string))
+				{
+					return new Optional<T>((T)(object)bool_value.Value.ToString());
+				}
+
+				throw new InvalidCastException($"Can't convert from int to {typeof(T).Name}");
+
+			default:
+				throw new NotImplementedException();
 		}
-
-		var final_value = (Optional<T>)value;
-
-		return final_value;
 	}
 
 	public static readonly Regex VariableRegex = _variableRegex();

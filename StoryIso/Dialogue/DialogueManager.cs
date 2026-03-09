@@ -68,7 +68,7 @@ public class DialogueManager
 				return null;
 			}
 
-			return currentDialogueStep.Value.duration ?? TIMEPERCHARACTER * currentDialogueStep.Value.text.Length;
+			return currentDialogueStep.Value.duration ?? TIME_PER_CHARACTER * currentDialogueStep.Value.text.Length;
 		}
 	}
 
@@ -76,7 +76,7 @@ public class DialogueManager
 	private bool _continueKeyPressedLastFrame = false;
 	private bool _skipKeyPressedLastFrame = false;
 	private float? _dialogueTimer;
-	const float TIMEPERCHARACTER = 0.05f;
+	const float TIME_PER_CHARACTER = 0.05f;
 
 	public bool Active
 	{
@@ -86,16 +86,16 @@ public class DialogueManager
 		}
 	}
 
-	private const float LEFTMARGIN = 6.6f;
-	private const float RIGHTMARGIN = 6.6f;
-	private const float TOPMARGIN = 6.6f;
-	private const float BOTTOMMARGIN = 6.6f;
+	private const float LEFT_MARGIN = 6.6f;
+	private const float RIGHT_MARGIN = 6.6f;
+	private const float TOP_MARGIN = 6.6f;
+	private const float BOTTOM_MARGIN = 6.6f;
 
 	private SizeF unscaledTextBounds
 	{
 		get
 		{
-			return DialogueBox.Bounds.Size.ToVector2() - new SizeF(LEFTMARGIN + RIGHTMARGIN, TOPMARGIN + BOTTOMMARGIN);
+			return DialogueBox.Bounds.Size.ToVector2() - new SizeF(LEFT_MARGIN + RIGHT_MARGIN, TOP_MARGIN + BOTTOM_MARGIN);
 		}
 	}
 	private SizeF dialogueTextBounds
@@ -260,11 +260,11 @@ public class DialogueManager
 			DrawNameBox(spriteBatch, current_step.speaker);
 		}
 
-		string dialogue_text = current_step.text[..(int)Math.Min(Math.Ceiling(_dialogueTimer!.Value / TIMEPERCHARACTER), current_step.text.Length)];
+		string dialogue_text = current_step.text[..(int)Math.Min(Math.Ceiling(_dialogueTimer!.Value / TIME_PER_CHARACTER), current_step.text.Length)];
 
 		List<string> fitted_text = TextFormatter.FitText(dialogue_text, Font, FontScale, unscaledTextBounds, out float scale_mult);
 
-		Vector2 top_left = _screenPosition + (new Vector2(LEFTMARGIN, TOPMARGIN) - new Vector2(0, DialogueBox.Height)) * Scale;
+		Vector2 top_left = _screenPosition + (new Vector2(LEFT_MARGIN, TOP_MARGIN) - new Vector2(0, DialogueBox.Height)) * Scale;
 		float text_scale = FontScale * scale_mult * Scale;
 
 		var color = current_step.color ?? Color.Black;

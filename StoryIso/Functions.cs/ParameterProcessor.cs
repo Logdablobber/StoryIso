@@ -54,7 +54,7 @@ public static partial class ParameterProcessor
 		return parameter_value;
 	}
 
-	public static FunctionParameter<T>? ParseEquation<T>(string value, Source source, string function) where T : notnull, IParsable<T>
+	public static FunctionParameter<T>? ParseEquation<T>(string value, Source source, string function, string? obj) where T : notnull, IParsable<T>
 	{
 		if (typeof(T) == typeof(float) || typeof(T) == typeof(int))
 		{
@@ -66,7 +66,7 @@ public static partial class ParameterProcessor
 
 		if (OperatorDefs.OperatorRegex.IsMatch(value))
 		{
-			var postfix = ParameterEvaluator.Postfix<T>(source, function, value);
+			var postfix = ParameterEvaluator.Postfix<T>(source, function, value, obj);
 
 			if (postfix == null)
 			{
@@ -103,7 +103,7 @@ public static partial class ParameterProcessor
 		return new ArrayParameter<T>(parameters);
 	}
 
-	public static (object, Type)? ProcessUnknownParameter(string value, Source source, string function)
+	public static (object, Type)? ProcessUnknownParameter(string value, Source source, string function, string? obj)
 	{
 
 		if (StringRegex.IsMatch(value))
@@ -156,9 +156,34 @@ public static partial class ParameterProcessor
 			}
 		}
 
+		if (obj != null) 
+		{
+			string local_variable_name = VariableManager.GetLocalVariableName(value, obj);
+			if (VariableManager.ContainsVariable(local_variable_name, out VariableType local_type))
+			{
+				switch (local_type)
+				{
+					case VariableType.Int:
+						return (new FunctionParameter<int>(local_variable_name), typeof(FunctionParameter<int>));
+
+					case VariableType.Float:
+						return (new FunctionParameter<float>(local_variable_name), typeof(FunctionParameter<float>));
+
+					case VariableType.String:
+						return (new FunctionParameter<string>(variable_name: local_variable_name), typeof(FunctionParameter<string>));
+
+					case VariableType.Bool:
+						return (new FunctionParameter<bool>(local_variable_name), typeof(FunctionParameter<bool>));
+
+					default:
+						break;
+				}
+			}
+		}
+
 		if (OperatorDefs.OperatorRegex.IsMatch(value))
 		{
-			var equation = ParseEquation<string>(value, source, function);
+			var equation = ParseEquation<string>(value, source, function, obj);
 
 			if (!equation.HasValue)
 			{
@@ -172,13 +197,13 @@ public static partial class ParameterProcessor
 		return null;
 	}
 
-	public static List<object>? ProcessParameters(Source source, string function_name, List<string> inputs, Type[] types)
+	public static List<object>? ProcessParameters(Source source, string function_name, List<string> inputs, Type[] types, string? obj)
 	{
 		List<object> args = [];
 
 		bool parse_variable<T1>(string input, bool equation = false) where T1 : notnull, IParsable<T1> 
 		{
-			var param = equation ? ParseEquation<T1>(input, source, function_name) : ParseParameter<T1>(input, source, function_name);
+			var param = equation ? ParseEquation<T1>(input, source, function_name, obj) : ParseParameter<T1>(input, source, function_name);
 
 			if (!param.HasValue)
 			{
@@ -267,7 +292,7 @@ public static partial class ParameterProcessor
 
 					string relative_int_input = inputs[j][(relative_int ? 1 : 0)..];
 
-					var relative_int_param = ParseEquation<int>(relative_int_input, source, function_name);
+					var relative_int_param = ParseEquation<int>(relative_int_input, source, function_name, obj);
 					
 					if (!relative_int_param.HasValue)
 					{
@@ -282,7 +307,7 @@ public static partial class ParameterProcessor
 
 					string relative_float_input = inputs[j][(relative_float ? 1 : 0)..];
 
-					var relative_float_param = ParseEquation<float>(relative_float_input, source, function_name);
+					var relative_float_param = ParseEquation<float>(relative_float_input, source, function_name, obj);
 					
 					if (!relative_float_param.HasValue)
 					{
@@ -308,7 +333,7 @@ public static partial class ParameterProcessor
 					break;
 
 				case TypeIndexers.VARIABLE_OBJECT:
-					var variable_parameter = ProcessUnknownParameter(inputs[j], source, function_name);
+					var variable_parameter = ProcessUnknownParameter(inputs[j], source, function_name, obj);
 
 					if (variable_parameter == null)
 					{

@@ -70,7 +70,7 @@ public partial class TextComponent
 		{
 			text = text[..matches[i].Index] + i.ToString() + text[Math.Min(text.Length - 1, matches[i].Index + matches[i].Length + 2)..];
 
-			FunctionParameter<string>? param = ParameterProcessor.ParseEquation<string>(matches[i].Value, new Source(0, null, $"TextComponent {name}"), "TextComponent.Parse");
+			FunctionParameter<string>? param = ParameterProcessor.ParseEquation<string>(matches[i].Value, new Source(0, null, $"TextComponent {name}"), "TextComponent.Parse", null);
 
 			if (param == null)
 			{

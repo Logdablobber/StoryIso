@@ -81,11 +81,6 @@ public static partial class FunctionProcessor
 				return new Source(i + 1, null, obj);
 			}
 
-			string get_loop_variable_name(string loop_name)
-			{
-				return $"Loop{loop_name}{Math.Abs(obj.GetHashCode())}";
-			}
-
 			var matches = lines[i];
 
 			if (matches.Length == 0)
@@ -116,7 +111,7 @@ public static partial class FunctionProcessor
 
 						string input = matches[1].Trim();
 
-						var postfix = ParameterEvaluator.Postfix<bool>(get_source(), "IF", $"!({input})");
+						var postfix = ParameterEvaluator.Postfix<bool>(get_source(), "IF", $"!({input})", obj);
 
 						uint? goto_line = null;
 
@@ -156,7 +151,7 @@ public static partial class FunctionProcessor
 
 						string elif_input = matches[1].Trim();
 
-						var elif_postfix = ParameterEvaluator.Postfix<bool>(get_source(), "ELIF", $"!({elif_input})");
+						var elif_postfix = ParameterEvaluator.Postfix<bool>(get_source(), "ELIF", $"!({elif_input})", obj);
 
 						uint? elif_goto_line = null;
 						uint? endif_line = null;
@@ -277,10 +272,10 @@ public static partial class FunctionProcessor
 							}
 						}
 
-						var variable_name = get_loop_variable_name(loop_name);
+						var variable_name = VariableManager.GetLocalVariableName(loop_name, obj);
 						VariableManager.DefineVariable(VariableType.Int, variable_name, new Optional<int>(0), get_source());
 
-						var condition = ParameterEvaluator.Postfix<bool>(get_source(), "LOOP", $"({variable_name} == {string.Join(' ', matches[2])}) || ({variable_name} == -1)");
+						var condition = ParameterEvaluator.Postfix<bool>(get_source(), "LOOP", $"({variable_name} == {string.Join(' ', matches[2])}) || ({variable_name} == -1)", obj);
 
 						if (condition == null)
 						{
@@ -315,9 +310,9 @@ public static partial class FunctionProcessor
 
 						loops.Remove(end_loop_name);
 
-						var loop_var_name = get_loop_variable_name(end_loop_name);
+						var loop_var_name = VariableManager.GetLocalVariableName(end_loop_name, obj);
 
-						var increment_var_postfix = ParameterEvaluator.Postfix<int>(get_source(), "ENDLOOP", $"{loop_var_name} + 1");
+						var increment_var_postfix = ParameterEvaluator.Postfix<int>(get_source(), "ENDLOOP", $"{loop_var_name} + 1", obj);
 
 						if (increment_var_postfix == null)
 						{
@@ -347,7 +342,7 @@ public static partial class FunctionProcessor
 							return null;
 						}
 
-						string break_var_name = get_loop_variable_name(break_loop_name);
+						string break_var_name = VariableManager.GetLocalVariableName(break_loop_name, obj);
 
 						// set variable to -1, as this will cause the loop to end
 						funcs.Add(new Function(FunctionDefs.GetIndex("SetVar"),
@@ -408,7 +403,7 @@ public static partial class FunctionProcessor
 				return null;
 			}
 			
-			List<object>? args = ParameterProcessor.ProcessParameters(new Source(i, functionDef.name!, obj), functionDef.name!, string_parameters, functionDef.parameters);
+			List<object>? args = ParameterProcessor.ProcessParameters(new Source(i, functionDef.name!, obj), functionDef.name!, string_parameters, functionDef.parameters, obj);
 
 			if (args == null)
 			{

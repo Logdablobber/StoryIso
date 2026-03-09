@@ -47,8 +47,13 @@
 	.Print "All tests successful!"
 #ENDIF
 
+.DefineVar int, i, 0
+
 #LOOP testLoop, 3
+	.SetVar i, i + 1
 	.Print "Looped!"
+	.Print testLoop
+	.Print i
 
 #ENDLOOP testLoop
 
