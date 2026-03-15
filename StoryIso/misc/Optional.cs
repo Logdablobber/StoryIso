@@ -2,9 +2,25 @@ using System;
 
 namespace StoryIso.Misc;
 
-public struct Optional<T>
+public struct Optional<T> : IOptional
 {
-	public bool HasValue { get; private set; } 
+	public Type ValueType
+	{
+		get
+		{
+			return typeof(T);
+		}
+	}
+
+	private readonly bool _hasValue;
+
+	public readonly bool HasValue
+	{
+		get
+		{
+			return _hasValue;
+		}
+	}
 	private readonly T value;
 	public T Value
 	{
@@ -24,7 +40,7 @@ public struct Optional<T>
 	public Optional(T value)
 	{
 		this.value = value;
-		this.HasValue = true;
+		this._hasValue = true;
 	}
 
 	public static explicit operator T(Optional<T> optional)
@@ -59,5 +75,15 @@ public struct Optional<T>
 	public readonly Type GetUnderlyingType()
 	{
 		return typeof(T);
+	}
+
+	public override string? ToString()
+	{
+		if (!HasValue)
+		{
+			return null;
+		}
+
+		return value!.ToString();
 	}
 }

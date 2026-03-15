@@ -13,7 +13,7 @@ using StoryIso.ECS;
 using StoryIso.Entities;
 using StoryIso.Enums;
 using StoryIso.FileLoading;
-using StoryIso.Functions;
+using StoryIso.Scripting;
 using StoryIso.Scenes;
 using StoryIso.Tiled;
 using StoryIso.UI;

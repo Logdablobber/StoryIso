@@ -9,7 +9,7 @@ using MonoGame.Extended.ECS.Systems;
 using StoryIso.Debugging;
 using StoryIso.Entities;
 using StoryIso.Enums;
-using StoryIso.Functions;
+using StoryIso.Scripting;
 using StoryIso.Misc;
 using StoryIso.Scenes;
 using StoryIso.UI;

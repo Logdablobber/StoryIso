@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using StoryIso.Debugging;
-using StoryIso.Functions;
+using StoryIso.Scripting;
 using StoryIso.Misc;
 
 namespace StoryIso.Scenes;

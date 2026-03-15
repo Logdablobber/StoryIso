@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using StoryIso.Enums;
-using StoryIso.Functions;
+using StoryIso.Scripting;
 
 namespace StoryIso.Misc;
 

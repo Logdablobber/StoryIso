@@ -1,61 +1,66 @@
 #startup
-.DefineVar int, testInt, 12 + 3 * 2
-.DefineVar bool, testSuccess, true
+let int testInt = 12 + 3 * 2
+let bool testSuccess = true
 
-.DefineVar string, testString, "Starting tests!"
-.Print testString
+let string testString = "Starting tests!"
+Print(testString)
 
-.SetVar testString, "String variable setting & retrieval successful!"
+set testString = "String variable setting & retrieval successful!"
 #IF !(testString == "String variable setting & retrieval successful!") 
-	.Print "Variable Setting Failed"
-	.SetVar testSuccess, false
+	Print("Variable Setting Failed")
+	set testSuccess = false
 #ELSE
-	.Print testString
+	Print(testString)
 #ENDIF
 
 #IF !("Hello, World!" == "Hello, World!")
-	.Print "String Equality Failed"
-	.SetVar testSuccess, false
+	Print("String Equality Failed")
+	set testSuccess = false
 #ENDIF
 
 #IF !((3 + 3) ^ 3 != 16)
-	.Print "Math or Int Inequalities Failed"
-	.SetVar testSuccess, false
+	Print("Math or Int Inequalities Failed")
+	set testSuccess = false
 #ENDIF
 
-#IF (1 != 1)
-	.Print "Inequalities Failed"
-	.SetVar testSuccess, false
+#IF (1 == 1)
+	Print("Inequalities Succeeded")
+#ELSE
+	set testSuccess = false
 #ENDIF
 
 #IF false
-	.Print "Boolean Logic Failed"
-	.SetVar testSuccess, false
+	Print("Boolean Logic Failed")
+	set testSuccess = false
 #ENDIF
 
 #IF !true
-	.Print "Negation Failed"
-	.SetVar testSuccess, false
+	Print("Negation Failed")
+	set testSuccess = false
 #ENDIF
 
 #IF testInt != 18
-	.Print "Variable retrieval failed"
-	.SetVar testSuccess, false
+	Print("Variable retrieval failed")
+	set testSuccess = false
 #ENDIF
 
 #IF testSuccess
-	.Print "All tests successful!"
+	Print("All tests successful!")
 #ENDIF
 
-.DefineVar int, i, 0
+let int i = 0
+let string indexer = 		"Indexes:      "
+let string loop_indexer = 	"Loop Indexes: "
 
-#LOOP testLoop, 3
-	.SetVar i, i + 1
-	.Print "Looped!"
-	.Print testLoop
-	.Print i
+#LOOP testLoop 3
+	set indexer += testLoop
+	set loop_indexer += i
+
+	Print(indexer)
+	Print(loop_indexer)
+	set i += 1
 
 #ENDLOOP testLoop
 
-.Print "End of tests"
+Print("End of tests")
 // comment example

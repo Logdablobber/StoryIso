@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using StoryIso.Functions;
+using StoryIso.Scripting;
 
 namespace StoryIso.Scenes;
 

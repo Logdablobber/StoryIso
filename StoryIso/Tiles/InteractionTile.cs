@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using StoryIso.Enums;
-using StoryIso.Functions;
+using StoryIso.Scripting;
 using StoryIso.Misc;
 
 namespace StoryIso.Tiled;

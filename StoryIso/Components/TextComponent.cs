@@ -2,7 +2,7 @@ using System;
 using System.Text.RegularExpressions;
 using MonoGame.Extended;
 using StoryIso.Debugging;
-using StoryIso.Functions;
+using StoryIso.Scripting;
 
 namespace StoryIso.Entities;
 

@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.BitmapFonts;
 using StoryIso.Debugging;
 using StoryIso.Dialogue;
-using StoryIso.Functions;
+using StoryIso.Scripting;
 
 namespace StoryIso.Scenes;
 

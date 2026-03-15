@@ -1,39 +1,39 @@
 #Test Scene
-.RunDialogue "test"
-.MoveTo ~-2, ~0, 1
-.RunDialogue "test part2"
-.SetCharacterPos "test", 9, 10
-.SetAttr "test", "visible", true
-.Wait 3
-.MoveCharacter "test", playerX, playerY + 1, 1
-.SetAttr "Player", "movement_locked", false
-.Wait 2
-.SetAttr "test", "direction", "left"
+RunDialogue("test")
+MoveTo(~-2, ~0, 1)
+RunDialogue("test part2")
+SetCharacterPos("test", 9, 10)
+SetAttr("test", "visible", true)
+Wait(3)
+MoveCharacter("test", playerX, playerY + 1, 1)
+SetAttr("Player", "movement_locked", false)
+Wait(2)
+SetAttr("test", "direction", "left")
 
-.SetAttr "Player", "speed", 300
-.Print "Player is now 3x speed"
-.Wait 3
-.SetAttr "Player", "speed", 100
-.Print "Player is now normal speed"
+SetAttr("Player", "speed", 300)
+Print("Player is now 3x speed")
+Wait(3)
+SetAttr("Player", "speed", 100)
+Print("Player is now normal speed")
 
-.SetAttr "test ui", "visible", false
-.Print "UI is now hidden"
-.Wait 1
-.SetAttr "test ui", "visible", true
-.Print "UI is now visible"
-.Wait 1
-.SetAttr "xText", "visible", false
-.Print "X text is now hidden"
-.Wait 1
-.SetAttr "xText", "visible", true
-.Print "X text is now visible"
-.Wait 1
-.SetAttr "test ui", "x", -400
-.Print "UI has now moved to the left"
-.Wait 1
-.SetAttr "yText", "y", 10
-.Print "Y text is now on top of x text"
-.Wait 1
-.SetAttr "test ui", "x", -300
-.SetAttr "yText", "y", 50
-.Print "UI has now been reverted"
+SetAttr("test ui", "visible", false)
+Print("UI is now hidden")
+Wait(1)
+SetAttr("test ui", "visible", true)
+Print("UI is now visible")
+Wait(1)
+SetAttr("xText", "visible", false)
+Print("X text is now hidden")
+Wait(1)
+SetAttr("xText", "visible", true)
+Print("X text is now visible")
+Wait(1)
+SetAttr("test ui", "x", -400)
+Print("UI has now moved to the left")
+Wait(1)
+SetAttr("yText", "y", 10)
+Print("Y text is now on top of x text")
+Wait(1)
+SetAttr("test ui", "x", -300)
+SetAttr("yText", "y", 50)
+Print("UI has now been reverted")

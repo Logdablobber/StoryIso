@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using MonoGame.Extended.Content;
-using StoryIso.Functions;
+using StoryIso.Scripting;
 using StoryIso.Misc;
 
 namespace StoryIso.Tiled;
