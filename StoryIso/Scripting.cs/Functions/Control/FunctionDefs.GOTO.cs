@@ -14,9 +14,9 @@ static partial class FunctionDefs
 	{
 		name = "GOTO",
 		parameters = [typeof(uint)],
-		function = (args, source) => 
+		function = (_, args, source) => 
 		{
-			Optional<uint> line = ParameterProcessor.Convert<uint>(args![0]);
+			Optional<uint> line = ParameterProcessor.Convert<uint>(source, args![0]);
 
 			if (!line.HasValue)
 			{

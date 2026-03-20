@@ -14,16 +14,16 @@ static partial class FunctionDefs
 	{
 		name = "RunScene",
 		parameters = [typeof(string)],
-		function = (args, source) => 
+		function = (_, args, source) => 
 		{
-			Optional<string> scene_name = ParameterProcessor.Convert<string>(args![0]);
+			Optional<string> scene_name = ParameterProcessor.Convert<string>(source, args![0]);
 
 			if (!scene_name.HasValue)
 			{
 				return null;
 			}
 		
-			Game1.sceneManager.RunScene(scene_name.Value[1..^1], source!);
+			Game1.sceneManager.RunScene(scene_name.Value, source!);
 			return null;
 		}
 	};

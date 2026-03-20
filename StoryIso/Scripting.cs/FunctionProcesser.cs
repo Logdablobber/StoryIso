@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading;
 using StoryIso.Debugging;
 using StoryIso.Enums;
 using StoryIso.Misc;
+using StoryIso.Scripting.Variables;
 
 namespace StoryIso.Scripting;
 
@@ -32,50 +34,9 @@ public static partial class FunctionProcessor
 					select match.Value.Trim()).ToArray()).ToArray();
 	} 
 
-	public static void Preprocess(string obj, string funcs_string, uint start_line = 0)
+	public static Scope? Process(string obj, string funcs_string, uint start_line = 0)
 	{
-		var lines = Tokenize(funcs_string);
-
-		for (uint i = start_line; i < lines.Length; i++)
-		{
-			var matches = lines[i];
-
-			if (matches.Length == 0)
-			{
-				continue;
-			}
-
-			if (matches[0].Trim() != "let")
-			{
-				continue;
-			}
-
-			if (matches.Length < 3 || matches.Length == 4)
-			{
-				DebugConsole.Raise(new ParameterError(new Source(i, "DefineVar", obj), "DefineVar", matches.Length - 1, 3, "Should be either 'let TYPE NAME' or 'let TYPE NAME = VALUE'"));
-				continue;
-			}
-
-			if (matches.Length >= 5 && matches[3] != "=")
-			{
-				DebugConsole.Raise(new ParameterError(new Source(i, "DefineVar", obj), "DefineVar", matches.Length - 1, 4, "Should be either 'let TYPE NAME' or 'let TYPE NAME = VALUE'"));
-				continue;
-			}
-
-			var type = VariableManager.GetVariableType(matches[1].Trim());
-
-			if (type == VariableType.None)
-			{
-				continue; // TODO: raise error
-			}
-
-			VariableManager.DefineVariable(type, matches[2].Trim(), null, new Source(i, "DefineVar", obj));
-		}
-	}
-
-	public static List<Function>? Process(string obj, string funcs_string, uint start_line = 0)
-	{
-		List<Function> funcs = [];
+		Scope new_scope = new(Game1.GlobalScope, [], start_line, (uint)funcs_string.Length);
 
 		var lines = Tokenize(funcs_string);
 
@@ -118,7 +79,7 @@ public static partial class FunctionProcessor
 
 						string input = matches[1..].JoinToString();
 
-						if (!ParameterEvaluator.ToNodeTree<bool>(temp_source, "IF", $"!({input})", obj, out var if_condition))
+						if (!ParameterEvaluator.ToNodeTree<bool>(temp_source, new_scope.GetCurrentScope(i), "IF", $"!({input})", out var if_condition))
 						{
 							continue;
 						}
@@ -141,10 +102,14 @@ public static partial class FunctionProcessor
 							goto_line = (uint)lines.Length;
 						}
 
-						funcs.Add(new Function(FunctionDefs.GOTOIF_Index, 
+						var if_scope = new Scope(null, [], i, goto_line.Value);
+
+						if_scope.AddObject(temp_source, new Function(FunctionDefs.GOTOIF_Index, 
 													[if_condition!, 
 													new FunctionParameter<uint>(goto_line.Value)], 
 												i));
+
+						new_scope.AddObject(temp_source, if_scope);
 						continue;
 
 					case "#ELIF":
@@ -156,7 +121,7 @@ public static partial class FunctionProcessor
 
 						string elif_input = matches[1..].JoinToString();
 
-						if (!ParameterEvaluator.ToNodeTree<bool>(temp_source, "ELIF", $"!({elif_input})", obj, out var elif_condition))
+						if (!ParameterEvaluator.ToNodeTree<bool>(temp_source, new_scope.GetCurrentScope(i), "ELIF", $"!({elif_input})", out var elif_condition))
 						{
 							continue;
 						}
@@ -198,14 +163,18 @@ public static partial class FunctionProcessor
 						}
 
 						// this is the goto for the IF statement before it
-						funcs.Add(new Function(FunctionDefs.GetIndex("GOTO"),
+						new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("GOTO"),
 												[new FunctionParameter<uint>(endif_line.Value)],
 												i - 1));
 
-						funcs.Add(new Function(FunctionDefs.GOTOIF_Index, 
+						var elif_scope = new Scope(null, [], i, elif_goto_line.Value);
+
+						elif_scope.AddObject(temp_source, new Function(FunctionDefs.GOTOIF_Index, 
 													[elif_condition!, 
 													new FunctionParameter<uint>(elif_goto_line.Value)], 
 												i));
+
+						new_scope.AddObject(temp_source, elif_scope);
 						continue;
 
 					case "#ELSE":
@@ -234,9 +203,11 @@ public static partial class FunctionProcessor
 						}		
 
 						// for IF statements before this one
-						funcs.Add(new Function(FunctionDefs.GetIndex("GOTO"),
+						new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("GOTO"),
 												[new FunctionParameter<uint>(else_endif_line.Value)],
 												i - 1));
+
+						new_scope.AddObject(temp_source, new Scope(null, [], i, else_endif_line.Value));
 						break;
 					
 					case "#ENDIF":
@@ -275,21 +246,26 @@ public static partial class FunctionProcessor
 							}
 						}
 
-						var variable_name = VariableManager.GetLocalVariableName(loop_name, obj);
-						VariableManager.DefineVariable(VariableType.Int, variable_name, new Optional<int>(0), temp_source);
+						var loop_variable = new ValueVariable<int>(loop_name, 0);
 
-						if (!ParameterEvaluator.ToNodeTree<bool>(temp_source, "LOOP", $"({variable_name} == {matches[2..].JoinToString()}) || ({variable_name} == -1)", obj, out var condition))
+						new_scope.GetCurrentScope(i).DefineVariable(temp_source, loop_variable);
+
+						if (!ParameterEvaluator.ToNodeTree<bool>(temp_source, new_scope.GetCurrentScope(i), "LOOP", $"({loop_name} == {matches[2..].JoinToString()}) || ({loop_name} == -1)", out var condition))
 						{
 							continue;
 						}
 						
-						funcs.Add(new Function(FunctionDefs.GetIndex("SetVar"),
-												[new FunctionParameter<string>(value:variable_name), 
+						new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("SetVar"),
+												[new FunctionParameter<string>(value:loop_name), 
 												new FunctionParameter<int>(0)], i - 1));
 
-						funcs.Add(new Function(FunctionDefs.GOTOIF_Index,
+						var loop_scope = new Scope(null, [], i, end_loop_line);
+
+						loop_scope.AddObject(temp_source, new Function(FunctionDefs.GOTOIF_Index,
 												[condition!, 
 												new FunctionParameter<uint>(end_loop_line)], i));
+						
+						new_scope.AddObject(temp_source, loop_scope);
 
 						loops.Add(loop_name, i);
 						break;
@@ -311,18 +287,16 @@ public static partial class FunctionProcessor
 
 						loops.Remove(end_loop_name);
 
-						var loop_var_name = VariableManager.GetLocalVariableName(end_loop_name, obj);
-
-						if (!ParameterEvaluator.ToNodeTree<int>(temp_source, "ENDLOOP", $"{loop_var_name} + 1", obj, out var increment_var_equation))
+						if (!ParameterEvaluator.ToNodeTree<int>(temp_source, new_scope.GetCurrentScope(i), "ENDLOOP", $"{end_loop_name} + 1", out var increment_var_equation))
 						{
 							throw new UnreachableException("How did this break?");
 						}
 
-						funcs.Add(new Function(FunctionDefs.GetIndex("SetVar"),
-													[new FunctionParameter<string>(value:loop_var_name),
+						new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("SetVar"),
+													[new FunctionParameter<string>(value:end_loop_name),
 													increment_var_equation!], i));
 
-						funcs.Add(new Function(FunctionDefs.GetIndex("GOTO"), 
+						new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("GOTO"), 
 													[new FunctionParameter<uint>(loop_line)], i));
 						break;
 
@@ -341,14 +315,12 @@ public static partial class FunctionProcessor
 							return null;
 						}
 
-						string break_var_name = VariableManager.GetLocalVariableName(break_loop_name, obj);
-
 						// set variable to -1, as this will cause the loop to end
-						funcs.Add(new Function(FunctionDefs.GetIndex("SetVar"),
-												[new FunctionParameter<string>(value: break_var_name),
+						new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("SetVar"),
+												[new FunctionParameter<string>(value: break_loop_name),
 												new FunctionParameter<int>(-1)], i));
 
-						funcs.Add(new Function(FunctionDefs.GetIndex("GOTO"),
+						new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("GOTO"),
 												[new FunctionParameter<int>((int)break_loop_line)], i));
 
 						break;
@@ -368,35 +340,58 @@ public static partial class FunctionProcessor
 			*/
 			if (first_value == "let")
 			{
+				if (matches.Length < 3)
+				{
+					DebugConsole.Raise(new ParameterError(temp_source, "let", matches.Length - 1, 2));
+					return null;
+				}
+
+				if (new_scope.IsLocalVariable(matches[1], i))
+				{
+					DebugConsole.Raise(new VariableAlreadyExistsError(temp_source, matches[1]));
+					return null;
+				}
+
+				if (matches.Length >= 3)
+				{
+					var define_parameters = ParameterProcessor.ProcessParameters(temp_source, new_scope.GetCurrentScope(i), "DefineVar", [matches[1], matches[2]], [typeof(VariableType), typeof(object)]);
+
+					if (define_parameters == null)
+					{
+						continue; // TODO: raise error
+					}
+
+					define_parameters.Add(new FunctionParameter<string>());
+
+					VariableManager.DefineVariable(temp_source, new_scope.GetCurrentScope(i), define_parameters);
+				}
+
 				if (matches.Length == 3)
 				{
-					continue; // defined as null
+					continue;
 				}
 
 				if (matches.Length < 5)
 				{
-					return null; // TODO: raise error
+					DebugConsole.Raise(new ParameterError(temp_source, "let", matches.Length - 1, 4));
+					return null;
 				}
 
 				if (matches[3] != "=")
 				{
-					return null; // TODO: raise error
+					DebugConsole.Raise(new UnknownFunctionError(temp_source, matches[3], "operator for 'let' must be '='"));
+					return null;
 				}
 
-				if (!VariableManager.ContainsVariable(matches[2], out var type) || type != VariableManager.GetVariableType(matches[1]))
-				{
-					return null; // TODO: raise error
-				}
+				var set_parameters = ParameterProcessor.ProcessParameters(temp_source, new_scope.GetCurrentScope(i), "DefineVar", [matches[2], matches[4..].JoinToString()], [typeof(object), typeof(VariableObject)]);
 
-				var parameters = ParameterProcessor.ProcessParameters(temp_source, "DefineVar", [matches[2], string.Join(' ', matches[4..])], [typeof(object), typeof(VariableObject)], obj);
-
-				if (parameters == null)
+				if (set_parameters == null)
 				{
 					continue; // TODO: raise error
 				}
 
-				funcs.Add(new Function(FunctionDefs.GetIndex("SetVar"),
-										parameters, i));
+				new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("SetVar"),
+										set_parameters, i));
 				continue;
 			}
 
@@ -405,12 +400,14 @@ public static partial class FunctionProcessor
 			{
 				if (matches.Length < 4)
 				{
-					return null; // TODO: raise error
+					DebugConsole.Raise(new ParameterError(temp_source, "set", matches.Length - 1, 3));
+					return null;
 				}
 
-				if (!VariableManager.ContainsVariable(matches[1], out var type))
+				if (!new_scope.ContainsVariable(matches[1], i, out var type))
 				{
-					return null; // TODO: raise error
+					DebugConsole.Raise(new UnknownVariableError(temp_source, matches[1]));
+					return null;
 				}
 
 				string? set_function;
@@ -491,14 +488,14 @@ public static partial class FunctionProcessor
 						return null;
 				}
 
-				var parameters = ParameterProcessor.ProcessParameters(temp_source, "SetVar", [matches[1], set_function], [typeof(object), typeof(VariableObject)], obj);
+				var parameters = ParameterProcessor.ProcessParameters(temp_source, new_scope.GetCurrentScope(i), "SetVar", [matches[1], set_function], [typeof(object), typeof(VariableObject)]);
 
 				if (parameters == null)
 				{
-					return null; // TODO: raise error
+					return null;
 				}
 
-				funcs.Add(new Function(FunctionDefs.GetIndex("SetVar"),
+				new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("SetVar"),
 										parameters, i));
 				continue;
 			}
@@ -519,7 +516,7 @@ public static partial class FunctionProcessor
 
 			if (matches.Length == 3 && matches[1] == "(" && matches[2] == ")")
 			{
-				funcs.Add(new Function(funcIndex, [], i));
+				new_scope.AddObject(temp_source, new Function(funcIndex, [], i));
 				continue;
 			}
 
@@ -544,17 +541,17 @@ public static partial class FunctionProcessor
 				return null;
 			}
 			
-			List<object>? args = ParameterProcessor.ProcessParameters(new Source(i, functionDef.name!, obj), functionDef.name!, string_parameters, functionDef.parameters, obj);
+			List<object>? args = ParameterProcessor.ProcessParameters(temp_source, new_scope.GetCurrentScope(i), functionDef.name!, string_parameters, functionDef.parameters);
 
 			if (args == null)
 			{
 				return null;
 			}
 
-			funcs.Add(new Function(funcIndex, args, i));
+			new_scope.AddObject(temp_source, new Function(funcIndex, args, i));
 		}
 
-		return funcs;
+		return new_scope;
 	}
 
 	private static List<string>? ParseFunctionParameters(Source source, string[] matches)
@@ -627,109 +624,119 @@ public static partial class FunctionProcessor
 		return res;
 	}
 
-	private static void RunFunctsThread(List<Function> funcs, string obj, Source? source, bool is_scene)
+	private static uint? Run(Scope scope, ScopeVariables? variables, string obj, Source source, bool sync, bool is_scene, uint? gotoLine)
 	{
-		if (is_scene)
-		{
-			Game1.sceneManager.Active = true;
-		}
+		uint? goto_line = gotoLine;
 
-		for (int i = 0; i < funcs.Count; i++)
+		var current_variables = scope.CopyVariables(variables);
+
+		for (int i = 0; i < scope.Objects.Count; i++)
 		{
-			while (Game1.sceneManager.dialogueManager.Active)
+			while (!sync && Game1.sceneManager.dialogueManager.Active)
 			{
 				Thread.Sleep(25);
 			}
- 
-			var func = funcs[i];
 
-			uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.functionIndex).name, obj, source));
+			var script_object = scope.Objects[i];
 
-			if (!goto_line.HasValue || goto_line.Value == func.line)
+			if (script_object.IsScope)
+			{
+				if (script_object is not Scope new_scope)
+				{
+					throw new UnreachableException();
+				}
+
+				goto_line = Run(new_scope, current_variables, obj, source, sync, is_scene, goto_line);
+			}
+
+			else
+			{
+				if (script_object is not Function func)
+				{
+					throw new UnreachableException();
+				}
+				
+				goto_line = RunFunct(current_variables, func, new Source(func.Line, FunctionDefs.Get(func.functionIndex).name, obj, source));
+			}
+
+			if (!goto_line.HasValue || goto_line.Value == script_object.Line)
 			{
 				continue;
 			}
 
-			if (goto_line.Value > func.line)
+			if (goto_line.Value > script_object.Line)
 			{
-				while (i < funcs.Count && funcs[i].line < goto_line)
+				while (i < scope.Objects.Count && scope.Objects[i].Line < goto_line)
 				{
 					i++;
 				}
 
-				i--; // because the loop adds one each time
-				continue;
+				if (i >= scope.Objects.Count)
+				{
+					return goto_line;
+				}
+			}
+			else
+			{
+				// goto_line must be less than the current line
+				while (i >= 0 && scope.Objects[i].Line > goto_line)
+				{
+					i--;
+				}
+
+				if (i < 0)
+				{
+					return goto_line;
+				}
+			}
+	
+			if (!scope.Objects[i].IsScope)
+			{
+				goto_line = null;
 			}
 
-			// goto_line must be less than the current line
-			while (i >= 0 && funcs[i].line > goto_line)
-			{
-				i--;
-			}
 			i--;
 		}
 
-		if (is_scene)
-		{
-			Game1.sceneManager.Active = false;
-		}
+		return null;
 	}
 
-	public static void RunFuncts(List<Function> funcs, string obj, Source? source = null, bool sync = false, bool is_scene = false)
+	public static void RunScope(Scope scope, string obj, Source source, bool sync = false, bool is_scene = false)
 	{
-		if (funcs.Count == 0)
+		if (scope.Objects.Count == 0)
 		{
 			return;
 		}
 
 		if (sync)
 		{
-			for (int i = 0; i < funcs.Count; i++)
-			{
-				var func = funcs[i];
-
-				uint? goto_line = RunFunct(func, new Source(func.line, FunctionDefs.Get(func.functionIndex).name, obj, source));
-
-				if (!goto_line.HasValue || goto_line.Value == func.line)
-				{
-					continue;
-				}
-
-				if (goto_line.Value > func.line)
-				{
-					while (i < funcs.Count && funcs[i].line < goto_line)
-					{
-						i++;
-					}
-
-					i--; // because the loop adds one each time
-					continue;
-				}
-
-				// goto_line must be less than the current line
-				while (i >= 0 && funcs[i].line > goto_line)
-				{
-					i--;
-				}
-				i--;
-			}
-
+			Run(scope, Game1.GlobalScope.CopyVariables(null), obj, source, true, is_scene, null);
 			return;
 		}
-
+		
 		Thread t = new Thread(() =>
 		{
-			RunFunctsThread(funcs, obj, source, is_scene);
+			if (is_scene)
+			{
+				Game1.sceneManager.Active = true;
+			}
+
+			Run(scope, Game1.GlobalScope.CopyVariables(null), obj, source, false, is_scene, null);
+
+			if (is_scene)
+			{
+				Game1.sceneManager.Active = false;
+			}
 		});
 		t.IsBackground = true;
 		t.Start();
 	}
 
-	private static uint? RunFunct(Function func, Source? source)
+	private static uint? RunFunct(ScopeVariables scope, Function func, Source source)
 	{
 		FunctionDef functionDef = FunctionDefs.Get(func.functionIndex);
 
-		return functionDef.function!(func.parameters, source);
+		return functionDef.function!(scope, func.parameters, source);
 	}
 
 	[GeneratedRegex(@"(//.*)| # comments

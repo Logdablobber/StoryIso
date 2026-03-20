@@ -16,10 +16,10 @@ static partial class FunctionDefs
 	{
 		name = "Move",
 		parameters = [typeof(float), typeof(float)],
-		function = (args, _) => 
+		function = (_, args, source) => 
 		{
-			Optional<float> x = ParameterProcessor.Convert<float>(args![0]);
-			Optional<float> y = ParameterProcessor.Convert<float>(args[1]);
+			Optional<float> x = ParameterProcessor.Convert<float>(source, args![0]);
+			Optional<float> y = ParameterProcessor.Convert<float>(source, args[1]);
 			if (!x.HasValue || !y.HasValue)
 			{
 				return null;

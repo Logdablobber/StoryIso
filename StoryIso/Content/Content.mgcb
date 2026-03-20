@@ -74,6 +74,9 @@
 #begin Scenes/test-scene.scene
 /copy:Scenes/test-scene.scene
 
+#begin System/Constants.json
+/copy:System/Constants.json
+
 #begin Textures/dialogue-box.png
 /copy:Textures/dialogue-box.png
 
@@ -94,4 +97,7 @@
 
 #begin UI/test-ui.json
 /copy:UI/test-ui.json
+
+#begin UI/UISchema.json
+/copy:UI/UISchema.json
 

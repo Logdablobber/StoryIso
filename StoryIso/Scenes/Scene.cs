@@ -6,11 +6,11 @@ namespace StoryIso.Scenes;
 public class Scene
 {
 	public readonly string name;
-	public List<Function> functions;
+	public Scope scope;
 
-	public Scene(string name, List<Function> functions)
+	public Scene(string name, Scope scope)
 	{
 		this.name = name;
-		this.functions = functions;
+		this.scope = scope;
 	}
 }

@@ -16,11 +16,11 @@ static partial class FunctionDefs
 	{
 		name = "MoveTo",
 		parameters = [typeof(RelativeVariable<float>), typeof(RelativeVariable<float>), typeof(float)],
-		function = (args, _) => 
+		function = (_, args, source) => 
 		{
-			var item1 = ParameterProcessor.RelativeConvert<float>(args![0]);
-			var item2 = ParameterProcessor.RelativeConvert<float>(args[1]);
-			Optional<float> item3 = ParameterProcessor.Convert<float>(args[2]);
+			var item1 = ParameterProcessor.RelativeConvert<float>(source, args![0]);
+			var item2 = ParameterProcessor.RelativeConvert<float>(source, args[1]);
+			Optional<float> item3 = ParameterProcessor.Convert<float>(source, args[2]);
 
 			if (!item1.HasValue || !item2.HasValue || !item3.HasValue)
 			{

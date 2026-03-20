@@ -14,16 +14,16 @@ static partial class FunctionDefs
 	{
 		name = "ToggleCollider",
 		parameters = [typeof(string)],
-		function = (args, source) =>
+		function = (_, args, source) =>
 		{
-			Optional<string> collider_name = ParameterProcessor.Convert<string>(args![0]);
+			Optional<string> collider_name = ParameterProcessor.Convert<string>(source, args![0]);
 
 			if (!collider_name.HasValue)
 			{
 				return null;
 			}
 
-			Game1.tiledManager.currentRoom?.ToggleCollider(collider_name.Value[1..^1], source!);
+			Game1.tiledManager.currentRoom?.ToggleCollider(collider_name.Value, source!);
 			return null;
 		}
 	};

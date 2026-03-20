@@ -14,10 +14,10 @@ static partial class FunctionDefs
 	{
 		name = "GOTOIF",
 		parameters = [typeof(object), typeof(uint)],
-		function = (args, source) =>
+		function = (_, args, source) =>
 		{
-			Optional<bool> item1 = ParameterProcessor.Convert<bool>(args![0]);
-			Optional<uint> item2 = ParameterProcessor.Convert<uint>(args[1]);
+			Optional<bool> item1 = ParameterProcessor.Convert<bool>(source, args![0]);
+			Optional<uint> item2 = ParameterProcessor.Convert<uint>(source, args[1]);
 
 			if (!item1.HasValue || !item2.HasValue || !item1.Value)
 			{

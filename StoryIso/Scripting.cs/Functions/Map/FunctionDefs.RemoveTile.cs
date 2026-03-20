@@ -15,11 +15,11 @@ static partial class FunctionDefs
 	{
 		name = "RemoveTile",
 		parameters = [typeof(TileLayerType), typeof(int), typeof(int)],
-		function = (args, _) => 
+		function = (_, args, source) => 
 		{
-			var layer_type = ParameterProcessor.Convert<TileLayerType>(args![0]);
-			Optional<int> x = ParameterProcessor.Convert<int>(args[1]);
-			Optional<int> y = ParameterProcessor.Convert<int>(args[2]);
+			var layer_type = ParameterProcessor.Convert<TileLayerType>(source, args![0]);
+			Optional<int> x = ParameterProcessor.Convert<int>(source, args[1]);
+			Optional<int> y = ParameterProcessor.Convert<int>(source, args[2]);
 
 			if (layer_type.Value == TileLayerType.None || !x.HasValue || !y.HasValue || x.Value < 0 || y.Value < 0)
 			{

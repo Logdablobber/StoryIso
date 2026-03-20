@@ -14,16 +14,16 @@ static partial class FunctionDefs
 	{
 		name = "RunDialogue",
 		parameters = [typeof(string)],
-		function = (args, source) => 
+		function = (_, args, source) => 
 		{
-			Optional<string> dialogue_name = ParameterProcessor.Convert<string>(args![0]);
+			Optional<string> dialogue_name = ParameterProcessor.Convert<string>(source, args![0]);
 
 			if (!dialogue_name.HasValue)
 			{
 				return null;
 			}
 
-			Game1.sceneManager.dialogueManager.RunDialogue(dialogue_name.Value[1..^1], source!);
+			Game1.sceneManager.dialogueManager.RunDialogue(dialogue_name.Value, source!);
 			return null;
 		}
 	};

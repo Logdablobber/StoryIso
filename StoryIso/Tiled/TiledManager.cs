@@ -10,6 +10,8 @@ using MonoGame.Extended;
 using MonoGame.Extended.Content;
 using StoryIso.Scripting;
 using StoryIso.Misc;
+using StoryIso.Debugging;
+using System.Diagnostics;
 
 namespace StoryIso.Tiled;
 
@@ -44,6 +46,7 @@ public class TiledManager
 	}
 
 	private string? map_to_load = null;
+	private Source? map_to_load_source = null;
 
 	private readonly TilemapRenderer _tilemapRenderer;
 
@@ -53,7 +56,7 @@ public class TiledManager
 	{
 		_tilemapRenderer = new TilemapRenderer();
 		LoadMaps(graphics, content);
-		LoadMap(start_room);
+		LoadMap(new Source(0, null, "TiledManager.Initialize"), start_room);
 	}
 
 	private void LoadMaps(GraphicsDevice graphics, ContentManager content)
@@ -83,12 +86,10 @@ public class TiledManager
 
 		foreach (var tileset in map.Tilesets)
 		{
-			using (var stream = content.OpenStream(".\\Tiled\\" + tileset.Image.Value.Source.Value))
-			{
-				Texture2D tileset_texture = Texture2D.FromStream(graphics, stream);
+			using var stream = content.OpenStream(".\\Tiled\\" + tileset.Image.Value.Source.Value);
+			Texture2D tileset_texture = Texture2D.FromStream(graphics, stream);
 
-				_tilemapRenderer.AddTileset(tileset.Image.Value.Source.Value, tileset_texture);
-			}
+			_tilemapRenderer.AddTileset(tileset.Image.Value.Source.Value, tileset_texture);
 		}
 	}
 
@@ -98,15 +99,16 @@ public class TiledManager
 		_tilemapRenderer.Update(gameTime);
 	}
 
-	public void LoadMapThread(string map_name)
+	public void LoadMapThread(Source source, string map_name)
 	{
 		lock (_mapLoadLock)
 		{
 			map_to_load = map_name;
+			map_to_load_source = source;
 		}
 	}
 
-	public void LoadMap(string map_name)
+	public void LoadMap(Source source, string map_name)
 	{
 		if (_rooms == null)
 		{
@@ -117,12 +119,16 @@ public class TiledManager
 		{			
 			currentRoomName = map_name;
 			currentRoom!.PlayMusic();
+			return;
 		}
+
+		DebugConsole.Raise(new UnknownMapError(source, "LoadMap", map_name));
 	}
 
 	private void CheckLoadMap()
 	{
 		string new_map;
+		Source new_map_source;
 		lock (_mapLoadLock)
 		{
 			if (map_to_load == null)
@@ -130,14 +136,21 @@ public class TiledManager
 				return;
 			}
 
+			if (map_to_load_source == null)
+			{
+				throw new UnreachableException("Source can't be null if map is defined");
+			}
+
 			new_map = map_to_load;
+			new_map_source = map_to_load_source;
 			map_to_load = null;
+			map_to_load_source = null;
 		}
 
-		LoadMap(new_map);
+		LoadMap(new_map_source, new_map);
 	}
 
-	private TilemapRoom GenerateMap(Map map)
+	private static TilemapRoom GenerateMap(Map map)
 	{
 		Dictionary<string, Collider> collision_rectangles = [];
 
@@ -200,9 +213,9 @@ public class TiledManager
 		{
 			foreach (var obj in ((ObjectLayer)map.Layers[layer_indices.triggerLayerIndex.Value]).Objects)
 			{
-				List<Function>? on_enter = [];
-				List<Function>? on_exit = [];
-				List<Function>? on_stay = [];
+				Scope? on_enter = null;
+				Scope? on_exit = null;
+				Scope? on_stay = null;
 				Color color = Color.White;
 				
 				if (obj.TryGetProperty<StringProperty>("onEnter", out var enter_code))
@@ -235,11 +248,11 @@ public class TiledManager
 		{
 			foreach (var obj in ((ObjectLayer)map.Layers[layer_indices.interactionLayerIndex.Value]).Objects)
 			{
-				List<Function>? on_interact = [];
-				List<Function>? on_uninteract = [];
-				List<Function>? while_interact = [];
-				List<Function>? on_toggle_on = [];
-				List<Function>? on_toggle_off = [];
+				Scope? on_interact = null;
+				Scope? on_uninteract = null;
+				Scope? while_interact = null;
+				Scope? on_toggle_on = null;
+				Scope? on_toggle_off = null;
 				bool default_toggle_state = false;
 				bool collides = true;
 				
@@ -327,35 +340,22 @@ public class TiledManager
 		return new RelativeVector2(new RelativeVariable<float>(x.Value * currentRoom!.map.TileWidth, x.Relative), new RelativeVariable<float>(y.Value * currentRoom.map.TileHeight, y.Relative));
 	}
 
-	public RelativeVector2 TilePosToWorldPos(RelativeVariable<FunctionParameter<int>> x, RelativeVariable<FunctionParameter<int>> y)
-	{
-		var x_value = x.Value.Value;
-		var y_value = y.Value.Value;
-
-		if (!x_value.HasValue || !y_value.HasValue)
-		{
-			return new RelativeVector2(new RelativeVariable<float>(0, x.Relative), new RelativeVariable<float>(0, y.Relative));
-		}
-
-		return new RelativeVector2(new RelativeVariable<float>(x_value.Value * currentRoom!.map.TileWidth, x.Relative), new RelativeVariable<float>(y_value.Value * currentRoom.map.TileHeight, y.Relative));
-	}
-
-	public Point WorldPosToTilePos(Point point)
-	{
-		return point / new Point(currentRoom!.map.TileWidth, currentRoom.map.TileHeight);
-	}
-
-	public Vector2 WorldPosToTilePos(Vector2 v2)
-	{
-		return v2 / new Vector2(currentRoom!.map.TileWidth, currentRoom.map.TileHeight);
-	}
-
 	public float WorldXToTileX(float x)
 	{
 		return x / currentRoom!.map.TileWidth;
 	}
 
 	public float WorldYToTileY(float y)
+	{
+		return y / currentRoom!.map.TileHeight;
+	}
+
+	public float? WorldXToTileX(float? x)
+	{
+		return x / currentRoom!.map.TileWidth;
+	}
+
+	public float? WorldYToTileY(float? y)
 	{
 		return y / currentRoom!.map.TileHeight;
 	}

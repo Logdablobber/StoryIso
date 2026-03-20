@@ -63,14 +63,14 @@ public class EquationTree<T> where T : notnull
 				throw new UnreachableException();
 			}
 
-			return ParameterProcessor.ConvertParam<T>(parameters[0]);
+			return ParameterProcessor.ConvertParam<T>(source, parameters[0]);
 		}
 
 		List<IOptional> operator_params = [];
 
 		for (int i = 0; i < parameters.Length; i++) 
 		{
-			var param_value = ParameterProcessor.ConvertParam(parameters[i], operatorDef.parameters[i]);
+			var param_value = ParameterProcessor.ConvertParam(source, parameters[i], operatorDef.parameters[i]);
 
 			if (param_value == null)
 			{
@@ -87,7 +87,7 @@ public class EquationTree<T> where T : notnull
 			return default;
 		}
 
-		return ParameterProcessor.ConvertOptional<T>(function_res);
+		return ParameterProcessor.ConvertOptional<T>(source, function_res);
 	}
 
 	public EquationTree<T1> ConvertTo<T1>() where T1 : notnull

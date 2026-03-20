@@ -14,17 +14,17 @@ static partial class FunctionDefs
 	{
 		name = "SetCollider",
 		parameters = [typeof(string), typeof(bool)],
-		function = (args, source) => 
+		function = (_, args, source) => 
 		{
-			Optional<string> collider_name = ParameterProcessor.Convert<string>(args![0]);
-			Optional<bool> state = ParameterProcessor.Convert<bool>(args[1]);
+			Optional<string> collider_name = ParameterProcessor.Convert<string>(source, args![0]);
+			Optional<bool> state = ParameterProcessor.Convert<bool>(source, args[1]);
 
 			if (!collider_name.HasValue || !state.HasValue)
 			{
 				return null;
 			}
 
-			Game1.tiledManager.currentRoom?.SetCollider(collider_name.Value[1..^1], state.Value, source!);
+			Game1.tiledManager.currentRoom?.SetCollider(collider_name.Value, state.Value, source!);
 			return null;
 		}
 	};

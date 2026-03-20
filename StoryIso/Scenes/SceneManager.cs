@@ -66,11 +66,7 @@ public class SceneManager
 		DirectoryInfo dir = new DirectoryInfo(directory);
 
 		FileInfo[] files = dir.GetFiles("*.scene");
-
-		foreach (var file in files)
-		{
-			SceneProcessor.PreprocessScene(file.FullName); // load variables
-		}
+		
 		foreach (var file in files)
 		{
 			LoadScene(file.FullName);
@@ -90,7 +86,7 @@ public class SceneManager
 			return;
 		}
 
-		FunctionProcessor.RunFuncts(scene.functions, scene.name, source, is_scene: true);
+		FunctionProcessor.RunScope(scene.scope, scene.name, source, is_scene: true);
 	}
 
 	public void Update(GameTime gameTime)

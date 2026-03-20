@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using StoryIso.Debugging;
 using StoryIso.Enums;
 using StoryIso.Misc;
+using StoryIso.Scripting.Variables;
 
 namespace StoryIso.Scripting;
 
@@ -42,16 +43,11 @@ public static partial class ParameterProcessor
 		return new FunctionParameter<T>(parsed_value);
 	}
 
-	public static FunctionParameter<T>? ParseParameterVariable<T>(string value, Source source, string function, string? obj) where T : notnull, IParsable<T>
+	public static FunctionParameter<T>? ParseParameterVariable<T>(Scope scope, string value, Source source, string function) where T : notnull, IParsable<T>
 	{
-		if (VariableManager.ContainsVariable(value, out _))
+		if (scope.ContainsVariable(value, out _))
 		{
-			return new FunctionParameter<T>(variable_name: value);
-		}
-
-		if (obj != null && VariableManager.ContainsVariable(VariableManager.GetLocalVariableName(value, obj), out _))
-		{
-			return new FunctionParameter<T>(variable_name: VariableManager.GetLocalVariableName(value, obj));
+			return new FunctionParameter<T>(source, scope, variable_name: value);
 		}
 
 		var parameter_value = ParseParameter<T>(value, source, function);
@@ -59,19 +55,19 @@ public static partial class ParameterProcessor
 		return parameter_value;
 	}
 
-	public static FunctionParameter<T>? ParseEquation<T>(string value, Source source, string function, string? obj) where T : notnull, IParsable<T>
+	public static FunctionParameter<T>? ParseEquation<T>(Scope scope, string value, Source source, string function) where T : notnull, IParsable<T>
 	{
 		if (typeof(T) == typeof(float) || typeof(T) == typeof(int))
 		{
 			if (FloatRegex.IsMatch(value))
 			{
-				return ParseParameterVariable<T>(value, source, function, obj);
+				return ParseParameterVariable<T>(scope, value, source, function);
 			}
 		}
 
 		if (OperatorDefs.OperatorRegex.IsMatch(value))
 		{
-			if (!ParameterEvaluator.ToNodeTree<T>(source, function, value, obj, out var equation)) 
+			if (!ParameterEvaluator.ToNodeTree<T>(source, scope, function, value, out var equation)) 
 			{
 				return null;
 			}
@@ -79,7 +75,7 @@ public static partial class ParameterProcessor
 			return equation;
 		}
 
-		return ParseParameterVariable<T>(value, source, function, obj);
+		return ParseParameterVariable<T>(scope, value, source, function);
 	}
 
 	private static ArrayParameter<T>? ParseArrayParameter<T>(string value, Source source, string function) where T : notnull, IParsable<T>
@@ -106,7 +102,7 @@ public static partial class ParameterProcessor
 		return new ArrayParameter<T>(parameters);
 	}
 
-	public static IFunctionParameter? ProcessUnknownParameter(string value, Source source, string function, string? obj)
+	public static IFunctionParameter? ProcessUnknownParameter(Scope scope, string value, Source source, string function)
 	{
 		if (StringRegex.IsMatch(value))
 		{
@@ -137,55 +133,30 @@ public static partial class ParameterProcessor
 			return parameter.Value;
 		}
 
-		if (VariableManager.ContainsVariable(value, out VariableType type))
+		if (scope.ContainsVariable(value, out VariableType type))
 		{
 			switch (type)
 			{
 				case VariableType.Int:
-					return new FunctionParameter<int>(value);
+					return new FunctionParameter<int>(source, scope, value);
 
 				case VariableType.Float:
-					return new FunctionParameter<float>(value);
+					return new FunctionParameter<float>(source, scope, value);
 
 				case VariableType.String:
-					return new FunctionParameter<string>(variable_name: value);
+					return new FunctionParameter<string>(source, scope, variable_name: value);
 
 				case VariableType.Bool:
-					return new FunctionParameter<bool>(value);
+					return new FunctionParameter<bool>(source, scope, value);
 
 				default:
 					break;
 			}
 		}
 
-		if (obj != null) 
-		{
-			string local_variable_name = VariableManager.GetLocalVariableName(value, obj);
-			if (VariableManager.ContainsVariable(local_variable_name, out VariableType local_type))
-			{
-				switch (local_type)
-				{
-					case VariableType.Int:
-						return new FunctionParameter<int>(local_variable_name);
-
-					case VariableType.Float:
-						return new FunctionParameter<float>(local_variable_name);
-
-					case VariableType.String:
-						return new FunctionParameter<string>(variable_name: local_variable_name);
-
-					case VariableType.Bool:
-						return new FunctionParameter<bool>(local_variable_name);
-
-					default:
-						break;
-				}
-			}
-		}
-
 		if (OperatorDefs.OperatorRegex.IsMatch(value))
 		{
-			var equation = ParseEquation<string>(value, source, function, obj);
+			var equation = ParseEquation<string>(scope, value, source, function);
 
 			if (!equation.HasValue)
 			{
@@ -199,13 +170,13 @@ public static partial class ParameterProcessor
 		return null;
 	}
 
-	public static List<object>? ProcessParameters(Source source, string function_name, List<string> inputs, Type[] types, string? obj)
+	public static List<object>? ProcessParameters(Source source, Scope scope, string function_name, List<string> inputs, Type[] types)
 	{
 		List<object> args = [];
 
 		bool parse_variable<T1>(string input, bool equation = false) where T1 : notnull, IParsable<T1> 
 		{
-			var param = equation ? ParseEquation<T1>(input, source, function_name, obj) : ParseParameter<T1>(input, source, function_name);
+			var param = equation ? ParseEquation<T1>(scope, input, source, function_name) : ParseParameter<T1>(input, source, function_name);
 
 			if (!param.HasValue)
 			{
@@ -294,7 +265,7 @@ public static partial class ParameterProcessor
 
 					string relative_int_input = inputs[j][(relative_int ? 1 : 0)..];
 
-					var relative_int_param = ParseEquation<int>(relative_int_input, source, function_name, obj);
+					var relative_int_param = ParseEquation<int>(scope, relative_int_input, source, function_name);
 					
 					if (!relative_int_param.HasValue)
 					{
@@ -309,7 +280,7 @@ public static partial class ParameterProcessor
 
 					string relative_float_input = inputs[j][(relative_float ? 1 : 0)..];
 
-					var relative_float_param = ParseEquation<float>(relative_float_input, source, function_name, obj);
+					var relative_float_param = ParseEquation<float>(scope, relative_float_input, source, function_name);
 					
 					if (!relative_float_param.HasValue)
 					{
@@ -335,7 +306,7 @@ public static partial class ParameterProcessor
 					break;
 
 				case TypeIndexers.VARIABLE_OBJECT:
-					var variable_parameter = ProcessUnknownParameter(inputs[j], source, function_name, obj);
+					var variable_parameter = ProcessUnknownParameter(scope, inputs[j], source, function_name);
 
 					if (variable_parameter == null)
 					{

@@ -14,7 +14,7 @@ static partial class FunctionDefs
 	{
 		name = "PlayMusic",
 		parameters = [],
-		function = (_, _) => 
+		function = (_, _, _) => 
 		{
 			AudioManager.PlayBGM();
 			return null;	

@@ -15,9 +15,9 @@ static partial class FunctionDefs
 	{
 		name = "SetMasterVolume",
 		parameters = [typeof(float)],
-		function = (args, source) => 
+		function = (_, args, source) => 
 		{
-			var item1 = ParameterProcessor.Convert<float>(args![0]);
+			var item1 = ParameterProcessor.Convert<float>(source, args![0]);
 
 			if (!item1.HasValue)
 			{

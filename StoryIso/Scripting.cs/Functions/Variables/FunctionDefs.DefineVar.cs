@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using StoryIso.Enums;
 using StoryIso.Misc;
+using StoryIso.Scripting.Variables;
 
 namespace StoryIso.Scripting;
-
+/*
 static partial class FunctionDefs
 {
 	/// <summary>
@@ -15,19 +17,38 @@ static partial class FunctionDefs
 	{
 		name = "DefineVar",
 		parameters = [typeof(VariableType), typeof(object), typeof(VariableObject)], // the last value is string because it will be parsed later
-		function = (args, source) => 
+		function = (scope, args, source) => 
 		{
-			// variables are defined at startup
-			Optional<string> name = ParameterProcessor.Convert<string>(args![1]);
-			object? value = ParameterProcessor.ConvertUnknown(args[2]);
+			Optional<VariableType> type = ParameterProcessor.Convert<VariableType>(source, args![0]);
+			Optional<string> name = ParameterProcessor.Convert<string>(source, args[1]);
+			IOptional? value = ParameterProcessor.ConvertUnknown(source, args[2]);
 
-			if (!name.HasValue || value == null)
+			if (!type.HasValue || !name.HasValue)
 			{
 				return null;
 			}
+
+			IVariable create<T>() where T : notnull
+			{
+				if (value == null)
+				{
+					return new ValueVariable<T>(name.Value, default);
+				}
+
+				return new ValueVariable<T>(name.Value, ParameterProcessor.ConvertOptional<T>(source, value));
+			}
+
+			var new_variable = type.Value switch
+			{
+				VariableType.Int => create<int>(),
+				VariableType.Float => create<float>(),
+				VariableType.String => create<string>(),
+				VariableType.Bool => create<bool>(),
+				_ => throw new UnreachableException(),
+			};
 		
-			VariableManager.SetVariable(name.Value, value, source!);
+			scope.DefineVariable(source, new_variable);
 			return null;
 		}
 	};
-}
+}*/

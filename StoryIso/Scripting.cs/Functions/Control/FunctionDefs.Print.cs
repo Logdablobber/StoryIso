@@ -16,16 +16,16 @@ static partial class FunctionDefs
 	{
 		name = "Print",
 		parameters = [typeof(string)],
-		function = (args, _) => 
+		function = (_, args, source) => 
 		{
-			Optional<string> arg = ParameterProcessor.Convert<string>(args![0]);
+			Optional<string> arg = ParameterProcessor.Convert<string>(source, args![0]);
 
 			if (!arg.HasValue)
 			{
 				return null;
 			}
 
-			DebugConsole.WriteLine(arg.Value.Trim('"'), Color.Black);
+			DebugConsole.WriteLine(arg.Value, Color.Black);
 
 			return null;
 		}

@@ -16,9 +16,9 @@ static partial class FunctionDefs
 	{
 		name = "Wait",
 		parameters = [typeof(float)],
-		function = (args, _) =>
+		function = (_, args, source) =>
 		{
-			Optional<float> item1 = ParameterProcessor.Convert<float>(args![0]);
+			Optional<float> item1 = ParameterProcessor.Convert<float>(source, args![0]);
 
 			if (!item1.HasValue)
 			{

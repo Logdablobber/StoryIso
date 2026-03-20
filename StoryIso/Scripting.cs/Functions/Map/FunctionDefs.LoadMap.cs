@@ -15,11 +15,11 @@ static partial class FunctionDefs
 	{
 		name = "LoadMap",
 		parameters = [typeof(string), typeof(RelativeVariable<float>), typeof(RelativeVariable<float>)],
-		function = (args, _) => 
+		function = (_, args, source) => 
 		{
-			Optional<string> map_name = ParameterProcessor.Convert<string>(args![0]);
-			var x = ParameterProcessor.RelativeConvert<float>(args[1]);
-			var y = ParameterProcessor.RelativeConvert<float>(args[2]);
+			Optional<string> map_name = ParameterProcessor.Convert<string>(source, args![0]);
+			var x = ParameterProcessor.RelativeConvert<float>(source, args[1]);
+			var y = ParameterProcessor.RelativeConvert<float>(source, args[2]);
 
 			if (!map_name.HasValue || !x.HasValue || !y.HasValue)
 			{
@@ -27,7 +27,7 @@ static partial class FunctionDefs
 			}
 
 			Game1.PauseRendering();
-			Game1.tiledManager.LoadMapThread(map_name.Value[1..^1]);
+			Game1.tiledManager.LoadMapThread(source, map_name.Value);
 			CharacterSystem.SetPlayerPosition(Game1.tiledManager.TilePosToWorldPos(x.Value, y.Value));
 			return null;
 		}

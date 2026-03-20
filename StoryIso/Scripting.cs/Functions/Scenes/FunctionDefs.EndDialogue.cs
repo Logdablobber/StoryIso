@@ -12,7 +12,7 @@ static partial class FunctionDefs
 	{
 		name = "EndDialogue",
 		parameters = [],
-		function = (_, source) => 
+		function = (_, _, source) => 
 		{
 			Game1.sceneManager.dialogueManager.EndDialogue(source);
 			return null;

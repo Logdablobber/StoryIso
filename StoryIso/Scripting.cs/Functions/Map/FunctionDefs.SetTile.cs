@@ -15,12 +15,12 @@ static partial class FunctionDefs
 	{
 		name = "SetTile",
 		parameters = [typeof(TileLayerType), typeof(uint), typeof(int), typeof(int)],
-		function = (args, _) => 
+		function = (_, args, source) => 
 		{
-			var layer_type = ParameterProcessor.Convert<TileLayerType>(args![0]);
-			Optional<uint> guid = ParameterProcessor.Convert<uint>(args[1]);
-			Optional<int> x = ParameterProcessor.Convert<int>(args[2]);
-			Optional<int> y = ParameterProcessor.Convert<int>(args[3]);
+			var layer_type = ParameterProcessor.Convert<TileLayerType>(source, args![0]);
+			Optional<uint> guid = ParameterProcessor.Convert<uint>(source, args[1]);
+			Optional<int> x = ParameterProcessor.Convert<int>(source, args[2]);
+			Optional<int> y = ParameterProcessor.Convert<int>(source, args[3]);
 
 			if (layer_type.Value == TileLayerType.None || !guid.HasValue || !x.HasValue || !y.HasValue || x.Value < 0 || y.Value < 0)
 			{

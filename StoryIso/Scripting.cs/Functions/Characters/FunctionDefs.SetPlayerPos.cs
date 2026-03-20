@@ -15,10 +15,10 @@ static partial class FunctionDefs
 	{
 		name = "SetPlayerPos",
 		parameters = [typeof(RelativeVariable<float>), typeof(RelativeVariable<float>)],
-		function = (args, _) => 
+		function = (_, args, source) => 
 		{
-			var x = ParameterProcessor.RelativeConvert<float>(args![0]);
-			var y = ParameterProcessor.RelativeConvert<float>(args[1]);
+			var x = ParameterProcessor.RelativeConvert<float>(source, args![0]);
+			var y = ParameterProcessor.RelativeConvert<float>(source, args[1]);
 
 			if (!x.HasValue || !y.HasValue)
 			{

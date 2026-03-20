@@ -5,6 +5,7 @@ using MonoGame.Extended;
 using StoryIso.Enums;
 using StoryIso.Scripting;
 using StoryIso.Misc;
+using StoryIso.Debugging;
 
 namespace StoryIso.Tiled;
 
@@ -12,11 +13,11 @@ public class InteractionTile
 {
 	public uint id;
 	Rectangle interactionHitbox;
-	readonly List<Function>? onInteract;
-	readonly List<Function>? onUninteract;
-	readonly List<Function>? whileInteract;
-	readonly List<Function>? onToggleOn;
-	readonly List<Function>? onToggleOff;
+	readonly Scope? onInteract;
+	readonly Scope? onUninteract;
+	readonly Scope? whileInteract;
+	readonly Scope? onToggleOn;
+	readonly Scope? onToggleOff;
 	bool interactingLastFrame = false;
 	bool toggleState;
 
@@ -25,11 +26,11 @@ public class InteractionTile
 
 	public InteractionTile(uint id,
 							Rectangle rect, 
-							List<Function>? on_interact = null, 
-							List<Function>? on_uninteract = null, 
-							List<Function>? while_interact = null,
-							List<Function>? on_toggle_on = null,
-							List<Function>? on_toggle_off = null,
+							Scope? on_interact = null, 
+							Scope? on_uninteract = null, 
+							Scope? while_interact = null,
+							Scope? on_toggle_on = null,
+							Scope? on_toggle_off = null,
 							bool default_toggle_state = false)
 	{
 		this.id = id;
@@ -158,7 +159,7 @@ public class InteractionTile
 
 		if (interactingLastFrame)
 		{
-			FunctionProcessor.RunFuncts(onUninteract, $"onUninteract of Interaction {id}");
+			FunctionProcessor.RunScope(onUninteract, $"onUninteract of Interaction {id}", new Source(0, null, $"onUninteract of Interaction {id}"));
 
 			interactingLastFrame = false;
 		}
@@ -166,21 +167,35 @@ public class InteractionTile
 
 	private void RunInteraction()
 	{
-		if (onInteract == null || onToggleOff == null || onToggleOn == null || whileInteract == null)
+		if (onInteract == null && onToggleOff == null && onToggleOn == null && whileInteract == null)
 		{
 			return;
 		}
 
 		if (!interactingLastFrame)
 		{
-			FunctionProcessor.RunFuncts(onInteract, $"onInteract of Interaction {id}");
-
-			FunctionProcessor.RunFuncts(toggleState ? onToggleOff : onToggleOn, $"onToggle{(toggleState ? "Off" : "On")} of Interaction {id}");
+			if (onInteract != null)
+			{
+				FunctionProcessor.RunScope(onInteract, $"onInteract of Interaction {id}", new Source(0, null, $"onInteract of Interaction {id}"));
+			}
+			
+			if (toggleState && onToggleOff != null)
+			{
+				FunctionProcessor.RunScope(onToggleOff, $"onToggleOff of Interaction {id}", new Source(0, null, $"onToggleOff of Interaction {id}"));
+			}
+			else if (!toggleState && onToggleOn != null)
+			{
+				FunctionProcessor.RunScope(onToggleOn, $"onToggleOn of Interaction {id}", new Source(0, null, $"onToggleOn of Interaction {id}"));
+			}
 
 			toggleState = !toggleState;
 			interactingLastFrame = true;
 		}
 
-		FunctionProcessor.RunFuncts(whileInteract, $"whileInteract of Interaction {id}", sync:true);
+		if (whileInteract == null)
+		{
+			return;
+		}
+		FunctionProcessor.RunScope(whileInteract, $"whileInteract of Interaction {id}", new Source(0, null, $"whileInteract of Interaction {id}"), sync:true);
 	}
 }

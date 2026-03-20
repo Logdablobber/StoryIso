@@ -1,0 +1,10 @@
+{
+	"$schema": "./ConstantSchema.json",
+	"Constants": [
+		{
+			"$type": "float",
+			"Name": "pi",
+			"Value": 3.14159265358979
+		}
+	]
+}

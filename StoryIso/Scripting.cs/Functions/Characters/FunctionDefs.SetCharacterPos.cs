@@ -15,11 +15,11 @@ static partial class FunctionDefs
 	{
 		name = "SetCharacterPos",
 		parameters = [typeof(string), typeof(RelativeVariable<float>), typeof(RelativeVariable<float>)],
-		function = (args, _) =>
+		function = (_, args, source) =>
 		{
-			Optional<string> item1 = ParameterProcessor.Convert<string>(args![0]);
-			var item2 = ParameterProcessor.RelativeConvert<float>(args[1]);
-			var item3 = ParameterProcessor.RelativeConvert<float>(args[2]);
+			Optional<string> item1 = ParameterProcessor.Convert<string>(source, args![0]);
+			var item2 = ParameterProcessor.RelativeConvert<float>(source, args[1]);
+			var item3 = ParameterProcessor.RelativeConvert<float>(source, args[2]);
 
 			if (!item1.HasValue || !item2.HasValue || !item3.HasValue)
 			{

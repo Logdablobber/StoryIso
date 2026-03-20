@@ -12,5 +12,5 @@ public class OperatorDef
 	public bool inlineFunc;
 	public required Type[] parameters;
 	public required Type returnType;
-	public Func<List<IOptional>?, Source?, IOptional?>? function;
+	public Func<List<IOptional>?, Source, IOptional?>? function;
 }

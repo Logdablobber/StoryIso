@@ -14,6 +14,7 @@ using StoryIso.Entities;
 using StoryIso.Enums;
 using StoryIso.FileLoading;
 using StoryIso.Scripting;
+using StoryIso.Scripting.Variables;
 using StoryIso.Scenes;
 using StoryIso.Tiled;
 using StoryIso.UI;
@@ -66,6 +67,8 @@ public class Game1 : Game
 	public const int ScreenWidth = 800;
 
 	private bool qPressedPreviousFrame = false;
+
+	public static Scope GlobalScope = new(null, [], 0, 0);
 
     public Game1()
     {

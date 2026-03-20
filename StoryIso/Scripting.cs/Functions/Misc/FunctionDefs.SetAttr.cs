@@ -15,11 +15,11 @@ static partial class FunctionDefs
 	{
 		name = "SetAttr",
 		parameters = [typeof(string), typeof(string), typeof(VariableObject)],
-		function = (args, source) => 
+		function = (_, args, source) => 
 		{
-			var item1 = ParameterProcessor.Convert<string>(args![0]);
-			var item2 = ParameterProcessor.Convert<string>(args[1]);
-			var item3 = ParameterProcessor.ConvertUnknown(args[2], out _, out Type type);
+			var item1 = ParameterProcessor.Convert<string>(source, args![0]);
+			var item2 = ParameterProcessor.Convert<string>(source, args[1]);
+			var item3 = ParameterProcessor.ConvertUnknown(source, args[2], out var _, out Type type);
 
 			if (!item1.HasValue || !item2.HasValue || item3 == null)
 			{

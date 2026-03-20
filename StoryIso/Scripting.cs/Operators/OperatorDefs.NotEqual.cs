@@ -17,10 +17,10 @@ static partial class OperatorDefs
 		isConstant = true,
 		parameters = [typeof(VariableObject), typeof(VariableObject)],
 		returnType = typeof(bool),
-		function = (args, _) =>
+		function = (args, source) =>
 		{
-			ParameterProcessor.ConvertUnknown(args![0], out var item1);
-			ParameterProcessor.ConvertUnknown(args[1], out var item2);
+			ParameterProcessor.ConvertUnknown(source, args![0], out var item1);
+			ParameterProcessor.ConvertUnknown(source, args[1], out var item2);
 
 			if (item1 == null || item2 == null)
 			{

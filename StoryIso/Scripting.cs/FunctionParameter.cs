@@ -1,12 +1,16 @@
 using System;
 using System.Diagnostics;
 using StoryIso.Debugging;
+using StoryIso.Enums;
 using StoryIso.Misc;
+using StoryIso.Scripting.Variables;
 
 namespace StoryIso.Scripting;
 
 public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 {
+	private readonly Scope? _scope;
+
 	public readonly bool IsConstant { get; }
 	public readonly Type ValueType
 	{
@@ -16,65 +20,55 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 		}
 	}
 
+	public readonly VariableType variableType
+	{
+		get
+		{
+			return VariableManager.GetVariableType(typeof(T));
+		}
+	}
+
 	private readonly T? _value;
 	private readonly string? _variableName;
 	private readonly EquationTree<T>? _equation;
 	private readonly ReturnType _returnType;
-	public readonly Optional<T> Value 
+	public Optional<T> GetValue(Source source)
 	{ 
-		get
+		switch (_returnType)
 		{
-			switch (_returnType)
-			{
-				case ReturnType.value:
-					if (_value == null)
-					{
-						return default;
-					}
+			case ReturnType.value:
+				if (_value == null)
+				{
+					return default;
+				}
 
-					return _value;
+				return _value;
 
-				case ReturnType.variable:
-					if (_variableName == null)
-					{
-						return default;
-					}
+			case ReturnType.variable:
+				if (_variableName == null)
+				{
+					return default;
+				}
 
-					if (typeof(T) == typeof(object))
-					{
-						if (VariableManager.TryGetVariable(_variableName, out var _, out object? value))
-						{
-							if (value == null)
-							{
-								return default;
-							}
+				var value = _scope?.GetVariable(source, _variableName, variableType, out _);
 
-							return (T)value;
-						}
+				if (value == null || !value.HasValue)
+				{
+					return default;
+				}
 
-						return default;
-					}
+				return (Optional<T>)value;
 
-					object? variable_value = VariableManager.GetVariable<T>(_variableName, new Source(0, "GetVariable", "VariableManager"));
+			case ReturnType.equation:
+				if (_equation == null)
+				{
+					return default;
+				}
 
-					if (variable_value == null)
-					{
-						return default;
-					}
-
-					return (T)variable_value;
-
-				case ReturnType.equation:
-					if (_equation == null)
-					{
-						return default;
-					}
-
-					return _equation.Evaluate(new Source(0, "Evaluate Parameter", ""));
-			}
-
-			return default;
+				return _equation.Evaluate(new Source(0, "Evaluate Parameter", ""));
 		}
+
+		return default;
 	}
 
 	public FunctionParameter()
@@ -94,16 +88,13 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 		IsConstant = true;
 	}
 
-	public FunctionParameter(string variable_name)
+	public FunctionParameter(Source source, Scope scope, string variable_name)
 	{
-		_value = default;
-		_variableName = variable_name;
-		_equation = null;
-		_returnType = ReturnType.variable;
+		var variable = scope.GetVariable(source, variable_name, VariableManager.GetVariableType(typeof(T)), out bool is_constant);
 		
-		if (VariableManager.IsVariableConstant(variable_name, out var value, out var type))
+		if (variable.HasValue && is_constant)
 		{
-			if (value == null)
+			if (variable is not ConstantVariable<T> value)
 			{
 				return;
 			}
@@ -112,82 +103,15 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 			_returnType = ReturnType.value;
 			IsConstant = true;
 
-			if (typeof(T) == type)
-			{
-				_value = (T)value;
-				return;
-			}
-
-			if (typeof(T) == typeof(string))
-			{
-				if (type == typeof(int))
-				{
-					_value = (T)(object)((int)value).ToString();
-					return;
-				}
-
-				if (type == typeof(float))
-				{
-					_value = (T)(object)((float)value).ToString();
-					return;
-				}
-
-				if (type == typeof(bool))
-				{
-					_value = (T)(object)((bool)value).ToString();
-					return;
-				}
-
-				throw new NotImplementedException();
-			}
-
-			if (typeof(T) == typeof(int))
-			{
-				if (type == typeof(float))
-				{
-					_value = (T)(object)(int)(float)value;
-					return;
-				}
-				
-				if (type == typeof(string) && int.TryParse((string)value, out int int_value))
-				{
-					_value = (T)(object)int_value;
-					return;
-				}
-
-				throw new NotImplementedException();
-			}
-
-			if (typeof(T) == typeof(float))
-			{
-				if (type == typeof(int))
-				{
-					_value = (T)(object)(float)(int)value;
-					return;
-				}
-				
-				if (type == typeof(string) && float.TryParse((string)value, out float float_value))
-				{
-					_value = (T)(object)float_value;
-					return;
-				}
-
-				throw new NotImplementedException();
-			}
-
-			if (typeof(T) == typeof(bool))
-			{
-				if (type == typeof(string) && bool.TryParse((string)value, out bool bool_value))
-				{
-					_value = (T)(object)bool_value;
-					return;
-				}
-
-				throw new NotImplementedException();
-			}
-
-			throw new NotImplementedException();
+			_value = ((Optional<T>)value.Value).Value;
+			return;
 		}
+
+		_value = default;
+		_variableName = variable_name;
+		_equation = null;
+		_returnType = ReturnType.variable;
+		_scope = scope;
 	}
 
 	public FunctionParameter(EquationTree<T> equation, Source source)
@@ -214,17 +138,7 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 		_returnType = ReturnType.equation;
 	}
 
-	public static explicit operator T?(FunctionParameter<T> parameter)
-	{
-		if (parameter.Value.HasValue)
-		{
-			return parameter.Value.Value;
-		}
-
-		return default;
-	} 	
-
-	public FunctionParameter<T1>? ConvertTo<T1>(Source source) where T1 : notnull
+	public FunctionParameter<T1>? ConvertTo<T1>(Source source, Scope scope) where T1 : notnull
 	{
 		if (typeof(T) == typeof(T1))
 		{
@@ -235,7 +149,7 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 		{
 			if (typeof(T1) == typeof(string))
 			{
-				var string_value = ParameterProcessor.ConvertByTypeToString(this) ?? throw new UnreachableException();
+				var string_value = ParameterProcessor.ConvertByTypeToString(source, this) ?? throw new UnreachableException();
 
 				return new FunctionParameter<T1>(value:(T1)(object)string_value);
 			}
@@ -243,13 +157,13 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 			// float to int
 			if (typeof(T) == typeof(float) && typeof(T1) == typeof(int))
 			{
-				return new FunctionParameter<T1>((T1)(object)(int)(float)(object)this.Value.Value);
+				return new FunctionParameter<T1>((T1)(object)(int)(float)(object)this.GetValue(source).Value);
 			}
 
 			// int to float
 			if (typeof(T) == typeof(int) && typeof(T1) == typeof(float))
 			{
-				return new FunctionParameter<T1>((T1)(object)(float)(int)(object)this.Value.Value);
+				return new FunctionParameter<T1>((T1)(object)(float)(int)(object)this.GetValue(source).Value);
 			}
 
 			throw new NotImplementedException();
@@ -257,12 +171,12 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 
 		if (this._returnType == ReturnType.variable)
 		{
-			if (this._variableName == null)
+			if (this._variableName == null || this._scope == null)
 			{
 				throw new NullReferenceException();
 			}
 
-			return new FunctionParameter<T1>(this._variableName);
+			return new FunctionParameter<T1>(source, _scope, this._variableName);
 		}
 
 		if (this._returnType == ReturnType.equation)

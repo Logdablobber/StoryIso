@@ -1,8 +1,8 @@
 {
-    "activeFile": "Maps/test-tilemap.tmx",
+    "activeFile": "Maps/test-tilemap2.tmx",
     "expandedProjectPaths": [
-        "Maps",
-        "."
+        ".",
+        "Maps"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -25,10 +25,10 @@
                 7
             ],
             "scale": 3,
-            "selectedLayer": 5,
+            "selectedLayer": 4,
             "viewCenter": {
-                "x": 240,
-                "y": 159.83333333333331
+                "x": 129.5,
+                "y": 141.99999999999997
             }
         },
         "dungeon-floor-tiles.tsx": {
@@ -59,9 +59,9 @@
     "project": "storyiso.tiled-project",
     "property.type": "float",
     "recentFiles": [
-        "Maps/test-tilemap2.tmx",
         "tileset-atlas.tsx",
         "Maps/test-tilemap.tmx",
+        "Maps/test-tilemap2.tmx",
         "objects.tsx"
     ],
     "textEdit.monospace": true,

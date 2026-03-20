@@ -47,55 +47,6 @@ public static partial class FunctionDefs
 
 			NameToFunctionDefIndex.Add(def.name, i);
 		}
-
-		#if DEBUG
-		// update scene formatting extension with variable and function names
-
-		string user_folder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-		string extension_dir = user_folder + "\\.vscode\\extensions\\scene-syntax-highlighting\\syntaxes\\";
-
-		string json = File.ReadAllText(extension_dir + "scene.tmLanguageBase.json");
-
-		if (JsonConvert.DeserializeObject(json) is not JObject jsonObj)
-		{
-			return;
-		}
-
-		JToken? token = jsonObj.SelectToken("repository.keywords.patterns");
-
-		if (token == null)
-		{
-			return;
-		}
-
-		foreach (JToken pattern in token) 
-		{
-			switch (pattern.Value<string>("name"))
-			{
-				case "keyword":
-					var match1 = pattern.Value<string>("match");
-					pattern.SelectToken("match")?.Replace(match1 + $"|\\b({string.Join('|', VariableManager.KeywordNames)})\\b");
-					break;
-
-				case "entity.name.function":
-					var match2 = pattern.Value<string>("match");
-					pattern.SelectToken("match")?.Replace(match2 + $"\\b({string.Join('|', NameToFunctionDefIndex.Keys)})\\b");
-					break;
-
-				default:
-					break;
-			}
-		}
-
-		string updated_json_string = jsonObj.ToString(Formatting.Indented);
-
-		if (File.Exists(extension_dir + "scene.tmLanguage.json"))
-		{
-			File.Delete(extension_dir + "scene.tmLanguage.json");
-		}
-
-		File.WriteAllText(extension_dir + "scene.tmLanguage.json", updated_json_string);
-		#endif
 	}
 
 

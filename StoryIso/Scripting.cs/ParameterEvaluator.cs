@@ -12,9 +12,9 @@ public static partial class ParameterEvaluator
 	private static readonly Regex _splitRegex = SplitRegex();
 	private static readonly Regex _operandRegex = OperandRegex();
 
-	public static bool ToNodeTree<T>(Source source, string function, string infix, string? obj, out FunctionParameter<T>? result) where T : notnull
+	public static bool ToNodeTree<T>(Source source, Scope scope, string function, string infix, out FunctionParameter<T>? result) where T : notnull
 	{
-		var postfix = Postfix<T>(source, function, infix, obj);
+		var postfix = Postfix<T>(source, scope, function, infix);
 
 		if (postfix == null)
 		{
@@ -76,7 +76,7 @@ public static partial class ParameterEvaluator
 			return false;
 		}
 
-		result = stack.Pop().ConvertTo<T>(source);
+		result = stack.Pop().ConvertTo<T>(source, scope);
 		return true;
 	}
 
@@ -99,7 +99,7 @@ public static partial class ParameterEvaluator
 			_ => -1,
 		};
 	}
-	private static (object, Type)[]? Postfix<T>(Source source, string function, string value, string? obj) where T : notnull
+	private static (object, Type)[]? Postfix<T>(Source source, Scope scope, string function, string value) where T : notnull
 	{
 		string[] infix = (from match in
 								_splitRegex.Matches(value)
@@ -109,7 +109,7 @@ public static partial class ParameterEvaluator
 		// check the "equation" is just a single value
 		if (infix.Length == 1 && _operandRegex.IsMatch(infix[0]) && !OperatorDefs.InlineFunctions.Contains(infix[0]))
 		{
-			var operand = ParameterProcessor.ProcessUnknownParameter(infix[0], source, function, obj);
+			var operand = ParameterProcessor.ProcessUnknownParameter(scope, infix[0], source, function);
 
 			if (operand == null)
 			{
@@ -130,7 +130,7 @@ public static partial class ParameterEvaluator
 
 			if (!previously_operand && item == "-" && i != infix.Length - 1 && _operandRegex.IsMatch(infix[i + 1]))
 			{
-				var operand = ParameterProcessor.ProcessUnknownParameter(item + infix[i + 1], source, function, obj);
+				var operand = ParameterProcessor.ProcessUnknownParameter(scope, item + infix[i + 1], source, function);
 				i += 1;
 
 				if (operand == null)
@@ -145,7 +145,7 @@ public static partial class ParameterEvaluator
 
 			if (_operandRegex.IsMatch(item) && !OperatorDefs.InlineFunctions.Contains(item))
 			{
-				var operand = ParameterProcessor.ProcessUnknownParameter(item, source, function, obj);
+				var operand = ParameterProcessor.ProcessUnknownParameter(scope, item, source, function);
 
 				if (operand == null)
 				{
@@ -219,7 +219,7 @@ public static partial class ParameterEvaluator
 
 				bool get_postfix<T1>(string param) where T1 : notnull
 				{
-					if (!ToNodeTree<T1>(source, function, param, obj, out var equation))
+					if (!ToNodeTree<T1>(source, scope, function, param, out var equation))
 					{
 						return false;
 					}

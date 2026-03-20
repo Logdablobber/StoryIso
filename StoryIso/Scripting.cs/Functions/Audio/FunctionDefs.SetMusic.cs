@@ -14,10 +14,10 @@ static partial class FunctionDefs
 	{
 		name = "SetMusic",
 		parameters = [typeof(string), typeof(float)],
-		function = (args, source) => 
+		function = (_, args, source) => 
 		{
-			var item1 = ParameterProcessor.Convert<string>(args![0]);
-			var item2 = ParameterProcessor.Convert<float>(args[1]);
+			var item1 = ParameterProcessor.Convert<string>(source, args![0]);
+			var item2 = ParameterProcessor.Convert<float>(source, args[1]);
 
 			if (!item1.HasValue || !item2.HasValue)
 			{

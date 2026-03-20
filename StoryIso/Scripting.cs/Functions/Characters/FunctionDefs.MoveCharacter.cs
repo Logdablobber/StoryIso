@@ -16,12 +16,12 @@ static partial class FunctionDefs
 	{
 		name = "MoveCharacter",
 		parameters = [typeof(string), typeof(RelativeVariable<float>), typeof(RelativeVariable<float>), typeof(float)],
-		function = (args, _) =>
+		function = (_, args, source) =>
 		{
-			Optional<string> item1 = ParameterProcessor.Convert<string>(args![0]);
-			var item2 = ParameterProcessor.RelativeConvert<float>(args[1]);
-			var item3 = ParameterProcessor.RelativeConvert<float>(args[2]);
-			Optional<float> item4 = ParameterProcessor.Convert<float>(args[3]);
+			Optional<string> item1 = ParameterProcessor.Convert<string>(source, args![0]);
+			var item2 = ParameterProcessor.RelativeConvert<float>(source, args[1]);
+			var item3 = ParameterProcessor.RelativeConvert<float>(source, args[2]);
+			Optional<float> item4 = ParameterProcessor.Convert<float>(source, args[3]);
 
 			if (!item1.HasValue || !item2.HasValue || !item3.HasValue || !item4.HasValue)
 			{

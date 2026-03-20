@@ -24,7 +24,7 @@ public partial class TextComponent
 
 			for (int i = 0; i < _params.Length; i++)
 			{
-				ParameterProcessor.ConvertUnknown(_params[i], out var string_value);
+				ParameterProcessor.ConvertUnknown(new Source(0, "TextComponent.GetText", $"TextComponent {name}"), _params[i], out var string_value);
 
 				if (string_value == null)
 				{
@@ -70,7 +70,7 @@ public partial class TextComponent
 		{
 			text = text[..matches[i].Index] + i.ToString() + text[Math.Min(text.Length - 1, matches[i].Index + matches[i].Length + 2)..];
 
-			FunctionParameter<string>? param = ParameterProcessor.ParseEquation<string>(matches[i].Value, new Source(0, null, $"TextComponent {name}"), "TextComponent.Parse", null);
+			FunctionParameter<string>? param = ParameterProcessor.ParseEquation<string>(Game1.GlobalScope, matches[i].Value, new Source(0, null, $"TextComponent {name}"), "TextComponent.Parse");
 
 			if (param == null)
 			{

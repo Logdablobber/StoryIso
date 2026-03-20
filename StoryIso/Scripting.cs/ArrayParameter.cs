@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using StoryIso.Debugging;
 using StoryIso.Misc;
 
 namespace StoryIso.Scripting;
@@ -19,17 +20,17 @@ public struct ArrayParameter<T> where T : notnull
 		this.values = values.ToArray();
 	}
 
-	public readonly T[]? GetValues()
+	public readonly Optional<T[]> GetValues(Source source)
 	{
 		T[] res = new T[values.Length];
 
 		for (int i = 0; i < values.Length; i++)
 		{
-			Optional<T> value = values[i].Value;
+			Optional<T> value = values[i].GetValue(source);
 
 			if (!value.HasValue)
 			{
-				return null;
+				return default;
 			}
 
 			res[i] = value.Value;
@@ -38,8 +39,8 @@ public struct ArrayParameter<T> where T : notnull
 		return res;
 	}
 
-	public readonly Optional<T> Get(int index)
+	public readonly Optional<T> Get(Source source, int index)
 	{
-		return values[index].Value;
+		return values[index].GetValue(source);
 	}
 }

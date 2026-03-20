@@ -1,5 +1,6 @@
 using System;
 using StoryIso.Debugging;
+using StoryIso.Enums;
 
 namespace StoryIso.Scripting;
 
@@ -7,6 +8,7 @@ public interface IFunctionParameter
 {
 	public bool IsConstant { get; }
 	public Type ValueType { get; }
+	public VariableType variableType { get; }
 
 	public static IFunctionParameter Create(IFunctionParameter[] parameters, OperatorDef oper, Source source)
 	{
@@ -38,5 +40,5 @@ public interface IFunctionParameter
 		throw new NotImplementedException();
 	}
 
-	public abstract FunctionParameter<T1>? ConvertTo<T1>(Source source) where T1 : notnull;
+	public abstract FunctionParameter<T1>? ConvertTo<T1>(Source source, Scope scope) where T1 : notnull;
 }

@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "Constants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+		  "oneOf" : [
+			{
+			"properties": {
+				"$type": {
+					"const": "string"
+				},
+				"Name": {
+					"type": "string"
+				},
+				"Value": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"Name",
+				"Value"
+			]
+			},
+			{
+			"properties": {
+				"$type": {
+					"const": "bool"
+				},
+				"Name": {
+					"type": "string"
+				},
+				"Value": {
+					"type": "boolean"
+				}
+			},
+			"required": [
+				"Name",
+				"Value"
+			]
+			},
+			{
+			"properties": {
+					"$type": {
+						"const": "int"
+					},
+					"Name": {
+						"type": "string"
+					},
+					"Value": {
+						"type": "integer"
+					}
+				},
+				"required": [
+					"Name",
+					"Value"
+				]
+	  		},
+			{
+			"properties": {
+					"$type": {
+						"const": "float"
+					},
+					"Name": {
+						"type": "string"
+					},
+					"Value": {
+						"type": "number"
+					}
+				},
+				"required": [
+					"Name",
+					"Value"
+				]
+	  		}			
+		  ]
+        }
+      }
+    },
+  	"required": [
+    	"Constants"
+  	]
+}

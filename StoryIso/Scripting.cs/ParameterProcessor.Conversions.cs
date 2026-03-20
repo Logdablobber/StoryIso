@@ -1,22 +1,24 @@
 using System;
+using StoryIso.Debugging;
 using StoryIso.Enums;
 using StoryIso.Misc;
+using StoryIso.Scripting.Variables;
 
 namespace StoryIso.Scripting;
 
 public partial class ParameterProcessor
 {
-	public static Optional<T> Convert<T>(object param) where T : notnull
+	public static Optional<T> Convert<T>(Source source, object param) where T : notnull
 	{
-		return ((FunctionParameter<T>)param).Value;
+		return ((FunctionParameter<T>)param).GetValue(source);
 	}
 
-	public static Optional<T> Convert<T>(IFunctionParameter param) where T : notnull
+	public static Optional<T> Convert<T>(Source source, IFunctionParameter param) where T : notnull
 	{
-		return ((FunctionParameter<T>)param).Value;
+		return ((FunctionParameter<T>)param).GetValue(source);
 	}
 
-	public static object? ConvertUnknown(object param, out string? string_value, out Type type)
+	public static IOptional? ConvertUnknown(Source source, object param, out string? string_value, out Type type)
 	{
 		string_value = null;
 		type = null!;
@@ -74,7 +76,7 @@ public partial class ParameterProcessor
 
 			case FunctionParameter<string> string_param:
 				type = typeof(string);
-				Optional<string> value = string_param.Value;
+				Optional<string> value = string_param.GetValue(source);
 
 				if (!value.HasValue)
 				{
@@ -87,7 +89,7 @@ public partial class ParameterProcessor
 
 			case FunctionParameter<float> float_param:
 				type = typeof(float);
-				Optional<float> float_value = float_param.Value;
+				Optional<float> float_value = float_param.GetValue(source);
 
 				if (!float_value.HasValue)
 				{
@@ -100,7 +102,7 @@ public partial class ParameterProcessor
 
 			case FunctionParameter<int> int_param:
 				type = typeof(int);
-				Optional<int> int_value = int_param.Value;
+				Optional<int> int_value = int_param.GetValue(source);
 
 				if (!int_value.HasValue)
 				{	
@@ -118,7 +120,7 @@ public partial class ParameterProcessor
 
 			case FunctionParameter<bool> bool_param:
 				type = typeof(bool);
-				Optional<bool> bool_value = bool_param.Value;
+				Optional<bool> bool_value = bool_param.GetValue(source);
 
 				if (!bool_value.HasValue)
 				{
@@ -134,40 +136,40 @@ public partial class ParameterProcessor
 		}
 	}
 
-	public static object? ConvertUnknown(object param, out string? string_value)
+	public static IOptional? ConvertUnknown(Source source, object param, out string? string_value)
 	{
-		return ConvertUnknown(param, out string_value, out _);
+		return ConvertUnknown(source, param, out string_value, out _);
 	}
 
-	public static object? ConvertUnknown(object param)
+	public static IOptional? ConvertUnknown(Source source, object param)
 	{
-		return ConvertUnknown(param, out _, out _);
+		return ConvertUnknown(source, param, out _, out _);
 	}
 
-	public static IOptional? ConvertByType(IFunctionParameter param)
+	public static IOptional? ConvertByType(Source source, IFunctionParameter param)
 	{
 		var variableType = VariableManager.GetVariableType(param.ValueType);
 
 		return variableType switch
 		{
-			VariableType.Int => Convert<int>(param),
-			VariableType.Float => Convert<float>(param),
-			VariableType.String => Convert<string>(param),
-			VariableType.Bool => Convert<bool>(param),
+			VariableType.Int => Convert<int>(source, param),
+			VariableType.Float => Convert<float>(source, param),
+			VariableType.String => Convert<string>(source, param),
+			VariableType.Bool => Convert<bool>(source, param),
 			_ => throw new NotImplementedException()
 		};
 	}
 
-	public static string? ConvertByTypeToString(IFunctionParameter param)
+	public static Optional<string> ConvertByTypeToString(Source source, IFunctionParameter param)
 	{
 		var variableType = VariableManager.GetVariableType(param.ValueType);
 
 		return variableType switch
 		{
-			VariableType.Int => Convert<int>(param).ToString(),
-			VariableType.Float => Convert<float>(param).ToString(),
-			VariableType.String => Convert<string>(param).ToString(),
-			VariableType.Bool => Convert<bool>(param).ToString(),
+			VariableType.Int => Convert<int>(source, param).ToString() ?? default(Optional<string>),
+			VariableType.Float => Convert<float>(source, param).ToString() ?? default(Optional<string>),
+			VariableType.String => Convert<string>(source, param).ToString() ?? default(Optional<string>),
+			VariableType.Bool => Convert<bool>(source, param).ToString() ?? default(Optional<string>),
 			_ => throw new NotImplementedException()
 		};
 	}
@@ -186,7 +188,7 @@ public partial class ParameterProcessor
 		};
 	}
 
-	public static string? ConvertByTypeToString(object param, Type type)
+	public static Optional<string> ConvertByTypeToString(object param, Type type)
 	{
 		var variableType = VariableManager.GetVariableType(type);
 
@@ -197,7 +199,7 @@ public partial class ParameterProcessor
 
 				if (!int_value.HasValue)
 				{
-					return null;
+					return default;
 				}
 
 				return int_value.Value.ToString();
@@ -207,7 +209,7 @@ public partial class ParameterProcessor
 
 				if (!float_value.HasValue)
 				{
-					return null;
+					return default;
 				}
 
 				return float_value.Value.ToString();
@@ -217,7 +219,7 @@ public partial class ParameterProcessor
 
 				if (!bool_value.HasValue)
 				{
-					return null;
+					return default;
 				}
 
 				return bool_value.Value.ToString();
@@ -227,7 +229,7 @@ public partial class ParameterProcessor
 
 				if (!string_value.HasValue)
 				{
-					return null;
+					return default;
 				}
 
 				return string_value.Value;
@@ -237,54 +239,54 @@ public partial class ParameterProcessor
 		}
 	}
 
-	public static RelativeVariable<T>? RelativeConvert<T>(object param) where T : notnull, IParsable<T>
+	public static Optional<RelativeVariable<T>> RelativeConvert<T>(Source source, object param) where T : notnull, IParsable<T>
 	{
 		var converted_param =  (RelativeVariable<FunctionParameter<T>>)param;
 
-		var value = converted_param.Value.Value;
+		var value = converted_param.Value.GetValue(source);
 
 		if (!value.HasValue)
 		{
-			return null;
+			return default;
 		}
 
 		return new RelativeVariable<T>(value.Value, converted_param.Relative);
 	}
 
-	public static T[]? ArrayConvert<T>(object param) where T : notnull
+	public static Optional<T[]> ArrayConvert<T>(Source source, object param) where T : notnull
 	{
 		var array_param = (ArrayParameter<T>)param;
 
 		if (array_param.Length == 0)
 		{
-			return null;
+			return default;
 		}
 
-		return array_param.GetValues();
+		return array_param.GetValues(source);
 	}
 
-	public static Optional<T> ConvertParam<T>(IFunctionParameter param) where T : notnull
+	public static Optional<T> ConvertParam<T>(Source source, IFunctionParameter param) where T : notnull
 	{
 		if (typeof(T) == param.ValueType)
 		{
-			return Convert<T>(param);
+			return Convert<T>(source, param);
 		}
 
 		if (typeof(T) == typeof(string))
 		{
-			string? res = ConvertByTypeToString(param);
+			Optional<string> res = ConvertByTypeToString(source, param);
 
-			if (res == null)
+			if (!res.HasValue)
 			{
 				return default;
 			}
 
-			return (T)(object)res;
+			return (Optional<T>)(object)res;
 		}
 
 		if (param.ValueType == typeof(float))
 		{
-			var float_value = Convert<float>(param);
+			var float_value = Convert<float>(source, param);
 
 			if (typeof(T) == typeof(int))
 			{
@@ -294,7 +296,7 @@ public partial class ParameterProcessor
 
 		if (param.ValueType == typeof(int))
 		{
-			var int_value = Convert<int>(param);
+			var int_value = Convert<int>(source, param);
 
 			if (typeof(T) == typeof(float))
 			{
@@ -311,28 +313,28 @@ public partial class ParameterProcessor
 		throw new NotImplementedException();
 	}
 
-	public static IOptional? ConvertParam(IFunctionParameter param, Type return_type)
+	public static IOptional? ConvertParam(Source source, IFunctionParameter param, Type return_type)
 	{
 		if (return_type == param.ValueType || return_type == typeof(VariableObject))
 		{
-			return ConvertByType(param) ?? null;
+			return ConvertByType(source, param) ?? null;
 		}
 
 		if (return_type == typeof(string))
 		{
-			string? res = ConvertByTypeToString(param);
+			Optional<string> res = ConvertByTypeToString(source, param);
 
-			if (res == null)
+			if (!res.HasValue)
 			{
 				return null;
 			}
 
-			return new Optional<string>(res);
+			return res;
 		}
 
 		if (param.ValueType == typeof(float))
 		{
-			var float_value = Convert<float>(param);
+			var float_value = Convert<float>(source, param);
 
 			if (return_type == typeof(int))
 			{
@@ -342,7 +344,7 @@ public partial class ParameterProcessor
 
 		if (param.ValueType == typeof(int))
 		{
-			var int_value = Convert<int>(param);
+			var int_value = Convert<int>(source, param);
 
 			if (return_type == typeof(float))
 			{
@@ -359,8 +361,13 @@ public partial class ParameterProcessor
 		throw new NotImplementedException();
 	}
 
-	public static Optional<T> ConvertOptional<T>(IOptional param) where T : notnull
+	public static Optional<T> ConvertOptional<T>(Source source, IOptional param) where T : notnull
 	{
+		if (!param.HasValue)
+		{
+			return default;
+		}
+
 		if (typeof(T) == param.ValueType)
 		{
 			return (Optional<T>)(object)param;
@@ -378,6 +385,29 @@ public partial class ParameterProcessor
 			return (T)(object)res;
 		}
 
+		if (param.ValueType == typeof(string))
+		{
+			var string_value = (Optional<string>)param;
+
+			if (typeof(T) == typeof(float) && float.TryParse(string_value.Value, out var parsed_float))
+			{
+				return new Optional<T>((T)(object)parsed_float);
+			}
+
+			if (typeof(T) == typeof(int) && int.TryParse(string_value.Value, out var parsed_int))
+			{
+				return new Optional<T>((T)(object)parsed_int);
+			}
+
+			if (typeof(T) == typeof(bool) && bool.TryParse(string_value.Value, out var parsed_bool))
+			{
+				return new Optional<T>((T)(object)parsed_bool);
+			}
+
+			DebugConsole.Raise(new ParameterTypeError(source, "Convert", string_value.Value, typeof(T).Name));
+			return default;
+		}
+
 		if (param.ValueType == typeof(float))
 		{
 			var float_value = (Optional<float>)param;
@@ -386,6 +416,9 @@ public partial class ParameterProcessor
 			{
 				return (T)(object)(int)float_value.Value;
 			}
+
+			DebugConsole.Raise(new ParameterTypeError(source, "Convert", float_value.Value.ToString(), typeof(T).Name));
+			return default;
 		}
 
 		if (param.ValueType == typeof(int))
@@ -396,14 +429,94 @@ public partial class ParameterProcessor
 			{
 				return (T)(object)(float)int_value.Value;
 			}
+
+			DebugConsole.Raise(new ParameterTypeError(source, "Convert", int_value.Value.ToString(), typeof(T).Name));
+			return default;
 		}
 
 		if (param.ValueType == typeof(bool))
 		{
-			//var bool_value = Convert<bool>(param);
+			var bool_value = (Optional<bool>)param;
 			// add conversions?
+
+			DebugConsole.Raise(new ParameterTypeError(source, "Convert", bool_value.Value.ToString(), typeof(T).Name));
+			return default;
 		}
 
 		throw new NotImplementedException();
+	}
+
+	public static IOptional ConvertOptional(Source source, IOptional param, VariableType type)
+	{
+		var param_type = VariableManager.GetVariableType(param.ValueType);
+
+		if (type == param_type)
+		{
+			return param;
+		}
+
+		if (type == VariableType.String)
+		{
+			string? res = param.ToString();
+
+			if (res == null)
+			{
+				return new Optional<string>();
+			}
+
+			return new Optional<string>(res);
+		}
+
+		switch (param_type)
+		{
+			case VariableType.String:
+				var string_value = (Optional<string>)param;
+
+				Optional<T> try_parse<T>() where T : IParsable<T>
+				{
+					if (!T.TryParse(string_value.Value, null, out var parsed_value))
+					{
+						DebugConsole.Raise(new ParameterTypeError(source, "Convert", string_value.Value, typeof(T).Name));
+						return default;
+					} 
+
+					return new Optional<T>(parsed_value);
+				}
+
+				return type switch
+				{
+					VariableType.Float => try_parse<float>(),
+					VariableType.Int => try_parse<int>(),
+					VariableType.Bool => try_parse<bool>(),
+					_ => throw new NotImplementedException()
+				};
+
+			case VariableType.Float:
+				var float_value = (Optional<float>)param;
+
+				if (type == VariableType.Int)
+				{
+					return new Optional<int>((int)float_value.Value);
+				}
+
+				break;
+
+			case VariableType.Int:
+				var int_value = (Optional<int>)param;
+
+				if (type == VariableType.Float)
+				{
+					return new Optional<float>(int_value.Value);
+				}
+
+				break;
+
+			case VariableType.Bool:
+				break;
+
+		}
+
+		DebugConsole.Raise(new ParameterTypeError(source, "Convert", param.ToString() ?? "null", VariableManager.GetVariableTypeName(type)));
+		return new Optional<string>();
 	}
 }
