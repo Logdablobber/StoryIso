@@ -19,7 +19,7 @@ public class UISystem : EntityUpdateSystem
 	private ComponentMapper<TextComponent> _textComponentMapper = null!;
 	private ComponentMapper<UIInfo> _infoMapper = null!;
 
-	private static readonly Dictionary<string, List<(string, object)>> _attributeChanges = [];
+	private static readonly Dictionary<string, List<(string, IOptional)>> _attributeChanges = [];
 	private static readonly System.Threading.Lock _attributeChangesLock = new();
 
 	public UISystem() : base(Aspect.All(typeof(Transform2), typeof(RenderAttributes), typeof(UIInfo))
@@ -125,7 +125,7 @@ public class UISystem : EntityUpdateSystem
 		_infoMapper = mapperService.GetMapper<UIInfo>();
 	}
 
-	public static void SetAttributeChange(string target, string attribute, object value) 
+	public static void SetAttributeChange(string target, string attribute, IOptional value) 
 	{
 		lock (_attributeChangesLock) 
 		{

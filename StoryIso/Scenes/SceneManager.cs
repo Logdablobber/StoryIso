@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.BitmapFonts;
 using StoryIso.Debugging;
 using StoryIso.Dialogue;
+using StoryIso.Misc;
 using StoryIso.Scripting;
 
 namespace StoryIso.Scenes;
@@ -29,7 +30,7 @@ public class SceneManager
 		}
 	}
 
-	public SceneManager(Texture2D dialogue_box, Texture2D name_box, BitmapFont font, string scene_directory)
+	public SceneManager(Texture2D dialogue_box, Texture2D name_box, FontInstance font, string scene_directory)
 	{
 		dialogueManager = new DialogueManager(dialogue_box_texture: dialogue_box,
 												name_box_texture: name_box,
@@ -42,14 +43,14 @@ public class SceneManager
 		LoadScenes(scene_directory);
 	}
 
-	private void LoadScene(string scene_path)
+	private void LoadScene(string obj, string[] scene_lines)
 	{
 		if (_scenes == null)
 		{
 			throw new NullReferenceException("_scenes is null :(");
 		}
 
-		Scene? new_scene = SceneProcessor.ProcessScene(scene_path);
+		Scene? new_scene = SceneProcessor.ProcessScene(obj, scene_lines);
 
 		if (new_scene == null)
 		{
@@ -66,10 +67,27 @@ public class SceneManager
 		DirectoryInfo dir = new DirectoryInfo(directory);
 
 		FileInfo[] files = dir.GetFiles("*.scene");
+
+		List<(string, string[])> scenes = [];
 		
 		foreach (var file in files)
 		{
-			LoadScene(file.FullName);
+			string scene_text;
+			using(StreamReader streamReader = new(file.FullName))
+			{
+				scene_text = streamReader.ReadToEnd();
+			}
+
+			string[] scene_lines = TextFormatter.SplitLines(scene_text);
+
+			scenes.Add((file.FullName, scene_lines));
+
+			SceneProcessor.PreprocessScene(file.FullName, scene_lines);
+		}
+
+		foreach (var (scene_name, scene_lines) in scenes)
+		{
+			LoadScene(scene_name, scene_lines);
 		}
 	}
 

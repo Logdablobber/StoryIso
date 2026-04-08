@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using MonoGame.Extended;
 using System.Text.RegularExpressions;
 using MonoGame.Extended.BitmapFonts;
+using System.Linq;
+using Assimp.Configs;
+using System.Runtime.CompilerServices;
 
 namespace StoryIso.Misc;
 
@@ -53,22 +56,63 @@ public static class TextFormatter
 		return Regex.Split(text, "\r\n|\r|\n");
 	}
 
-	public static List<string> FitText(string text, BitmapFont font, float font_scale, SizeF size, out float scale_mult, bool combine_words = true)
+	// TODO: make cache clear over time so it doesn't get too large?
+	static readonly Dictionary<TextInstance, (ushort[], float)> cached_fitted_text = [];
+
+	private static void Cache(TextInstance instance, string[] lines, float scale_mult)
 	{
-		List<string> wrapped_text = WrapText(text, font, font_scale, size.Width, combine_words);
+		ushort[] line_lengths = (from line in lines select (ushort)line.Length).ToArray();
+
+		cached_fitted_text[instance] = (line_lengths, scale_mult);
+	}
+
+	private static bool TryGetCache(TextInstance instance, string text, out string[] lines, out float scale_mult)
+	{
+		if (!cached_fitted_text.TryGetValue(instance, out var value))
+		{
+			lines = [];
+			scale_mult = default;
+			return false;
+		}
+
+		lines = new string[value.Item1.Length];
+
+		ushort index = 0;
+
+		for (int i = 0; i < value.Item1.Length; i++)
+		{
+			lines[i] = text[index..(index + value.Item1[i])];
+		}
+
+		scale_mult = value.Item2;
+		return true;
+	}
+
+	public static string[] FitText(string text, FontInstance font, float font_scale, SizeF size, out float scale_mult, bool combine_words = true)
+	{
+		var instance = new TextInstance(text, font, font_scale, size);
+
+		if (TryGetCache(instance, text, out var lines, out scale_mult))
+		{
+			return lines;
+		}
+
+		string[] wrapped_text = WrapText(text, font.Font, font_scale, size.Width, combine_words);
 		scale_mult = 1f;
 
-		while (font.MeasureString(string.Join('\n', wrapped_text)).Height * font_scale > size.Height)
+		while (font.Font.MeasureString(string.Join('\n', wrapped_text)).Height * font_scale * scale_mult > size.Height)
 		{
 			scale_mult *= 0.98f;
 
-			wrapped_text = WrapText(text, font, font_scale * scale_mult, size.Width, combine_words);
+			wrapped_text = WrapText(text, font.Font, font_scale * scale_mult, size.Width, combine_words);
 		}
+
+		Cache(instance, lines, scale_mult);
 
 		return wrapped_text;
 	}
 
-	public static List<string> WrapText(string text, BitmapFont font, float font_scale, float width, bool combine_words = true)
+	public static string[] WrapText(string text, BitmapFont font, float font_scale, float width, bool combine_words = true)
 	{
 		if (text.Contains('\n'))
 		{
@@ -79,7 +123,7 @@ public static class TextFormatter
 				lines.AddRange(WrapText(line, font, font_scale, width, combine_words));
 			}
 
-			return lines;
+			return lines.ToArray();
 		}
 
 		float relative_width = width / font_scale;
@@ -98,6 +142,7 @@ public static class TextFormatter
 
 			float line_width = 0f;
 			float space_width = font.MeasureString(" ").Width;
+			float hyphen_width = font.MeasureString("-").Width;
 
 			for (int i = 0; i < words.Length; i++)
 			{
@@ -107,14 +152,52 @@ public static class TextFormatter
 
 				if (word_width > relative_width) // split up word
 				{
-					float hyphen_width = font.MeasureString("-").Width;
-
 					float first_char_width = font.MeasureString(word[0].ToString()).Width;
+
+					if (first_char_width >= relative_width)
+					{
+						// I wrote this while half asleep so it probably isn't the best :p
+						// Splits up words if each letter is big enough to take up an entire line
+						wrapped_lines.Add(word[0].ToString());
+
+						string temp_group = "";
+						for (int j = 1; j < word.Length; j++)
+						{
+							if (!string.IsNullOrEmpty(temp_group))
+							{
+								if (font.MeasureString(temp_group + word[j]).Width >= relative_width)
+								{
+									wrapped_lines.Add(temp_group);
+
+									temp_group = word[j].ToString();
+									continue;
+								}
+
+								temp_group += word[j];
+								continue;
+							}
+
+							if (font.MeasureString(word[j].ToString()).Width >= relative_width)
+							{
+								wrapped_lines.Add(word[j].ToString());
+								continue;
+							}
+
+							temp_group = word[j].ToString();
+						}
+
+						continue;
+					}
 
 					if (line_width + space_width + first_char_width > relative_width)
 					{
 						line_width = 0f;
 						wrapped_lines.Add(word[0].ToString());
+					}
+					else if (wrapped_lines.Count == 0)
+					{
+						wrapped_lines.Add(word[0].ToString());
+						line_width += space_width + first_char_width;
 					}
 					else
 					{
@@ -182,7 +265,7 @@ public static class TextFormatter
 			}
 		}
 
-		return wrapped_lines;
+		return wrapped_lines.ToArray();
 	}
 
 	const char delim = '\t';

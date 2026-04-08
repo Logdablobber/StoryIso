@@ -7,7 +7,7 @@
 			"speaker": "",
 			"text": "Something Unhappened",
 			"duration": 5,
-			"preventSkip": true
+			"preventSkip": false
 		}
 	]
 }

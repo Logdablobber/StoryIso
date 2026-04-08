@@ -29,7 +29,7 @@ public class DialogueManager
 	}
 	public Vector2 Position;
 	
-	public BitmapFont Font;
+	public FontInstance Font;
 	public float FontScale;
 
 	private readonly Dictionary<string, DialogueSequence> dialogues;
@@ -110,7 +110,7 @@ public class DialogueManager
 							Texture2D name_box_texture,
 							float scale,
 							Vector2 position,
-							BitmapFont font,
+							FontInstance font,
 							float font_scale,
 							string dialogue_directory)
 	{
@@ -262,18 +262,18 @@ public class DialogueManager
 
 		string dialogue_text = current_step.text[..(int)Math.Min(Math.Ceiling(_dialogueTimer!.Value / TIME_PER_CHARACTER), current_step.text.Length)];
 
-		List<string> fitted_text = TextFormatter.FitText(dialogue_text, Font, FontScale, unscaledTextBounds, out float scale_mult);
+		string[] fitted_text = TextFormatter.FitText(dialogue_text, Font, FontScale, unscaledTextBounds, out float scale_mult);
 
 		Vector2 top_left = _screenPosition + (new Vector2(LEFT_MARGIN, TOP_MARGIN) - new Vector2(0, DialogueBox.Height)) * Scale;
 		float text_scale = FontScale * scale_mult * Scale;
 
 		var color = current_step.color ?? Color.Black;
 
-		for (int i = 0; i < fitted_text.Count; i++)
+		for (int i = 0; i < fitted_text.Length; i++)
 		{
-			Vector2 position = top_left + new Vector2(0, i * Font.LineHeight * text_scale);
+			Vector2 position = top_left + new Vector2(0, i * Font.Font.LineHeight * text_scale);
 
-			spriteBatch.DrawString(Font, fitted_text[i], position, color, 0, Vector2.Zero, text_scale, SpriteEffects.None, 0f);
+			spriteBatch.DrawString(Font.Font, fitted_text[i], position, color, 0, Vector2.Zero, text_scale, SpriteEffects.None, 0f);
 		}
 	}
 
@@ -285,8 +285,8 @@ public class DialogueManager
 
 		spriteBatch.Draw(NameBox, name_box_position, null, Color.White, 0, new Vector2(0, NameBox.Height), Scale, SpriteEffects.None, 0f);
 
-		Vector2 text_origin = Font.GetStringRectangle(name).Center - new Vector2(0, Y_PIXEL_OFFSET);
+		Vector2 text_origin = Font.Font.GetStringRectangle(name).Center - new Vector2(0, Y_PIXEL_OFFSET);
 
-		spriteBatch.DrawString(Font, name, name_box_position + new Vector2(NameBox.Width / 2, -NameBox.Height / 2) * Scale, Color.Black, 0, text_origin, Scale * FontScale * NAME_SCALE, SpriteEffects.None, 0f);
+		spriteBatch.DrawString(Font.Font, name, name_box_position + new Vector2(NameBox.Width / 2, -NameBox.Height / 2) * Scale, Color.Black, 0, text_origin, Scale * FontScale * NAME_SCALE, SpriteEffects.None, 0f);
 	}
 }

@@ -2,7 +2,7 @@
 	"$schema": "./UISchema.json",
 	"Name": "test ui",
 	"Visible": true,
-	"Position": "-300 10",
+	"Position": [-300, 10],
 	"Scale": 1,
 	"Parts": 
 	[
@@ -13,7 +13,7 @@
 				"$type": "image",
 				"image": "dialogue-box"
 			},
-			"Position": "0 0",
+			"Position": [0, 0],
 			"Scale": 2
 		},
 		{
@@ -23,9 +23,12 @@
 				"$type": "text",
 				"text": "X: {round(playerX, 2)}",
 				"font": "ibmbios",
-				"Size": "100 100"
+				"fontSize": 1,
+				"Size": [100, 100],
+				"hAlignment": "Left",
+				"vAlignment": "Top"
 			},
-			"Position": "10 10",
+			"Position": [10, 0],
 			"Scale": 1
 		},
 		{
@@ -35,9 +38,11 @@
 				"$type": "text",
 				"text": "Y: {round(playerY, 2)}",
 				"font": "ibmbios",
-				"Size": "100 100"
+				"fontSize": 1,
+				"Size": [300, 100],
+				"hAlignment": "Left"
 			},
-			"Position": "10 50",
+			"Position": [10, 50],
 			"Scale": 1
 		}
 	]

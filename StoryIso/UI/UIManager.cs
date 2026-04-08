@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
 using System.Text.RegularExpressions;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.ECS;
 
 namespace StoryIso.UI;
@@ -64,7 +65,7 @@ public static class UIManager
 		obj.info.Scale = new Vector2(scale);
 	}
 
-	public static void LoadAll(string base_path, World world)
+	public static void LoadAll(GraphicsDevice graphics, string base_path, World world)
 	{
 		_UIObjects.Clear();
 
@@ -92,7 +93,7 @@ public static class UIManager
 				continue;
 			}
 
-			var ui_object = new UIObject(ui_data.Value, world);
+			var ui_object = new UIObject(graphics, ui_data.Value, world);
 
 			_UIObjects.Add(ui_object.info.Name, ui_object);
 

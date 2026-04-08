@@ -55,18 +55,169 @@
                   "font": {
                     "type": "string"
                   },
-                  "Size": true,
-                  "color": true
+                  "fontSize": {
+                    "type": "number"
+                  },
+                  "Size": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "color": true,
+                  "vAlignment": {
+                    "enum": [
+                      "None",
+                      "Top",
+                      "Center",
+                      "Bottom",
+                      null
+                    ]
+                  },
+                  "hAlignment": {
+                    "enum": [
+                      "None",
+                      "Left",
+                      "Center",
+                      "Right",
+                      null
+                    ]
+                  }
                 },
                 "required": [
                   "text",
                   "font",
+                  "fontSize",
                   "Size"
+                ]
+              },
+              {
+                "properties": {
+                  "$type": {
+                    "const": "button"
+                  },
+                  "Size": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "OnLeftClick": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "OnLeftRelease": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "WhileLeftHeld": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "OnRightClick": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "OnRightRelease": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "WhileRightHeld": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "OnEnter": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "OnExit": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "OnStay": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "Size"
+                ]
+              },
+              {
+                "properties": {
+                  "$type": {
+                    "const": "rectangle"
+                  },
+                  "color": true,
+                  "Size": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "OutlineWidth": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "OutlineColor": true
+                },
+                "required": [
+                  "color",
+                  "Size"
+                ]
+              },
+              {
+                "properties": {
+                  "$type": {
+                    "const": "polygon"
+                  },
+                  "color": true,
+                  "Vertices": {
+                    "type": "array",
+                    "items": {
+                      "type": [
+                        "array",
+                        "null"
+                      ],
+                      "items": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "color",
+                  "Vertices"
                 ]
               }
             ]
           },
-          "Position": true,
+          "Position": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
           "Scale": {
             "type": [
               "number",
@@ -87,7 +238,12 @@
         ]
       }
     },
-    "Position": true
+    "Position": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    }
   },
   "required": [
     "Name",

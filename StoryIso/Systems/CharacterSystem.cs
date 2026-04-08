@@ -13,6 +13,7 @@ using StoryIso.Scripting;
 using StoryIso.Misc;
 using StoryIso.Scenes;
 using StoryIso.UI;
+using StoryIso.Scripting.Variables;
 
 namespace StoryIso.ECS;
 
@@ -30,7 +31,7 @@ public class CharacterSystem : EntityUpdateSystem
 	// and that would be bad
 	static readonly Dictionary<string, Movement> _movements = [];
 	static readonly Dictionary<string, RelativeVector2> _positionChanges = [];
-	static readonly Dictionary<string, List<(string, object)>> _attributeChanges = [];
+	static readonly Dictionary<string, List<(string, IOptional)>> _attributeChanges = [];
 	static readonly System.Threading.Lock _movementLock = new();
 	static readonly System.Threading.Lock _positionChangesLock = new();
 	static readonly System.Threading.Lock _attributeChangesLock = new();
@@ -313,10 +314,14 @@ public class CharacterSystem : EntityUpdateSystem
 	private static readonly Dictionary<string, Type> _playerAttributes = _universalAttributes.Union(_allCharacterAttributes).Union(_playerOnlyAttributes).ToDictionary();
 	private static readonly Dictionary<string, Type> _characterAttributes = _universalAttributes.Union(_allCharacterAttributes).Union(_characterOnlyAttributes).ToDictionary();
 
-	public static void SetAttribute(Source source, string target, string attribute, object value, Type type)
+	public static void SetAttribute(Source source, string target, string attribute, IOptional value)
 	{
-		target = target.Trim('"');
-		attribute = attribute.ToLower().Trim('"');
+		if (!value.HasValue)
+		{
+			return;
+		}
+
+		attribute = attribute.ToLower();
 
 		if (UIManager.UIElements.Contains(target))
 		{
@@ -326,26 +331,14 @@ public class CharacterSystem : EntityUpdateSystem
 				return;
 			}
 
-			if (ui_attr_type == type)
+			IOptional converted_value = ParameterProcessor.ConvertOptional(source, value, VariableManager.GetVariableType(ui_attr_type));
+
+			if (!converted_value.HasValue) 
 			{
-				UISystem.SetAttributeChange(target, attribute, value);
-				return;
+				DebugConsole.Raise(new WrongVariableTypeError(source, attribute, ui_attr_type.Name, $"Type of '{value.ValueType.Name}' was inputted for attribute '{attribute}' of object '{target}'"));
 			}
 
-			// convert between floats and ints
-			if (ui_attr_type == typeof(int) && type == typeof(float))
-			{
-				UISystem.SetAttributeChange(target, attribute, new Optional<int>((int)((Optional<float>)value).Value));
-				return;
-			}
-
-			if (ui_attr_type == typeof(float) && type == typeof(int))
-			{
-				UISystem.SetAttributeChange(target, attribute, new Optional<float>(((Optional<int>)value).Value));
-				return;
-			}
-
-			DebugConsole.Raise(new WrongVariableTypeError(source, attribute, ui_attr_type.Name, $"Type of '{type.Name}' was inputted for attribute '{attribute}' of object '{target}'"));
+			UISystem.SetAttributeChange(target, attribute, converted_value);
 			return;
 		}
 		
@@ -353,33 +346,21 @@ public class CharacterSystem : EntityUpdateSystem
 
 		if (attributes_dict.TryGetValue(attribute, out var attr_type))
 		{
-			if (attr_type == type)
+			IOptional converted_value = ParameterProcessor.ConvertOptional(source, value, VariableManager.GetVariableType(attr_type));
+
+			if (!converted_value.HasValue) 
 			{
-				SetAttributeChange(target, attribute, value);
-				return;
+				DebugConsole.Raise(new WrongVariableTypeError(source, attribute, attr_type.Name, $"Type of '{value.ValueType.Name}' was inputted for attribute '{attribute}' of object '{target}'"));
 			}
 
-			// convert between floats and ints
-			if (attr_type == typeof(int) && type == typeof(float))
-			{
-				SetAttributeChange(target, attribute, (int)(float)value);
-				return;
-			}
-
-			if (attr_type == typeof(float) && type == typeof(int))
-			{
-				SetAttributeChange(target, attribute, (float)(int)value);
-				return;
-			}
-
-			DebugConsole.Raise(new WrongVariableTypeError(source, attribute, attr_type.Name, $"Type of '{type.Name}' was inputted for attribute '{attribute}' of object '{target}'"));
+			SetAttributeChange(target, attribute, converted_value);
 			return;
 		}
 
 		DebugConsole.Raise(new UnknownVariableError(source, attribute, $"object '{target}' does not have attribute '{attribute}'"));
 	}
 
-	private static void SetAttributeChange(string character, string attribute, object value)
+	private static void SetAttributeChange(string character, string attribute, IOptional value)
 	{
 		lock (_attributeChangesLock)
 		{

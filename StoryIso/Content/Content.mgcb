@@ -71,6 +71,9 @@
 #begin Scenes/startup.scene
 /copy:Scenes/startup.scene
 
+#begin Scenes/test-button.scene
+/copy:Scenes/test-button.scene
+
 #begin Scenes/test-scene.scene
 /copy:Scenes/test-scene.scene
 
@@ -94,6 +97,9 @@
 
 #begin Tiled/tileset-atlas.tsx
 /copy:Tiled/tileset-atlas.tsx
+
+#begin UI/test-button.json
+/copy:UI/test-button.json
 
 #begin UI/test-ui.json
 /copy:UI/test-ui.json

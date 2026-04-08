@@ -16,5 +16,7 @@ public struct DialogueStep
 	public float? duration { get; set;}
 	// I may add extra things like backgrounds
 	// or other things that could change per line
+
+	// TODO: add dialogue trees / responses
 }
 

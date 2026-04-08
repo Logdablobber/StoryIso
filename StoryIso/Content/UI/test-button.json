@@ -1,0 +1,43 @@
+{
+	"$schema": "./UISchema.json",
+	"Name": "test button",
+	"Position": [10, 10],
+	"Parts": 
+	[
+		{
+			"Name": "background",
+			"Position": [0, 0],
+			"Content": {
+				"$type": "polygon",
+				"Vertices": [
+					[0, 0],
+					[0, 50],
+					[50, 50],
+					[50, 0]
+				],
+				"color": "#ff0000ff"
+			},
+			"Visible": true
+		},
+		{
+			"Name": "button",
+			"Position": [0, 0],
+			"Content": {
+				"$type": "button",
+				"Size": [50, 50],
+				"OnLeftRelease": "Test Button"
+			}
+		},
+		{
+			"Name": "Text",
+			"Position": [10, 10],
+			"Content": {
+				"$type": "text",
+				"font": "ibmbios",
+				"fontSize": 1,
+				"Size": [30, 30],
+				"text": "{counter}"
+			}
+		}
+	]
+}

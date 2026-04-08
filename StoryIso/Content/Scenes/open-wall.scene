@@ -20,3 +20,6 @@ SetRow(WallLayer, 12, 8, [9, 25, 25])
 SetCollider("removable1", false)
 
 RunDialogue("wall open")
+
+set counter += 1
+Print(concat("Counter: ", counter))

@@ -14,15 +14,15 @@
             "scale": 2,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 140.75,
-                "y": 159.5
+                "x": 239.75,
+                "y": 160.25
             }
         },
         "Maps/test-tilemap2.tmx": {
             "expandedObjectLayers": [
+                7,
                 4,
-                3,
-                7
+                3
             ],
             "scale": 3,
             "selectedLayer": 4,

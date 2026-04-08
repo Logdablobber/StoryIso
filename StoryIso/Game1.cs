@@ -107,12 +107,12 @@ public class Game1 : Game
 
 		tiledManager = new TiledManager(GraphicsDevice, Content, "Map1");
 
-		DebugConsole.Font = FontLoader.GetFont("arial");
+		DebugConsole.Font = FontLoader.GetFont("arial")?.Font;
 		DebugConsole.Scale = 0.125f;
 
 		sceneManager = new SceneManager(TextureLoader.GetTexture("dialogue-box")!,
 										TextureLoader.GetTexture("name-box")!,
-										FontLoader.GetFont("ibmbios")!,
+										FontLoader.GetFont("ibmbios") ?? throw new NullReferenceException(),
 										"./Content/Scenes/");
 
 		_world = new WorldBuilder()
@@ -121,9 +121,10 @@ public class Game1 : Game
 					.AddSystem(new AnimationSystem())
 					.AddSystem(new CharacterSystem())
 					.AddSystem(new UISystem())
+					.AddSystem(new ButtonSystem())
 					.Build();
 
-		UIManager.LoadAll("./Content/UI/", _world);
+		UIManager.LoadAll(GraphicsDevice, "./Content/UI/", _world);
 
 		CharacterManager.LoadCharacters("./Content/Characters/", _world);
 

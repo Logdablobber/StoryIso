@@ -50,12 +50,14 @@ public class InteractionTile
 		if (!(keystate.IsKeyDown(Keys.Enter) || keystate.IsKeyDown(Keys.Z))) 
 		{
 			RunUninteract();
+			interactingLastFrame = false;
 			return; // interaction keys not pressed
 		}
 
 		if (interactionHitbox.Intersects(other))
 		{
 			RunInteraction();
+			interactingLastFrame = true;
 			return;
 		}
 
@@ -73,6 +75,7 @@ public class InteractionTile
 				if (other.Bottom < interactionHitbox.Top)
 				{
 					RunUninteract();
+					interactingLastFrame = true;
 					return;
 				}
 
@@ -88,6 +91,7 @@ public class InteractionTile
 				if (other.Top > interactionHitbox.Bottom)
 				{
 					RunUninteract();
+					interactingLastFrame = true;
 					return;
 				}
 
@@ -103,6 +107,7 @@ public class InteractionTile
 				if (other.Right < interactionHitbox.Left)
 				{
 					RunUninteract();
+					interactingLastFrame = true;
 					return;
 				}
 
@@ -118,6 +123,7 @@ public class InteractionTile
 				if (other.Left > interactionHitbox.Right)
 				{
 					RunUninteract();
+					interactingLastFrame = true;
 					return;
 				}
 
@@ -130,6 +136,7 @@ public class InteractionTile
 			
 			default:
 				RunUninteract();
+				interactingLastFrame = true;
 				return;
 		}
 
@@ -142,12 +149,14 @@ public class InteractionTile
 				if (dist <= INTERACTIONRANGE)
 				{
 					RunInteraction();
+					interactingLastFrame = true;
 					return;
 				}
 			}
 		}
 
 		RunUninteract();
+		interactingLastFrame = true;
 	}
 
 	private void RunUninteract()
@@ -160,8 +169,6 @@ public class InteractionTile
 		if (interactingLastFrame)
 		{
 			FunctionProcessor.RunScope(onUninteract, $"onUninteract of Interaction {id}", new Source(0, null, $"onUninteract of Interaction {id}"));
-
-			interactingLastFrame = false;
 		}
 	}
 
@@ -189,7 +196,6 @@ public class InteractionTile
 			}
 
 			toggleState = !toggleState;
-			interactingLastFrame = true;
 		}
 
 		if (whileInteract == null)

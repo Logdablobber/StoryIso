@@ -14,6 +14,11 @@ public static class MiscFuncs
 		return (max - min) * value + min;
 	}
 
+	public static float InverseLerp(float min, float max, float value)
+	{
+		return (value - min) / (max - min);
+	}
+
 	// check if two types are similar
 	// if they are the same or if they are nullable versions of each other
 	public static bool SimilarTypes(Type type1, Type type2)

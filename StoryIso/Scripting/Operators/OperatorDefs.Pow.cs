@@ -1,0 +1,34 @@
+using System;
+using StoryIso.Misc;
+
+namespace StoryIso.Scripting;
+
+static partial class OperatorDefs
+{
+	/// <summary>
+	/// (^) Power Function
+	/// <para>Takes in a and b as floats and returns a^b</para>
+	/// </summary>
+	/// 
+	/// <returns>float</returns>
+	private static readonly OperatorDef Pow = new()
+	{
+		oper = "^",
+		inlineFunc = false,
+		isConstant = true,
+		parameters = [typeof(float), typeof(float)],
+		returnType = typeof(float),
+		function = (args, _) =>
+		{
+			var item1 = (Optional<float>)args![0];
+			var item2 = args[1].ToOptional<float>();
+
+			if (!item1.HasValue || !item2.HasValue)
+			{
+				return new Optional<float>();
+			}
+
+			return new Optional<float>(MathF.Pow(item1.Value, item2.Value));
+		}
+	};
+}

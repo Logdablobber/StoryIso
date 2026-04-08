@@ -6,7 +6,7 @@
 		{
 			"speaker": "",
 			"text": "Something Happened!",
-			"preventSkip": true
+			"preventSkip": false
 		}
 	]
 }

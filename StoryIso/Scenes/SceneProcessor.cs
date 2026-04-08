@@ -8,26 +8,30 @@ namespace StoryIso.Scenes;
 
 public static class SceneProcessor
 {
-	public static Scene? ProcessScene(string path)
+	public static void PreprocessScene(string obj, string[] lines)
 	{
-		string scene_text;
-		using(StreamReader streamReader = new StreamReader(path))
+		if (!lines[0].StartsWith('#'))
 		{
-			scene_text = streamReader.ReadToEnd();
+			DebugConsole.Raise(new InvalidSceneError(new Source(1, null, obj), "Scene should start with '#NAME' where 'NAME' is the name of the scene."));	
+
+			return;	
 		}
 
-		string[] scene_lines = TextFormatter.SplitLines(scene_text);
+		FunctionProcessor.Preprocess(obj, lines, 1);
+	}
 
-		if (!scene_lines[0].StartsWith('#'))
+	public static Scene? ProcessScene(string obj, string[] lines)
+	{
+		if (!lines[0].StartsWith('#'))
 		{
-			DebugConsole.Raise(new InvalidSceneError(new Source(1, null, path), "Scene should start with '#NAME' where 'NAME' is the name of the scene."));	
+			DebugConsole.Raise(new InvalidSceneError(new Source(1, null, obj), "Scene should start with '#NAME' where 'NAME' is the name of the scene."));	
 
 			return null;	
 		}
 
-		string name = scene_lines[0][1..];
+		string name = lines[0][1..];
 
-		Scope? scope = FunctionProcessor.Process(path, scene_text, 1);
+		Scope? scope = FunctionProcessor.Process(obj, lines, 1);
 
 		if (scope == null)
 		{

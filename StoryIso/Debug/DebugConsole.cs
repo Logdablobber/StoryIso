@@ -76,9 +76,9 @@ public static class DebugConsole
 					continue;
 				}
 
-				List<string> wrapped_lines = TextFormatter.WrapText(text, Font, Scale, screen_width);
+				string[] wrapped_lines = TextFormatter.WrapText(text, Font, Scale, screen_width);
 
-				for (int i = 0; i < wrapped_lines.Count; i++)
+				for (int i = 0; i < wrapped_lines.Length; i++)
 				{
 					var position = new Vector2(XMARGIN, YMARGIN + index * LINE_SPACING + (wrap_index + i) * WRAP_SPACING) * Scale + Game1.cameraOffset;
 
@@ -86,7 +86,7 @@ public static class DebugConsole
 				}
 
 				index++;
-				wrap_index += wrapped_lines.Count - 1;
+				wrap_index += wrapped_lines.Length - 1;
 			}
 		}
 	}

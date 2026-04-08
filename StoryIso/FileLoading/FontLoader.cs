@@ -2,14 +2,15 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.BitmapFonts;
+using StoryIso.Misc;
 
 namespace StoryIso.FileLoading;
 
 public static class FontLoader
 {
-	private static readonly Dictionary<string, BitmapFont> _fonts = [];
+	private static readonly Dictionary<string, FontInstance> _fonts = [];
 
-	public static BitmapFont? GetFont(string name)
+	public static FontInstance? GetFont(string name)
 	{
 		if (_fonts.TryGetValue(name, out var value))
 		{
@@ -33,7 +34,7 @@ public static class FontLoader
 
 			string font_name = file.Name.Replace(".fnt", null);
 
-			_fonts.Add(font_name, font_file);
+			_fonts.Add(font_name, new FontInstance(font_name, font_file));
 		}
 	}
 }
