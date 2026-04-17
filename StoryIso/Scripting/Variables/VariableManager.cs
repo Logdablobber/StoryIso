@@ -125,6 +125,8 @@ public static partial class VariableManager
 	{
 		const string CONSTANTS_PATH = "./Content/System/Constants.json";
 
+		var file_info = new FileInfo(CONSTANTS_PATH);
+
 		if (!new FileInfo(CONSTANTS_PATH).Exists)
 		{
 			throw new FileNotFoundException("Constants json not found");

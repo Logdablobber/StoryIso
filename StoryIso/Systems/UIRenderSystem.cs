@@ -78,7 +78,7 @@ public class UIRenderSystem : EntityDrawSystem
 			if (rect != null)
 			{
 				// TODO: implement origin
-				rect.Draw(_spriteBatch, render_attributes.color, info.Position, info.Scale, render_attributes.renderLayer.GetLayerDepth());
+				rect.Draw(_spriteBatch, render_attributes.color, draw_position, draw_scale, render_attributes.renderLayer.GetLayerDepth());
 				continue;
 			}
 

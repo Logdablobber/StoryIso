@@ -32,6 +32,4 @@ static partial class OperatorDefs
 			return new Optional<float>(item1.Value + item2.Value);
 		}
 	};
-
-	// TODO: make this support strings
 }

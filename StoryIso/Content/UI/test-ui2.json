@@ -1,0 +1,17 @@
+{
+	"$schema": "./UISchema.json",
+	"Name": "test ui2",
+	"Position": [0, 0],
+	"Parts": [
+		{
+			"Name": "test background",
+			"Position": [0, 0],
+			"Content": {
+				"$type": "rectangle",
+				"Size": [20, 20],
+				"OutlineWidth": 1,
+				"color": "#ff0000ff"
+			}
+		}
+	]
+}

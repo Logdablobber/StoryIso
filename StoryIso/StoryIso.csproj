@@ -6,6 +6,7 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <TieredCompilation>false</TieredCompilation>
 	<Nullable>enable</Nullable>
+	<GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -30,15 +31,20 @@
     <PackageReference Include="DotTiled" Version="1.0.0" />
     <PackageReference Include="MadWorldNL.EarCut" Version="1.1.0" />
     <PackageReference Include="MonoGame.Aseprite" Version="6.3.0" />
-    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
     <PackageReference Include="MonoGame.Extended" Version="5.3.1" />
     <PackageReference Include="MonoGame.Extended.Content.Pipeline" Version="4.0.0" />
-    <PackageReference Include="MonoGame.Framework.Content.Pipeline" Version="3.8.4.1" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+    <PackageReference Include="MonoGame.Framework.Content.Pipeline" Version="3.8.5-develop.13" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5-develop.13" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
-  <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
-    <Message Text="Restoring dotnet tools" Importance="High" />
-    <Exec Command="dotnet tool restore" />
+    <Target Name="BuildContent" BeforeTargets="BeforeCompile">
+    <PropertyGroup>
+      <ContentOutput>$(ProjectDir)$(OutputPath)</ContentOutput>
+      <ContentTemp>$(ProjectDir)$(IntermediateOutputPath)</ContentTemp>
+      <ContentArgs>build -p $(MonoGamePlatform) -s Content -o $(ContentOutput) -i $(ContentTemp)</ContentArgs>
+    </PropertyGroup>
+    <MSBuild Projects="..\Builder\Builder.csproj" Targets="Build;Run" RemoveProperties="Configuration;TargetFramework;RuntimeIdentifier;RuntimeIdentifiers" 
+		Properties="RunArguments=$(ContentArgs)"/>
   </Target>
+
 </Project>
