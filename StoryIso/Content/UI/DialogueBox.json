@@ -1,0 +1,222 @@
+{
+	"$schema": "./UISchema.json",
+	"Name": "Dialogue",
+	"Position": [0, 480],
+	"Visible": false,
+	"Scale": 4,
+	"Children": [
+		{
+			"Name": "DialogueBox",
+			"Position": [0, 0],
+			"Visible": true,
+			"Scale": 1,
+			"Parts": [
+				{
+					"Name": "DialogueBackground",
+					"Position": [0, 0],
+					"Origin": [0, 1],
+					"Scale": 1,
+					"Visible": true,
+					"Content": {
+						"$type": "image",
+						"image": "dialogue-box"
+					}
+				},
+				{
+					"Name": "DialogueText",
+					"Position": [6.6, -41.4],
+					"Scale": 1,
+					"Visible": true,
+					"Content": {
+						"$type": "text",
+						"font": "ibmbios",
+						"fontSize": 0.35,
+						"hAlignment": "Left",
+						"vAlignment": "Top",
+						"Size": [186.8, 34.8],
+						"WrapText": true,
+						"text": "N/A"
+					}
+				}
+			]
+		},
+		{
+			"Name": "SpeakerBox",
+			"Position": [0, 0],
+			"Visible": true,
+			"Scale": 1,
+			"Parts": [
+				{
+					"Name": "SpeakerBackground",
+					"Position": [7, -48],
+					"Origin": [0, 1],
+					"Scale": 1,
+					"Visible": true,
+					"Content": {
+						"$type": "image",
+						"image": "name-box"
+					}
+				},
+				{
+					"Name": "SpeakerText",
+					"Position": [10, -62],
+					"Scale": 1,
+					"Visible": true,
+					"Content": {
+						"$type": "text",
+						"font": "ibmbios",
+						"fontSize": 0.75,
+						"hAlignment": "Center",
+						"vAlignment": "Center",
+						"Size": [58, 12],
+						"text": "N/A",
+						"WrapText": false
+					}
+				}
+			]
+		},
+		{
+			"Name": "Options",
+			"Position": [0, 0],
+			"Visible": true,
+			"Scale": 1,
+			"Children": [
+				{
+					"Name": "Option1",
+					"Position": [120, -66],
+					"Visible": true,
+					"Scale": 1,
+					"Parts": [
+						{
+							"Name": "Option1Background",
+							"Position": [0, 0],
+							"Scale": 1,
+							"Visible": true,
+							"Content": {
+								"$type": "image",
+								"image": "option-box"
+							}
+						},
+						{
+							"Name": "Option1Text",
+							"Position": [2, 2],
+							"Scale": 1,
+							"Visible": true,
+							"Content": {
+								"$type": "text",
+								"font": "ibmbios",
+								"fontSize": 0.5,
+								"WrapText": false,
+								"Size": [71, 12],
+								"hAlignment": "Center",
+								"vAlignment": "Center",
+								"text": "N/A"
+							}
+						},
+						{
+							"Name": "Option1Button",
+							"Position": [0, 0],
+							"Visible": true,
+							"Scale": 1,
+							"Content": {
+								"$type": "button",
+								"Size": [75, 16],
+								"OnLeftRelease": "Button 1"
+							}
+						}
+					]
+				},
+				{
+					"Name": "Option2",
+					"Position": [120, -84],
+					"Visible": true,
+					"Scale": 1,
+					"Parts": [
+						{
+							"Name": "Option2Background",
+							"Position": [0, 0],
+							"Scale": 1,
+							"Visible": true,
+							"Content": {
+								"$type": "image",
+								"image": "option-box"
+							}
+						},
+						{
+							"Name": "Option2Text",
+							"Position": [2, 2],
+							"Scale": 1,
+							"Visible": true,
+							"Content": {
+								"$type": "text",
+								"font": "ibmbios",
+								"fontSize": 0.5,
+								"WrapText": false,
+								"Size": [71, 12],
+								"hAlignment": "Center",
+								"vAlignment": "Center",
+								"text": "N/A"
+							}
+						},
+						{
+							"Name": "Option2Button",
+							"Position": [0, 0],
+							"Scale": 1,
+							"Visible": true,
+							"Content": {
+								"$type": "button",
+								"Size": [75, 16],
+								"OnLeftRelease": "Button 2"
+							}
+						}
+					]
+				},
+				{
+					"Name": "Option3",
+					"Position": [120, -100],
+					"Visible": true,
+					"Scale": 1,
+					"Parts": [
+						{
+							"Name": "Option3Background",
+							"Position": [0, 0],
+							"Scale": 1,
+							"Visible": true,
+							"Content": {
+								"$type": "image",
+								"image": "option-box"
+							}
+						},
+						{
+							"Name": "Option3Text",
+							"Position": [2, 2],
+							"Scale": 1,
+							"Visible": true,
+							"Content": {
+								"$type": "text",
+								"font": "ibmbios",
+								"fontSize": 0.5,
+								"WrapText": false,
+								"Size": [71, 12],
+								"hAlignment": "Center",
+								"vAlignment": "Center",
+								"text": "N/A"
+							}
+						},
+						{
+							"Name": "Option3Button",
+							"Position": [0, 0],
+							"Scale": 1,
+							"Visible": true,
+							"Content": {
+								"$type": "button",
+								"Size": [75, 16],
+								"OnLeftRelease": "Button 3"
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}

@@ -1,11 +1,13 @@
 {
 	"$schema": "./DialogueSchema.json",
 	"id": "test part2",
-	"dialogueSteps": 
+	"nodes": 
 	[
 		{
+			"ID": 0,
 			"speaker": "System",
-			"text": "You just got moved!"
+			"text": "You just got moved!",
+			"NextNode": -1
 		}
 	]
 }

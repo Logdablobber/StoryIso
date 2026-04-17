@@ -1,13 +1,14 @@
 {
 	"$schema": "./DialogueSchema.json",
 	"id": "wall close",
-	"dialogueSteps":
+	"nodes":
 	[
 		{
-			"speaker": "",
+			"ID": 0,
 			"text": "Something Unhappened",
 			"duration": 5,
-			"preventSkip": false
+			"preventSkip": false,
+			"NextNode": -1
 		}
 	]
 }

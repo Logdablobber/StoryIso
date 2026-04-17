@@ -5,13 +5,17 @@ using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
 using System.Text.RegularExpressions;
+using Microsoft.Toolkit.HighPerformance.Helpers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using MonoGame.Extended.BitmapFonts;
+using SharpDX.Direct3D;
 using StoryIso.Debugging;
+using StoryIso.ECS;
 using StoryIso.Misc;
+using StoryIso.UI;
 
 namespace StoryIso.Dialogue;
 
@@ -19,6 +23,7 @@ public class DialogueManager
 {
 	public Texture2D DialogueBox;
 	public Texture2D NameBox;
+	public Texture2D OptionBox;
 	public float Scale;
 	private Vector2 _screenPosition
 	{
@@ -32,57 +37,58 @@ public class DialogueManager
 	public FontInstance Font;
 	public float FontScale;
 
-	private readonly Dictionary<string, DialogueSequence> dialogues;
-	private string? currentDialogueName;
+	private readonly Dictionary<string, DialogueTree> dialogueTrees = [];
+	private string? currentDialogueTreeName;
+	private DialogueTree? currentDialogueTree
+	{
+		get
+		{
+			if (currentDialogueTreeName == null)
+			{
+				return null;
+			}
+
+			return dialogueTrees[currentDialogueTreeName];
+		}
+	}
+	private DialogueNode? currentDialogueNode
+	{
+		get
+		{
+			if (currentDialogueTree == null)
+			{
+				return null;
+			}
+
+			return currentDialogueTree.currentNode;
+		}
+	}
+
 	const float NAME_SCALE = 0.8f;
-	private DialogueSequence? currentDialogueSequence
-	{
-		get
-		{
-			if (currentDialogueName == null)
-			{
-				return null;
-			}
-
-			return dialogues[currentDialogueName];
-		}
-	}
-	private DialogueStep? currentDialogueStep
-	{
-		get
-		{
-			if (currentDialogueSequence == null || !dialogueIndex.HasValue || dialogueIndex.Value >= currentDialogueSequence.dialogueSteps.Count)
-			{
-				return null;
-			}
-
-			return currentDialogueSequence.dialogueSteps[dialogueIndex.Value];
-		}
-	}
 	private float? currentDialogueDuration
 	{
 		get
 		{
-			if (!currentDialogueStep.HasValue)
+			if (currentDialogueNode == null)
 			{
 				return null;
 			}
 
-			return currentDialogueStep.Value.duration ?? TIME_PER_CHARACTER * currentDialogueStep.Value.text.Length;
+			return currentDialogueNode.Duration ?? TIME_PER_CHARACTER * currentDialogueNode.text.Length;
 		}
 	}
 
-	private int? dialogueIndex;
 	private bool _continueKeyPressedLastFrame = false;
 	private bool _skipKeyPressedLastFrame = false;
 	private float? _dialogueTimer;
 	const float TIME_PER_CHARACTER = 0.05f;
+	private int _currentCharacterIndex = 0;
 
 	public bool Active
 	{
 		get
 		{
-			return currentDialogueStep.HasValue && dialogueIndex.HasValue && _dialogueTimer.HasValue;
+			return currentDialogueNode != null && _dialogueTimer.HasValue;
 		}
 	}
 
@@ -108,16 +114,18 @@ public class DialogueManager
 
 	public DialogueManager(Texture2D dialogue_box_texture,
 							Texture2D name_box_texture,
+							Texture2D option_box_texture,
 							float scale,
 							Vector2 position,
 							FontInstance font,
 							float font_scale,
 							string dialogue_directory)
 	{
-		dialogues = new Dictionary<string, DialogueSequence>();
+		dialogueTrees = new Dictionary<string, DialogueTree>();
 
 		DialogueBox = dialogue_box_texture;
 		NameBox = name_box_texture;
+		OptionBox = option_box_texture;
 		Scale = scale;
 		Position = position;
 		Font = font;
@@ -127,6 +135,21 @@ public class DialogueManager
 
 	private void LoadDialogues(string directory)
 	{
+		#if DEBUG
+
+		JsonNode schema = Game1.DeserializeOptions.GetJsonSchemaAsNode(typeof(SerializableDialogueTree));
+
+		var path = Path.GetFullPath("./");
+
+		var src_path = Regex.Replace(path, @"bin.+", string.Empty);
+
+		using (var f = new StreamWriter(Path.Combine(src_path, directory, "DialogueSchema.json")))
+		{
+			f.Write(schema.ToJsonString(Game1.DeserializeOptions));
+		}
+
+		#endif
+
 		var dir = new DirectoryInfo(directory);
 
 		var files = dir.GetFiles("*.json");
@@ -140,21 +163,6 @@ public class DialogueManager
 
 			LoadDialogue(file.FullName);
 		}
-
-		#if DEBUG
-
-		JsonNode schema = Game1.DeserializeOptions.GetJsonSchemaAsNode(typeof(DialogueSequence));
-
-		var path = Path.GetFullPath("./");
-
-		var src_path = Regex.Replace(path, @"bin.+", string.Empty);
-
-		using (var f = new StreamWriter(Path.Combine(src_path, directory, "DialogueSchema.json")))
-		{
-			f.Write(schema.ToJsonString(Game1.DeserializeOptions));
-		}
-
-		#endif
 	}
 
 	private void LoadDialogue(string path)
@@ -165,23 +173,45 @@ public class DialogueManager
 			json = streamReader.ReadToEnd();
 		}
 
-		DialogueSequence? sequence = DialogueGenerator.Generate(json);
+		var tree = DialogueGenerator.Generate(json);
 
-		if (sequence == null)
+		if (tree == null)
 		{
 			return;
 		}
 
-		dialogues.Add(sequence.id, sequence);
+		var unserialized_tree = tree.ToDialogueTree();
+
+		dialogueTrees.Add(unserialized_tree.id, unserialized_tree);
+	}
+
+	public void SelectDialogueOption(int index, Source source)
+	{
+		if (currentDialogueNode == null)
+		{
+			DebugConsole.Raise(new DialogueNotRunningError(source));
+			return;
+		}
+
+		currentDialogueTree!.Next(index, source);
+
+		UpdateDialogue();
+		_dialogueTimer = 0;
+		_currentCharacterIndex = 0;
 	}
 
 	public void RunDialogue(string name, Source source)
 	{
-		if (dialogues.ContainsKey(name))
+		if (dialogueTrees.ContainsKey(name))
 		{
-			currentDialogueName = name;
-			dialogueIndex = 0;
+			currentDialogueTreeName = name;
+			currentDialogueTree!.Reset();
 			_dialogueTimer = 0f;
+			_currentCharacterIndex = 0;
+
+			UpdateDialogue();
+			
+			UIManager.SetObjectVisible("Dialogue", true);
 		}
 		else
 		{
@@ -197,9 +227,68 @@ public class DialogueManager
 			return;
 		}
 
-		currentDialogueName = null;
-		dialogueIndex = null;
+		UIManager.SetObjectVisible("Dialogue", false);
+
+		currentDialogueTreeName = null;
 		_dialogueTimer = null;
+	}
+
+	private void UpdateDialogue()
+	{
+		if (currentDialogueNode == null)
+		{
+			throw new NullReferenceException();
+		}
+
+		if (currentDialogueNode.speaker != null)
+		{	
+			UISystem.SetAttributeChange("SpeakerText", "text", new Optional<string>(currentDialogueNode.speaker));
+			SetSpeakerBoxVisibility(true);
+		}
+		else
+		{
+			SetSpeakerBoxVisibility(false);
+		}
+
+		if (currentDialogueNode.Options != null && currentDialogueNode.Options.Length != 0)
+		{
+			if (currentDialogueNode.Options.Length > 3)
+			{
+				// TODO: raise error
+			}
+
+			UIManager.SetObjectVisible("Options", true);
+
+			UISystem.SetAttributeChange("Option1Text", "text", new Optional<string>(currentDialogueNode.Options[0].Text));
+			UIManager.SetObjectVisible("Option1", true);
+
+			if (currentDialogueNode.Options.Length < 2)
+			{
+				UIManager.SetObjectVisible("Option2", false);
+				UIManager.SetObjectVisible("Option3", false);
+				return;
+			}
+
+			UISystem.SetAttributeChange("Option2Text", "text", new Optional<string>(currentDialogueNode.Options[1].Text));
+			UIManager.SetObjectVisible("Option2", true);
+
+			if (currentDialogueNode.Options.Length < 3)
+			{
+				UIManager.SetObjectVisible("Option3", false);
+				return;
+			}
+
+			UISystem.SetAttributeChange("Option3Text", "text", new Optional<string>(currentDialogueNode.Options[2].Text));
+			UIManager.SetObjectVisible("Option3", true);
+			return;
+		}
+
+		UIManager.SetObjectVisible("Options", false);
+	}
+
+	private void SetSpeakerBoxVisibility(bool visible)
+	{
+		UIManager.SetObjectVisible("SpeakerBox", visible);
 	}
 
 	public void Update(GameTime gameTime)
@@ -211,11 +300,23 @@ public class DialogueManager
 
 		var keystate = Keyboard.GetState();
 
-		_dialogueTimer += (float)gameTime.ElapsedGameTime.TotalSeconds * (currentDialogueStep!.Value.speedMultiplier ?? 1f);
+		var current_step = currentDialogueNode!;
 
+		_dialogueTimer += (float)gameTime.ElapsedGameTime.TotalSeconds * (current_step.SpeedMultiplier ?? 1f);
+
+		int character_index = (int)Math.Min(Math.Ceiling(_dialogueTimer!.Value / TIME_PER_CHARACTER), current_step.text.Length);
+
+		if (character_index > _currentCharacterIndex)
+		{
+			_currentCharacterIndex = character_index;
+
+			UISystem.SetAttributeChange("DialogueText", "text", new Optional<string>(current_step.text[..(int)Math.Min(Math.Ceiling(_dialogueTimer!.Value / TIME_PER_CHARACTER), current_step.text.Length)]));
+		}
+
+		// skip to end of current dialogue node
 		if (keystate.IsKeyDown(Keys.X) || keystate.IsKeyDown(Keys.RightShift) || keystate.IsKeyDown(Keys.LeftShift)) 
 		{
-			if (!currentDialogueStep.Value.preventSkip && !_skipKeyPressedLastFrame)
+			if (!currentDialogueNode!.PreventSkip && !_skipKeyPressedLastFrame)
 			{
 				_dialogueTimer = currentDialogueDuration;
 			}
@@ -227,13 +328,22 @@ public class DialogueManager
 			_skipKeyPressedLastFrame = false;
 		}
 
+		// go to next dialogue
 		if (keystate.IsKeyDown(Keys.Z) || keystate.IsKeyDown(Keys.Enter))
 		{
 			if (!_continueKeyPressedLastFrame && _dialogueTimer >= currentDialogueDuration &&
-				dialogueIndex < currentDialogueSequence!.dialogueSteps.Count)
+				!currentDialogueTree!.AtEnd &&
+				currentDialogueTree.TryNext(new Source(0, null, "DialogueManager")))
 			{	
-				dialogueIndex += 1;
+				_currentCharacterIndex = 0;
 				_dialogueTimer = 0f;
+
+				UpdateDialogue();
+			}
+
+			if (currentDialogueTree!.AtEnd)
+			{
+				EndDialogue();
 			}
 
 			_continueKeyPressedLastFrame = true;
@@ -242,51 +352,5 @@ public class DialogueManager
 		{
 			_continueKeyPressedLastFrame = false;
 		}
-	}
-
-	public void Draw(SpriteBatch spriteBatch)
-	{
-		if (!Active)
-		{
-			return;
-		}
-
-		spriteBatch.Draw(DialogueBox, _screenPosition, null, Color.White, 0, new Vector2(0, DialogueBox.Height), Scale, SpriteEffects.None, 0);
-
-		DialogueStep current_step = currentDialogueStep!.Value;
-
-		if (current_step.speaker != "")
-		{
-			DrawNameBox(spriteBatch, current_step.speaker);
-		}
-
-		string dialogue_text = current_step.text[..(int)Math.Min(Math.Ceiling(_dialogueTimer!.Value / TIME_PER_CHARACTER), current_step.text.Length)];
-
-		string[] fitted_text = TextFormatter.FitText(dialogue_text, Font, FontScale, unscaledTextBounds, out float scale_mult);
-
-		Vector2 top_left = _screenPosition + (new Vector2(LEFT_MARGIN, TOP_MARGIN) - new Vector2(0, DialogueBox.Height)) * Scale;
-		float text_scale = FontScale * scale_mult * Scale;
-
-		var color = current_step.color ?? Color.Black;
-
-		for (int i = 0; i < fitted_text.Length; i++)
-		{
-			Vector2 position = top_left + new Vector2(0, i * Font.Font.LineHeight * text_scale);
-
-			spriteBatch.DrawString(Font.Font, fitted_text[i], position, color, 0, Vector2.Zero, text_scale, SpriteEffects.None, 0f);
-		}
-	}
-
-	private void DrawNameBox(SpriteBatch spriteBatch, string name)
-	{
-		const int Y_PIXEL_OFFSET = 7;
-
-		Vector2 name_box_position = _screenPosition - new Vector2(0, DialogueBox.Height * Scale);
-
-		spriteBatch.Draw(NameBox, name_box_position, null, Color.White, 0, new Vector2(0, NameBox.Height), Scale, SpriteEffects.None, 0f);
-
-		Vector2 text_origin = Font.Font.GetStringRectangle(name).Center - new Vector2(0, Y_PIXEL_OFFSET);
-
-		spriteBatch.DrawString(Font.Font, name, name_box_position + new Vector2(NameBox.Width / 2, -NameBox.Height / 2) * Scale, Color.Black, 0, text_origin, Scale * FontScale * NAME_SCALE, SpriteEffects.None, 0f);
 	}
 }

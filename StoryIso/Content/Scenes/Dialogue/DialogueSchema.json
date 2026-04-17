@@ -7,36 +7,68 @@
     "id": {
       "type": "string"
     },
-    "dialogueSteps": {
+    "nodes": {
       "type": "array",
       "items": {
-        "type": "object",
+        "type": [
+          "object",
+          "null"
+        ],
         "properties": {
+          "ID": {
+            "type": "integer"
+          },
           "speaker": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "text": {
             "type": "string"
           },
-          "speedMultiplier": {
+          "SpeedMultiplier": {
             "type": [
               "number",
               "null"
             ]
           },
           "color": true,
-          "preventSkip": {
+          "PreventSkip": {
             "type": "boolean"
           },
-          "duration": {
+          "Duration": {
             "type": [
               "number",
+              "null"
+            ]
+          },
+          "Options": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "Text": {
+                  "type": "string"
+                },
+                "NextNode": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "NextNode": {
+            "type": [
+              "integer",
               "null"
             ]
           }
         },
         "required": [
-          "speaker",
+          "ID",
           "text"
         ]
       }
@@ -44,6 +76,6 @@
   },
   "required": [
     "id",
-    "dialogueSteps"
+    "nodes"
   ]
 }

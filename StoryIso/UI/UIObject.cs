@@ -18,24 +18,49 @@ public class UIObject
 {
 	public UIInfo info { get; private set; }
 
-	private List<Entity> Parts { get; set; }
+	private Entity[] _parts { get; set; }
+	private UIObject[] _children { get; set; }
 
-	public string[] Children
+	public string[] Parts
 	{
 		get
 		{
-			return (from part in Parts select part.Get<UIInfo>().Name).ToArray();
+			return (from part in _parts select part.Get<UIInfo>().Name).ToArray();
+		}
+	}
+
+	public UIObject[] Children
+	{
+		get
+		{
+			return _children;
 		}
 	}
 	
-	public UIObject(GraphicsDevice graphics, UIData data, World world)
+	public UIObject(UIObject? parent, GraphicsDevice graphics, UIData data, World world)
 	{
-		this.Parts = new List<Entity>();
+		this._children = new UIObject[data.Children?.Length ?? 0];
+		this._parts = new Entity[data.Parts?.Length ?? 0];
 
-		this.info = new UIInfo(null, data.Position.ToVector2(), new Vector2(data.Scale ?? 1f), data.Visible ?? true, data.Name);
+		this.info = new UIInfo(parent?.info, data.Position.ToVector2(), new Vector2(data.Scale ?? 1f), data.Visible ?? true, data.Name);
 
-		foreach (var part in data.Parts)
+		if (data.Children != null)
 		{
+			for (int i = 0; i < data.Children.Length; i++)
+			{
+				_children[i] = new UIObject(this, graphics, data.Children[i], world);
+			}
+		}
+
+		if (data.Parts == null)
+		{
+			return;
+		}
+
+		for (int i = 0; i < data.Parts.Length; i++)
+		{
+			var part = data.Parts[i];
+
 			var entity = world.CreateEntity();
 
 			Color? color = null;
@@ -54,7 +79,7 @@ public class UIObject
 						HorizontalAlignment = textContent.hAlignment ?? HorizontalTextAlignment.Left
 					};
 
-					entity.Attach(new TextComponent(part.Name, textContent.text, textContent.font, textContent.fontSize, size, alignment));
+					entity.Attach(new TextComponent(part.Name, textContent.text, textContent.font, textContent.fontSize, size, alignment, textContent.WrapText ?? true));
 					break;
 
 				case ImageContent imageContent:
@@ -106,14 +131,10 @@ public class UIObject
 					break;
 			}
 
-			entity.Attach(new Transform2());
-			if (color.HasValue)
-			{
-				entity.Attach(new RenderAttributes(data.Visible ?? true, color.Value, true));
-			}
+			entity.Attach(new RenderAttributes(data.Visible ?? true, color ?? Color.White, true, RenderLayer.UI, part.Origin?.ToVector2()));
 			entity.Attach(new UIInfo(info, part.Position.ToVector2(), new Vector2(part.Scale ?? 1f), part.Visible ?? true, part.Name));
 
-			this.Parts.Add(entity);
+			this._parts[i] = entity;
 		}
 	}
 
@@ -134,11 +155,18 @@ public class UIObject
 	
 	public void Destroy()
 	{
-		for (int i = this.Parts.Count - 1; i >= 0; i--)
+		for (int i = this._parts.Length - 1; i >= 0; i--)
 		{
-			this.Parts[i].Destroy();
+			this._parts[i].Destroy();
 		}
 
-		this.Parts.Clear();
+		this._parts = [];
+
+		for (int i = this._children.Length - 1; i >= 0; i--)
+		{
+			this._children[i].Destroy();
+		}
+
+		this._children = [];
 	}
 }

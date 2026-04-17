@@ -30,6 +30,11 @@ public class ButtonSystem : EntityUpdateSystem
 		foreach (var entityID in ActiveEntities)
 		{
 			UIInfo info = _uiMapper.Get(entityID);
+			if (!info.Visible)
+			{
+				continue;
+			}
+
 			ButtonComponent button = _buttonMapper.Get(entityID);
 
 			Task new_task = new(() =>
@@ -51,8 +56,6 @@ public class ButtonSystem : EntityUpdateSystem
 		Source source = new(0, null, button.name);
 
 		RectangleF hitbox = new RectangleF(position, button.size * scale);
-
-		// TODO: figure out why the hitbox won't line up correctly
 
 		if (hitbox.Contains(current_state.Position.ToVector2()))
 		{

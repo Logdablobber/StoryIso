@@ -18,6 +18,8 @@ using StoryIso.Scripting.Variables;
 using StoryIso.Scenes;
 using StoryIso.Tiled;
 using StoryIso.UI;
+using Microsoft.VisualBasic.FileIO;
+using StoryIso.Misc;
 
 namespace StoryIso;
 
@@ -95,6 +97,7 @@ public class Game1 : Game
 			Zoom = 4f
 		};
 		FunctionProcessor.Initialize();
+		TextFormatter.Initialize();
 
 		base.Initialize();
     }
@@ -112,11 +115,13 @@ public class Game1 : Game
 
 		sceneManager = new SceneManager(TextureLoader.GetTexture("dialogue-box")!,
 										TextureLoader.GetTexture("name-box")!,
+										TextureLoader.GetTexture("option-box")!,
 										FontLoader.GetFont("ibmbios") ?? throw new NullReferenceException(),
 										"./Content/Scenes/");
 
 		_world = new WorldBuilder()
 					.AddSystem(new RenderSystem(_spriteBatch))
+					.AddSystem(new UIRenderSystem(_spriteBatch))
 					.AddSystem(new PlayerSystem())
 					.AddSystem(new AnimationSystem())
 					.AddSystem(new CharacterSystem())
@@ -140,7 +145,7 @@ public class Game1 : Game
 		player.Attach(new Player(speed:100f));
 		player.Attach(new Character("Player", Direction.Down, room:"#any#"));
 		player.Attach(new Transform2(new Vector2(190, 150), 0, characterScale));
-		player.Attach(new RenderAttributes(true, Color.White));
+		player.Attach(new RenderAttributes(true, Color.White, RenderLayer.Player));
 
 		sceneManager.RunScene("startup", new Source(0, null, "startup"));
     }
@@ -224,8 +229,6 @@ public class Game1 : Game
 		}
 
 		_spriteBatch.Begin(samplerState: SamplerState.PointWrap, transformMatrix:camera.GetViewMatrix());
-
-		sceneManager.Draw(_spriteBatch);
 
 		if (debug)
 		{

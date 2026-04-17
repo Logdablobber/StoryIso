@@ -702,11 +702,6 @@ public static partial class FunctionProcessor
 
 		for (int i = 0; i < scope.Objects.Count; i++)
 		{
-			while (!sync && Game1.sceneManager.dialogueManager.Active)
-			{
-				Thread.Sleep(25);
-			}
-
 			var script_object = scope.Objects[i];
 
 			if (script_object.IsScope)

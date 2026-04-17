@@ -1,34 +1,78 @@
 {
 	"$schema": "./DialogueSchema.json",
 	"id": "test",
-	"dialogueSteps": 
+	"nodes": 
 	[
 		{
+			"ID": 0,
 			"speaker": "System",
 			"text": "Hello, world!",
-			"color": "#000000ff"
+			"color": "#000000ff",
+			"NextNode": 1
 		},
 		{
+			"ID": 1,
 			"speaker": "System",
 			"text": "This is the second item in the dialogue. It should wrap around.",
-			"color": "#00ff00ff"
+			"color": "#00ff00ff",
+			"NextNode": 2
 		},
 		{
+			"ID": 2,
 			"speaker": "System",
 			"text": "This text has a really long aaaaaaaaaaaaaaaaaaaaaaaaaaaaa. Did it work?",
-			"speedMultiplier": 2
+			"speedMultiplier": 2,
+			"NextNode": 3
 		},
 		{
+			"ID": 3,
 			"speaker": "System",
-			"text": "This is\ntesting new lines :)"
+			"text": "This is\ntesting new lines :)",
+			"NextNode": 4
 		},
 		{
+			"ID": 4,
 			"speaker": "System",
-			"text": "This text should get smaller aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+			"text": "This text should get smaller aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			"NextNode": 5
 		},
 		{
-			"speaker": "",
-			"text": "This is another test line :3"
+			"ID": 5,
+			"text": "This is another test line :3",
+			"NextNode": 6
+		},
+		{
+			"ID": 6,
+			"text": "This is testing options",
+			"Options": [
+				{
+					"Text": "Ok, what's 9 + 10?",
+					"NextNode": 7
+				},
+				{
+					"Text": "Sounds cool",
+					"NextNode": 8
+				},
+				{
+					"Text": "Bye!",
+					"NextNode": 9
+				}
+			]
+		},
+		{
+			"ID": 7,
+			"text": "Shut up nerd",
+			"NextNode": -1
+		},
+		{
+			"ID": 8,
+			"text": "I know, right?",
+			"NextNode": -1
+		},
+		{
+			"ID": 9,
+			"text": "Bye!",
+			"NextNode": -1
 		}
 	]
 }

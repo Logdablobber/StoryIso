@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
@@ -6,6 +7,7 @@ using MonoGame.Extended.ECS;
 using MonoGame.Extended.ECS.Systems;
 using MonoGame.Extended.Shapes;
 using StoryIso.Entities;
+using StoryIso.Enums;
 using StoryIso.FileLoading;
 
 namespace StoryIso.ECS;
@@ -16,21 +18,19 @@ public class RenderSystem : EntityDrawSystem
 	private ComponentMapper<Texture2D> _textureMapper = null!;
 	private ComponentMapper<Animation> _animationMapper = null!;
 	private ComponentMapper<Transform2> _transformMapper = null!;
-	private ComponentMapper<TextComponent> _textMapper = null!;
-	private ComponentMapper<RectangleComponent> _rectMapper = null!;
-	private ComponentMapper<PolygonComponent> _polyMapper = null!;
 	private ComponentMapper<RenderAttributes> _renderAttributesMapper = null!;
 
 	public RenderSystem(SpriteBatch spriteBatch)
 		: base(Aspect.All(typeof(Transform2), typeof(RenderAttributes))
-			.One(typeof(Texture2D), typeof(Animation), typeof(TextComponent), typeof(RectangleComponent), typeof(PolygonComponent)))
+			.One(typeof(Texture2D), typeof(Animation))
+			.Exclude(typeof(UIInfo)))
 	{
 		_spriteBatch = spriteBatch;
 	}
 
 	public override void Draw(GameTime gameTime)
 	{
-		_spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: Game1.camera.GetViewMatrix());
+		_spriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: Game1.camera.GetViewMatrix(), sortMode:SpriteSortMode.BackToFront);
 
 		foreach (var entityId in ActiveEntities)
 		{
@@ -50,39 +50,21 @@ public class RenderSystem : EntityDrawSystem
 			Animation animation = _animationMapper.Get(entityId);
 			if (animation != null)
 			{
-				animation.GetFrame().Draw(_spriteBatch, draw_position, render_attributes.color, transform.Rotation, Vector2.Zero, draw_scale, SpriteEffects.None, render_attributes.ScreenElement ? 0f : 1f);
+				var origin = render_attributes.GetOrigin(animation.GetFrame().Bounds.Size.ToVector2());
+				animation.GetFrame().Draw(_spriteBatch, draw_position, render_attributes.color, transform.Rotation, origin, draw_scale, SpriteEffects.None, render_attributes.renderLayer.GetLayerDepth());
 				continue;
 			}
 
 			Texture2D texture = _textureMapper.Get(entityId);
 			if (texture != null)
 			{
-				_spriteBatch.Draw(texture, draw_position, null, render_attributes.color, transform.Rotation, Vector2.Zero, draw_scale, SpriteEffects.None, render_attributes.ScreenElement ? 0f : 1f);
+				var origin = render_attributes.GetOrigin(texture.Bounds.Size.ToVector2());
+				_spriteBatch.Draw(texture, draw_position, null, render_attributes.color, transform.Rotation, origin, draw_scale, SpriteEffects.None, render_attributes.renderLayer.GetLayerDepth());
 				continue;
 			}
 
-			TextComponent text = _textMapper.Get(entityId); 
-			if (text != null)
-			{
-				text.Draw(_spriteBatch, render_attributes.color, draw_position, draw_scale, transform.Rotation);
-				continue;
-			}
-
-			RectangleComponent rect = _rectMapper.Get(entityId);
-			if (rect != null)
-			{
-				rect.Draw(_spriteBatch, render_attributes.color, transform.Position, transform.Scale);
-				continue;
-			}
-
-			PolygonComponent polygon = _polyMapper.Get(entityId);
-			if (polygon != null)
-			{
-				polygon.Draw(render_attributes.color, transform.Position, transform.Scale);
-				continue;
-			}
+			throw new UnreachableException();
 		}
-
 		_spriteBatch.End();
 	}
 
@@ -118,9 +100,6 @@ public class RenderSystem : EntityDrawSystem
 		_textureMapper = mapperService.GetMapper<Texture2D>();
 		_transformMapper = mapperService.GetMapper<Transform2>();
 		_animationMapper = mapperService.GetMapper<Animation>();
-		_textMapper = mapperService.GetMapper<TextComponent>();
 		_renderAttributesMapper = mapperService.GetMapper<RenderAttributes>();
-		_rectMapper = mapperService.GetMapper<RectangleComponent>();
-		_polyMapper = mapperService.GetMapper<PolygonComponent>();
 	}
 }

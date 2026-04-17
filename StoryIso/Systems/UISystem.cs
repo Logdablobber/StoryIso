@@ -14,7 +14,6 @@ namespace StoryIso.ECS;
 
 public class UISystem : EntityUpdateSystem
 {
-	private ComponentMapper<Transform2> _transformMapper = null!;
 	private ComponentMapper<RenderAttributes> _renderAttributesMapper = null!;
 	private ComponentMapper<TextComponent> _textComponentMapper = null!;
 	private ComponentMapper<UIInfo> _infoMapper = null!;
@@ -22,14 +21,13 @@ public class UISystem : EntityUpdateSystem
 	private static readonly Dictionary<string, List<(string, IOptional)>> _attributeChanges = [];
 	private static readonly System.Threading.Lock _attributeChangesLock = new();
 
-	public UISystem() : base(Aspect.All(typeof(Transform2), typeof(RenderAttributes), typeof(UIInfo))
-									.One(typeof(TextComponent), typeof(Texture2D), typeof(Animation))) { }
+	public UISystem() : base(Aspect.All(typeof(RenderAttributes), typeof(UIInfo))
+									.One(typeof(TextComponent), typeof(Texture2D), typeof(Animation), typeof(RectangleComponent), typeof(PolygonComponent))) { }
 
 	public override void Update(GameTime gameTime)
 	{
 		foreach (var entityId in ActiveEntities)
 		{
-			var transform = _transformMapper.Get(entityId);
 			var render_attributes = _renderAttributesMapper.Get(entityId);
 			var text_component = _textComponentMapper.Get(entityId);
 			var info = _infoMapper.Get(entityId);
@@ -110,16 +108,11 @@ public class UISystem : EntityUpdateSystem
 					_attributeChanges[info.Name].Clear();
 				}
 			}
-
-			render_attributes.Visible = info.Visible;
-			transform.Position = info.Position;
-			transform.Scale = info.Scale;
 		}
 	}
 
 	public override void Initialize(IComponentMapperService mapperService)
 	{
-		_transformMapper = mapperService.GetMapper<Transform2>();
 		_renderAttributesMapper = mapperService.GetMapper<RenderAttributes>();
 		_textComponentMapper = mapperService.GetMapper<TextComponent>();
 		_infoMapper = mapperService.GetMapper<UIInfo>();

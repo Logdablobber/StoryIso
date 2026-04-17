@@ -65,6 +65,16 @@ public static class UIManager
 		obj.info.Scale = new Vector2(scale);
 	}
 
+	private static void AddObject(UIObject obj)
+	{
+		_UIObjects.Add(obj.info.Name, obj);
+
+		foreach (var child in obj.Children)
+		{
+			AddObject(child);
+		}
+	}
+
 	public static void LoadAll(GraphicsDevice graphics, string base_path, World world)
 	{
 		_UIObjects.Clear();
@@ -93,12 +103,12 @@ public static class UIManager
 				continue;
 			}
 
-			var ui_object = new UIObject(graphics, ui_data.Value, world);
+			var ui_object = new UIObject(null, graphics, ui_data.Value, world);
 
-			_UIObjects.Add(ui_object.info.Name, ui_object);
+			AddObject(ui_object);
 
 			UIElements.Add(ui_object.info.Name);
-			UIElements.AddRange(ui_object.Children);
+			UIElements.AddRange(ui_object.Parts);
 		}
 
 		#if DEBUG

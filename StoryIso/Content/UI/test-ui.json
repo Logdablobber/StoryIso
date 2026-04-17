@@ -24,7 +24,7 @@
 				"text": "X: {round(playerX, 2)}",
 				"font": "ibmbios",
 				"fontSize": 1,
-				"Size": [100, 100],
+				"Size": [300, 100],
 				"hAlignment": "Left",
 				"vAlignment": "Top"
 			},

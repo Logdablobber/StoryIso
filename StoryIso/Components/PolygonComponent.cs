@@ -5,6 +5,7 @@ using MadWorldNL.EarCut.Logic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
+using MonoGame.Extended.Collisions.Layers;
 using MonoGame.Extended.Screens;
 using MonoGame.Extended.Shapes;
 using StoryIso.Misc;
@@ -38,7 +39,7 @@ public class PolygonComponent
 		indices = EarCut.Tessellate(vertices_array, null, 2).ToArray();
 	}
 
-	public void Draw(Color color, Vector2 position, Vector2 scale)
+	public void Draw(Color color, Vector2 position, Vector2 scale, float layer_depth)
 	{
 		VertexPositionColor[] vert = new VertexPositionColor[vertices.Length];
 
@@ -58,7 +59,13 @@ public class PolygonComponent
 		{
 			effectPass.Apply();
 			effect.GraphicsDevice.DrawUserIndexedPrimitives(
-				PrimitiveType.TriangleList, vert, 0, vert.Length, indices, 0, indices.Length / 3);
+				primitiveType: PrimitiveType.TriangleList, 
+				vertexData: vert, 
+				vertexOffset: 0, 
+				numVertices: vert.Length, 
+				indexData: indices, 
+				indexOffset: 0, 
+				primitiveCount: indices.Length / 3);
 		}
 	}
 }

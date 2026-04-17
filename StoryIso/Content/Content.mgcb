@@ -47,6 +47,15 @@
 #begin Fonts/ibmbios.fnt
 /copy:Fonts/ibmbios.fnt
 
+#begin Scenes/button1.scene
+/copy:Scenes/button1.scene
+
+#begin Scenes/button2.scene
+/copy:Scenes/button2.scene
+
+#begin Scenes/button3.scene
+/copy:Scenes/button3.scene
+
 #begin Scenes/close-wall.scene
 /copy:Scenes/close-wall.scene
 
@@ -86,6 +95,9 @@
 #begin Textures/name-box.png
 /copy:Textures/name-box.png
 
+#begin Textures/option-box.png
+/copy:Textures/option-box.png
+
 #begin Tiled/Maps/test-tilemap.tmx
 /copy:Tiled/Maps/test-tilemap.tmx
 
@@ -97,6 +109,9 @@
 
 #begin Tiled/tileset-atlas.tsx
 /copy:Tiled/tileset-atlas.tsx
+
+#begin UI/DialogueBox.json
+/copy:UI/DialogueBox.json
 
 #begin UI/test-button.json
 /copy:UI/test-button.json

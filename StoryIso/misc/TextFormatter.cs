@@ -6,11 +6,26 @@ using MonoGame.Extended.BitmapFonts;
 using System.Linq;
 using Assimp.Configs;
 using System.Runtime.CompilerServices;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace StoryIso.Misc;
 
 public static class TextFormatter
 {
+	private static readonly Task _clearCacheThread = new Task(ClearCacheThread);
+
+	public static void Initialize()
+	{
+		_clearCacheThread.Start();
+	}
+
+	public static void Dispose()
+	{
+		_clearCacheThread.Dispose();
+	}
+
 	// gets a range of characters in range [start, end)
 	// the indexes of characters in the string exclusions are not counted
 	// but they are returned
@@ -56,8 +71,7 @@ public static class TextFormatter
 		return Regex.Split(text, "\r\n|\r|\n");
 	}
 
-	// TODO: make cache clear over time so it doesn't get too large?
-	static readonly Dictionary<TextInstance, (ushort[], float)> cached_fitted_text = [];
+	static readonly ConcurrentDictionary<TextInstance, (ushort[], float)> cached_fitted_text = [];
 
 	private static void Cache(TextInstance instance, string[] lines, float scale_mult)
 	{
@@ -75,6 +89,13 @@ public static class TextFormatter
 			return false;
 		}
 
+		if (!instance.wrap_text)
+		{
+			lines = text.Split('\n');
+			scale_mult = value.Item2;
+			return true;
+		}
+
 		lines = new string[value.Item1.Length];
 
 		ushort index = 0;
@@ -88,23 +109,47 @@ public static class TextFormatter
 		return true;
 	}
 
-	public static string[] FitText(string text, FontInstance font, float font_scale, SizeF size, out float scale_mult, bool combine_words = true)
+	const int CLEAR_CACHE_INTERVAL = 10000; // clear cache every 10 seconds aka 10,000 ms
+
+	private static void ClearCacheThread()
 	{
-		var instance = new TextInstance(text, font, font_scale, size);
+		while (true)
+		{
+			Thread.Sleep(CLEAR_CACHE_INTERVAL);
+
+			cached_fitted_text.Clear();
+		}
+	}
+
+	public static string[] FitText(string text, FontInstance font, float font_scale, SizeF size, out float scale_mult, bool combine_words = true, bool wrap_text = true)
+	{
+		var instance = new TextInstance(text, font, font_scale, size, wrap_text);
 
 		if (TryGetCache(instance, text, out var lines, out scale_mult))
 		{
 			return lines;
 		}
 
-		string[] wrapped_text = WrapText(text, font.Font, font_scale, size.Width, combine_words);
-		scale_mult = 1f;
-
-		while (font.Font.MeasureString(string.Join('\n', wrapped_text)).Height * font_scale * scale_mult > size.Height)
+		if (!wrap_text)
 		{
-			scale_mult *= 0.98f;
+			var text_size = font.Font.MeasureString(text);
 
-			wrapped_text = WrapText(text, font.Font, font_scale * scale_mult, size.Width, combine_words);
+			scale_mult = MathF.Min(1f, MathF.Min(size.Width / text_size.Width, size.Height / text_size.Height) * font_scale);
+
+			Cache(instance, lines, scale_mult);
+			return text.Split('\n');
+		}
+
+		string[] wrapped_text;
+		wrapped_text = WrapText(text, font.Font, font_scale, size.Width, combine_words);
+		
+		scale_mult = font_scale;
+
+		while (font.Font.MeasureString(string.Join('\n', wrapped_text)).Height * scale_mult > size.Height)
+		{
+			scale_mult *= 0.98f; // TODO: improve this to not cycle so many times
+
+			wrapped_text = WrapText(text, font.Font, scale_mult, size.Width, combine_words);
 		}
 
 		Cache(instance, lines, scale_mult);
@@ -140,9 +185,12 @@ public static class TextFormatter
 		{
 			string[] words = text.Split(' ');
 
+			float filler_character_width = font.MeasureString("a").Width;
+
 			float line_width = 0f;
-			float space_width = font.MeasureString(" ").Width;
-			float hyphen_width = font.MeasureString("-").Width;
+			// doesn't work if I just measure a space for some reason
+			float space_width = font.MeasureString("a a").Width - filler_character_width * 2;
+			float hyphen_width = font.MeasureString("a-a").Width - filler_character_width * 2;
 
 			for (int i = 0; i < words.Length; i++)
 			{
@@ -209,13 +257,13 @@ public static class TextFormatter
 					{
 						string c = word[j].ToString();
 
-						float char_width = font.MeasureString(c).Width;
+						float char_width = font.MeasureString($"a{c}a").Width - filler_character_width * 2;
 
 						// if the letter can fit
 						// also check, if it isn't the last letter, if you can also fit a hyphen
 						// to allow for hyphenation on long words
-						if ((j == word.Length - 1 && line_width + char_width < relative_width) ||
-							line_width + char_width + hyphen_width < relative_width)
+						if ((j == word.Length - 1 && line_width + char_width + font.LetterSpacing < relative_width) ||
+							line_width + char_width + hyphen_width + font.LetterSpacing < relative_width)
 						{
 							wrapped_lines[^1] += c;
 							line_width += char_width;

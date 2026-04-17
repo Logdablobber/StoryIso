@@ -11,6 +11,8 @@ using StoryIso.FileLoading;
 using StoryIso.Misc;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using Microsoft.Toolkit.HighPerformance.Buffers;
 
 namespace StoryIso.Entities;
 
@@ -52,10 +54,11 @@ public partial class TextComponent
 	public float FontSize { get; set; }
 	public SizeF Size { get; set; }
 	public TextAlignment Alignment { get; set; }
+	public bool WrapText { get; set; }
 
 	private static readonly Regex _formatRegex = FormatRegex();
 
-	public TextComponent(string name, string text, string fontName, float fontSize, SizeF size, TextAlignment alignment)
+	public TextComponent(string name, string text, string fontName, float fontSize, SizeF size, TextAlignment alignment, bool wrap_text)
 	{
 		this.name = name;
 		SetText(text);
@@ -63,6 +66,7 @@ public partial class TextComponent
 		this.FontSize = fontSize;
 		this.Size = size;
 		this.Alignment = alignment;
+		this.WrapText = wrap_text;
 	}
 
 	public void SetText(string text)
@@ -96,9 +100,8 @@ public partial class TextComponent
 		_text = text;
 	}
 
-	public void Draw(SpriteBatch spriteBatch, Color color, Vector2 position, Vector2 scale, float rotation)
+	public void Draw(SpriteBatch spriteBatch, Color color, Vector2 position, Vector2 scale, float rotation, float layer_depth)
 	{
-		// TODO: Make this wrap
 		FontInstance? font = FontLoader.GetFont(this.FontName);
 
 		if (font == null)
@@ -106,83 +109,67 @@ public partial class TextComponent
 			return;
 		}
 
-		string[] fitted_text = TextFormatter.FitText(this.Text, font, this.FontSize, this.Size, out float scale_mult);
+		string fitted_text = TextFormatter.FitText(this.Text, font, this.FontSize, this.Size, out float scale_mult, wrap_text:this.WrapText).JoinToString('\n');
 
 		Vector2 draw_scale = scale * scale_mult;
 
-		if (Alignment.VerticalAlignment == VerticalTextAlignment.Top)
-		{
-			for (int i = 0; i < fitted_text.Length; i++)
-			{
-				float y_position = position.Y + (font.Font.LineSpacing + font.Font.LineHeight) * draw_scale.Y * i;
+		RectangleF text_rect = font.Font.GetStringRectangle(fitted_text);
 
-				DrawLine(spriteBatch, font.Font, fitted_text[i], position.X, position.X + Size.Width * draw_scale.X, y_position, color, rotation, scale);
-			}
-			
-			return;
+		float y_origin;
+		float y_position;
+		switch (Alignment.VerticalAlignment)
+		{
+			case VerticalTextAlignment.Top: 
+				y_origin = 0;
+				y_position = position.Y;
+				break;
+
+			case VerticalTextAlignment.Center:
+				y_origin = text_rect.Center.Y;
+				y_position = position.Y + Size.Height * scale.Y * 0.5f;
+				break;
+
+			case VerticalTextAlignment.Bottom:
+				y_origin = text_rect.Bottom;
+				y_position = position.Y + Size.Height * scale.Y;
+				break;
+
+			default:
+				throw new NotImplementedException();
 		}
 
-		if (Alignment.VerticalAlignment == VerticalTextAlignment.Bottom)
+		float x_origin;
+		float x_position;
+		switch (Alignment.HorizontalAlignment)
 		{
-			for (int i = 0; i < fitted_text.Length; i++)
-			{
-				float y_position = position.Y + (Size.Height - (font.Font.LineSpacing + font.Font.LineHeight) * i) * draw_scale.Y;
+			case HorizontalTextAlignment.Left: 
+				x_origin = 0;
+				x_position = position.X;
+				break;
 
-				DrawLine(spriteBatch, font.Font, fitted_text[i], position.X, position.X + Size.Width * draw_scale.X, y_position, color, rotation, scale);
-			}
+			case HorizontalTextAlignment.Center:
+				x_origin = text_rect.Center.X;
+				x_position = position.X + Size.Width * scale.X * 0.5f;
+				break;
 
-			return;
+			case HorizontalTextAlignment.Right:
+				x_origin = text_rect.Right;
+				x_position = position.X + Size.Width * scale.X;
+				break;
+
+			default:
+				throw new NotImplementedException();
 		}
 
-		// TODO: fix this
-		if (Alignment.VerticalAlignment != VerticalTextAlignment.Center)
-		{
-			throw new NotImplementedException();
-		}
+		Vector2 origin = new Vector2(x_origin, y_origin);
+		
+		Vector2 draw_position = new Vector2(x_position, y_position);
 
-		for (int i = 0; i < fitted_text.Length; i++)
-		{
-			float y_position = position.Y + (Size.Height / 2 + (font.Font.LineSpacing + font.Font.LineHeight) * (i - fitted_text.Length / 2.0f)) * draw_scale.Y;
+		// draw hitboxes of text boxes
+		//spriteBatch.DrawRectangle(new RectangleF(position, Size * scale), new Color(1f, 0, 1f, 0.5f));
+		//spriteBatch.DrawLine(new Vector2(position.X, position.Y + Size.Height * 0.5f * scale.Y), new Vector2(position.X + Size.Width * scale.X, position.Y + Size.Height * 0.5f * scale.Y), new Color(1f, 0, 1f, 0.5f));
 
-			DrawLine(spriteBatch, font.Font, fitted_text[i], position.X, position.X + Size.Width * draw_scale.X, y_position, color, rotation, scale);
-		}
-	}
-
-	private void DrawLine(SpriteBatch spriteBatch, BitmapFont font, string text, float min_x, float max_x, float y_position, Color color, float rotation, Vector2 scale)
-	{
-		if (Alignment.HorizontalAlignment == HorizontalTextAlignment.None)
-		{
-			throw new UnreachableException();
-		}
-
-		SizeF text_size = font.MeasureString(text);
-		float y_origin = Alignment.VerticalAlignment == VerticalTextAlignment.Bottom ? text_size.Height : 0;
-
-		if (Alignment.HorizontalAlignment == HorizontalTextAlignment.Left)
-		{
-			Vector2 line_position = new(min_x, y_position);
-
-			spriteBatch.DrawString(font, text, line_position, color, rotation, new Vector2(0, y_origin), scale, SpriteEffects.None, 0f);
-			return;
-		}
-
-		if (Alignment.HorizontalAlignment == HorizontalTextAlignment.Right)
-		{
-			Vector2 line_position = new(max_x, y_position);
-
-			spriteBatch.DrawString(font, text, line_position, color, rotation, new Vector2(text_size.Width, y_origin), scale, SpriteEffects.None, 0f);
-			return;
-		}
-
-		if (Alignment.HorizontalAlignment == HorizontalTextAlignment.Center)
-		{
-			Vector2 line_position = new((min_x + max_x) / 2, y_position);
-
-			spriteBatch.DrawString(font, text, line_position, color, rotation, new Vector2(text_size.Width / 2, y_origin), scale, SpriteEffects.None, 0f);
-			return;
-		}
-
-		throw new NotImplementedException();
+		spriteBatch.DrawString(font.Font, fitted_text, draw_position, color, 0, origin, draw_scale, SpriteEffects.None, layer_depth);
 	}
 
 	[GeneratedRegex(@"(?<={)[^}]+(?=})", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.RightToLeft, "en-US")]

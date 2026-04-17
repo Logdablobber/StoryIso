@@ -31,7 +31,7 @@ public class TilemapRenderer
 		
 	}
 
-	public void Draw(SpriteBatch spriteBatch, Map map, BoundingRectangle boundingRectangle)
+	public void Draw(SpriteBatch spriteBatch, Map map, BoundingRectangle boundingRectangle, float layer_depth)
 	{
 		RectangleF bounding_rect = new RectangleF(boundingRectangle.Center - boundingRectangle.HalfExtents, boundingRectangle.HalfExtents * 2);
 
@@ -42,11 +42,11 @@ public class TilemapRenderer
 				continue;
 			}
 			
-			DrawLayer(spriteBatch, map, layer, bounding_rect);
+			DrawLayer(spriteBatch, map, layer, bounding_rect, layer_depth);
 		}
  	}
 
-	private void DrawLayer(SpriteBatch spriteBatch, Map map, TileLayer layer, RectangleF bounding_rect)
+	private void DrawLayer(SpriteBatch spriteBatch, Map map, TileLayer layer, RectangleF bounding_rect, float layer_depth)
 	{
 		if (!layer.Visible)
 		{
@@ -96,7 +96,7 @@ public class TilemapRenderer
 								Vector2.Zero,
 								Vector2.One * (16f / 14f), // shrink to avoid seams
 								SpriteEffects.None,
-								0f);
+								layer_depth);
 
 			}
 		}

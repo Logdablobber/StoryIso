@@ -11,8 +11,10 @@ public struct UIData
 	public required string Name { get; set; }
 	public float? Scale { get; set; }
 	public bool? Visible { get; set; }
-	public required UIPart[] Parts { get; set; }
+	public UIPart[] Parts { get; set; }
+	public UIData[] Children { get; set; }
 	public required float[] Position { get; set; }
+	public float[]? Origin { get; set; } // range from 0 to 1 where [0, 0] is topleft and default
 }
 
 public struct UIPart
@@ -22,6 +24,7 @@ public struct UIPart
 	public required float[] Position { get; set; }
 	public float? Scale { get; set; } // default = 1
 	public bool? Visible { get; set; } // default = true;
+	public float[]? Origin { get; set; } // range from 0 to 1 where [0, 0] is topleft and default
 }
 
 [JsonDerivedType(typeof(ImageContent), typeDiscriminator: "image")]
@@ -48,6 +51,7 @@ public struct TextContent : IContent
 	public required string font { get; set; }
 	public required float fontSize { get; set; }
 	public required float[] Size { get; set; }
+	public bool? WrapText { get; set; } // default = true
 
 	[JsonConverter(typeof(ColorJsonConverter))]
 	public Color? color { get; set; }

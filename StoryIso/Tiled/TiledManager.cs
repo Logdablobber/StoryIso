@@ -12,6 +12,7 @@ using StoryIso.Scripting;
 using StoryIso.Misc;
 using StoryIso.Debugging;
 using System.Diagnostics;
+using StoryIso.Enums;
 
 namespace StoryIso.Tiled;
 
@@ -377,6 +378,6 @@ public class TiledManager
 			return;
 		}
 
-		_tilemapRenderer.Draw(spriteBatch, currentRoom.map, Game1.camera.BoundingRectangle);
+		_tilemapRenderer.Draw(spriteBatch, currentRoom.map, Game1.camera.BoundingRectangle, RenderLayer.Background.GetLayerDepth());
 	}
 }

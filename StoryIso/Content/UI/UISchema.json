@@ -64,6 +64,12 @@
                       "type": "number"
                     }
                   },
+                  "WrapText": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
                   "color": true,
                   "vAlignment": {
                     "enum": [
@@ -229,6 +235,15 @@
               "boolean",
               "null"
             ]
+          },
+          "Origin": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "number"
+            }
           }
         },
         "required": [
@@ -238,8 +253,23 @@
         ]
       }
     },
+    "Children": {
+      "type": "array",
+      "items": {
+        "$ref": "#"
+      }
+    },
     "Position": {
       "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "Origin": {
+      "type": [
+        "array",
+        "null"
+      ],
       "items": {
         "type": "number"
       }
@@ -247,7 +277,6 @@
   },
   "required": [
     "Name",
-    "Parts",
     "Position"
   ]
 }

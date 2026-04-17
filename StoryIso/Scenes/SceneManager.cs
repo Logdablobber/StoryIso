@@ -30,10 +30,11 @@ public class SceneManager
 		}
 	}
 
-	public SceneManager(Texture2D dialogue_box, Texture2D name_box, FontInstance font, string scene_directory)
+	public SceneManager(Texture2D dialogue_box, Texture2D name_box, Texture2D option_box, FontInstance font, string scene_directory)
 	{
 		dialogueManager = new DialogueManager(dialogue_box_texture: dialogue_box,
 												name_box_texture: name_box,
+												option_box_texture: option_box,
 												scale: 1f,
 												position: new Vector2(0, Game1.camera.BoundingRectangle.Height),
 												font: font,
@@ -110,10 +111,5 @@ public class SceneManager
 	public void Update(GameTime gameTime)
 	{
 		dialogueManager.Update(gameTime);
-	}
-
-	public void Draw(SpriteBatch spriteBatch)
-	{
-		dialogueManager.Draw(spriteBatch);
 	}
 }

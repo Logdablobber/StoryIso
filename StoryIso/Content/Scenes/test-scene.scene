@@ -1,7 +1,9 @@
 #Test Scene
 RunDialogue("test")
+WaitForDialogueEnd()
 MoveTo(~-2, ~0, 1)
 RunDialogue("test part2")
+WaitForDialogueEnd()
 SetCharacterPos("test", 9, 10)
 SetAttr("test", "visible", true)
 Wait(3)

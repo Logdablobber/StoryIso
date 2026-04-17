@@ -30,13 +30,16 @@
 		},
 		{
 			"Name": "Text",
-			"Position": [10, 10],
+			"Position": [2, 2],
 			"Content": {
 				"$type": "text",
 				"font": "ibmbios",
 				"fontSize": 1,
-				"Size": [30, 30],
-				"text": "{counter}"
+				"Size": [46, 46],
+				"text": "{counter}",
+				"hAlignment": "Center",
+				"vAlignment": "Center",
+				"WrapText": false
 			}
 		}
 	]

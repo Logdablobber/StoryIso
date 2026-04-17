@@ -4,8 +4,8 @@ namespace StoryIso.Dialogue;
 
 public static class DialogueGenerator
 {
-	public static DialogueSequence? Generate(string json)
+	public static SerializableDialogueTree? Generate(string json)
 	{
-		return JsonSerializer.Deserialize<DialogueSequence>(json, Game1.DeserializeOptions);
+		return JsonSerializer.Deserialize<SerializableDialogueTree>(json, Game1.DeserializeOptions);
 	}
 }
