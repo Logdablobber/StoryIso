@@ -50,9 +50,9 @@ Content/Characters/CharacterSchema.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Characters/CharacterSchema.json: 2026-04-17T18:11:10.5504937Z
+    Characters/CharacterSchema.json: 2026-04-17T18:13:14.2129445Z
   outputs:
-    Content/Characters/CharacterSchema.json: 2026-04-17T18:11:10.5504937Z
+    Content/Characters/CharacterSchema.json: 2026-04-17T18:13:14.2129445Z
 Content/Characters/test-character.json:
   contentRoot: Content
   shouldBuild: false
@@ -116,9 +116,9 @@ Content/Scenes/Dialogue/DialogueSchema.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Scenes/Dialogue/DialogueSchema.json: 2026-04-17T18:11:10.1716698Z
+    Scenes/Dialogue/DialogueSchema.json: 2026-04-20T16:04:26.2525385Z
   outputs:
-    Content/Scenes/Dialogue/DialogueSchema.json: 2026-04-17T18:11:10.1716698Z
+    Content/Scenes/Dialogue/DialogueSchema.json: 2026-04-20T16:04:26.2525385Z
 Content/Scenes/Dialogue/test-dialogue-part2.json:
   contentRoot: Content
   shouldBuild: false
@@ -479,9 +479,9 @@ Content/UI/UISchema.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    UI/UISchema.json: 2026-04-17T18:11:10.5326127Z
+    UI/UISchema.json: 2026-04-17T18:13:14.1937374Z
   outputs:
-    Content/UI/UISchema.json: 2026-04-17T18:11:10.5326127Z
+    Content/UI/UISchema.json: 2026-04-17T18:13:14.1937374Z
 Content/UI/test-ui2.json:
   contentRoot: Content
   shouldBuild: false

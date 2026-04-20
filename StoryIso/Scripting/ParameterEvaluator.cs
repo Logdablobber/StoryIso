@@ -14,7 +14,7 @@ public static partial class ParameterEvaluator
 
 	public static bool ToNodeTree<T>(Source source, Scope scope, string function, string infix, out FunctionParameter<T>? result) where T : notnull
 	{
-		var postfix = Postfix<T>(source, scope, function, infix);
+		var postfix = Postfix(source, scope, function, infix);
 
 		if (postfix == null)
 		{
@@ -59,20 +59,14 @@ public static partial class ParameterEvaluator
 			}
 
 			var new_param = IFunctionParameter.Create(parameters.ToArray(), operatorDef, source);
-
-			if (new_param == null)
-			{
-				result = default;
-				return false;
-			}
-
+            
 			stack.Push(new_param);
 		}
 
 		if (stack.Count != 1)
 		{
 			DebugConsole.Raise(new ParameterProcessError(source, "Too many parameters, not enough functions. "));
-			result = default;
+			result = null;
 			return false;
 		}
 
@@ -80,7 +74,7 @@ public static partial class ParameterEvaluator
 		return true;
 	}
 
-	private static int precedence(string oper)
+	private static int Precedence(string oper)
 	{
 		if (OperatorDefs.InlineFunctions.Contains(oper))
 		{
@@ -99,7 +93,7 @@ public static partial class ParameterEvaluator
 			_ => -1,
 		};
 	}
-	private static (object, Type)[]? Postfix<T>(Source source, Scope scope, string function, string value) where T : notnull
+	private static (object, Type)[]? Postfix(Source source, Scope scope, string function, string value)
 	{
 		string[] infix = (from match in
 								_splitRegex.Matches(value)
@@ -171,7 +165,7 @@ public static partial class ParameterEvaluator
 				var oper = OperatorDefs.Get(item);
 
 				List<string> parameters = [""];
-				int parenthesis_depth = 0;
+				var parenthesis_depth = 0;
 
 				for (int j = i + 2; j < infix.Length; j++)
 				{
@@ -260,44 +254,43 @@ public static partial class ParameterEvaluator
 						continue;
 					}
 
-					if (oper.parameters[j] == typeof(bool))
+					if (oper.parameters[j] != typeof(bool))
 					{
-						if (!get_postfix<bool>(parameters[j]))
-						{
-							return null;
-						}
-
-						continue;
+						throw new NotImplementedException();
 					}
 
-					throw new NotImplementedException();
+					if (!get_postfix<bool>(parameters[j]))
+					{
+						return null;
+					}
 				}
 
 				res.Add((oper, typeof(OperatorDef)));
 				continue;
 			}
 
-			if (item == "(")
+			switch (item)
 			{
-				stack.Push("(");
-				continue;
-			}
-
-			if (item == ")")
-			{
-				while (stack.Count > 0 && stack.Peek() != "(")
+				case "(":
+					stack.Push("(");
+					continue;
+                
+				case ")":
 				{
-					res.Add((OperatorDefs.Get(stack.Pop()), typeof(OperatorDef)));
-				}
+					while (stack.Count > 0 && stack.Peek() != "(")
+					{
+						res.Add((OperatorDefs.Get(stack.Pop()), typeof(OperatorDef)));
+					}
 
-				stack.Pop();
-				continue;
+					stack.Pop();
+					continue;
+				}
 			}
 
 			while (stack.Count > 0 && stack.Peek() != "(" &&
-					(precedence(stack.Peek()) > precedence(item) || 
-					(precedence(stack.Peek()) == precedence(item) &&
-					item != "^")))
+			       (Precedence(stack.Peek()) > Precedence(item) || 
+			        (Precedence(stack.Peek()) == Precedence(item) &&
+			         item != "^")))
 			{
 				res.Add((OperatorDefs.Get(stack.Pop()), typeof(OperatorDef)));
 			}

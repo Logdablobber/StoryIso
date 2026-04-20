@@ -15,7 +15,7 @@ using StoryIso.Scripting.Variables;
 
 namespace StoryIso.Scripting.Variables;
 
-public static partial class VariableManager
+public static class VariableManager
 {
 	public static VariableType GetVariableType(string name)
 	{
@@ -25,7 +25,7 @@ public static partial class VariableManager
 			"float" => VariableType.Float,
 			"bool" => VariableType.Bool,
 			"string" => VariableType.String,
-			_ => VariableType.None,
+			_ => VariableType.None
 		};
 	}
 
@@ -59,17 +59,17 @@ public static partial class VariableManager
 		return VariableType.None;
 	}
 
-	readonly static Dictionary<string, Func<bool>> _readonlyBools = new()
+	static readonly Dictionary<string, Func<bool>> _readonlyBools = new()
 	{
 		{"movementLocked", () => Game1.sceneManager.Active},
 	};
 
-	readonly static Dictionary<string, float> _constantFloats = new()
+	static readonly Dictionary<string, float> _constantFloats = new()
 	{
 		{"pi", 3.14159265358979f},
 	};
 
-	readonly static string[] _invalidNames =
+	static readonly string[] _invalidNames =
 	[
 		"true",
 		"false",
@@ -125,14 +125,12 @@ public static partial class VariableManager
 	{
 		const string CONSTANTS_PATH = "./Content/System/Constants.json";
 
-		var file_info = new FileInfo(CONSTANTS_PATH);
-
 		if (!new FileInfo(CONSTANTS_PATH).Exists)
 		{
 			throw new FileNotFoundException("Constants json not found");
 		}
 
-		Source source = new Source(0, null, "VariableManager.LoadConstants");
+		var source = new Source(0, null, "VariableManager.LoadConstants");
 
 		string json_text;
 		using (StreamReader streamReader = new(CONSTANTS_PATH))
@@ -178,13 +176,18 @@ public static partial class VariableManager
 
 	public static void DefineVariable(Source source, Scope scope, List<object> parameters)
 	{
-		Optional<VariableType> type = ParameterProcessor.Convert<VariableType>(source, parameters[0]);
-		Optional<string> name = ParameterProcessor.Convert<string>(source, parameters[1]);
-		IOptional? value = ParameterProcessor.ConvertUnknown(source, parameters[2]);
+		var type = ParameterProcessor.Convert<VariableType>(source, parameters[0]);
+		var name = ParameterProcessor.Convert<string>(source, parameters[1]);
+		var value = ParameterProcessor.ConvertUnknown(source, parameters[2]);
 
 		if (!type.HasValue || !name.HasValue)
 		{
 			return;
+		}
+        
+        if (_invalidNames.Contains(name.Value))
+		{
+			DebugConsole.Raise(new BadVariableNameError(source, name.Value));
 		}
 
 		IVariable create<T>() where T : notnull

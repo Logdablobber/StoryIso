@@ -19,7 +19,7 @@ static partial class OperatorDefs
 		returnType = typeof(bool),
 		function = (args, _) =>
 		{
-			var item1 = (Optional<float>)args![0];
+			var item1 = (Optional<float>)args[0];
 			var item2 = args[1].ToOptional<float>();
 
 			if (!item1.HasValue || !item2.HasValue)

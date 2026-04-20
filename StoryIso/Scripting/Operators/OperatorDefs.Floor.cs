@@ -20,7 +20,7 @@ static partial class OperatorDefs
 		returnType = typeof(float),
 		function = (args, _) =>
 		{
-			var item1 = (Optional<float>)args![0];
+			var item1 = args[0].ToOptional<float>();
 
 			if (!item1.HasValue)
 			{

@@ -17,7 +17,7 @@ static partial class FunctionDefs
 		parameters = [typeof(RelativeVariable<float>), typeof(RelativeVariable<float>)],
 		function = (_, args, source) => 
 		{
-			var x = ParameterProcessor.RelativeConvert<float>(source, args![0]);
+			var x = ParameterProcessor.RelativeConvert<float>(source, args[0]);
 			var y = ParameterProcessor.RelativeConvert<float>(source, args[1]);
 
 			if (!x.HasValue || !y.HasValue)

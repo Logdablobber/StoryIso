@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using StoryIso.Debugging;
 using StoryIso.Enums;
 using StoryIso.Misc;
@@ -7,36 +6,24 @@ using StoryIso.Scripting.Variables;
 
 namespace StoryIso.Scripting;
 
-public struct FunctionParameter<T> : IFunctionParameter where T : notnull
+public readonly struct FunctionParameter<T> : IFunctionParameter where T : notnull
 {
 	private readonly Scope? _scope;
 
-	public readonly bool IsConstant { get; }
-	public readonly Type ValueType
-	{
-		get
-		{
-			return typeof(T);
-		}
-	}
+	public bool IsConstant { get; }
+	public Type ValueType => typeof(T);
 
-	public readonly VariableType variableType
-	{
-		get
-		{
-			return VariableManager.GetVariableType(typeof(T));
-		}
-	}
+	public VariableType variableType => VariableManager.GetVariableType(typeof(T));
 
 	private readonly T? _value;
 	private readonly string? _variableName;
 	private readonly EquationTree<T>? _equation;
 	private readonly ReturnType _returnType;
-	public readonly Optional<T> GetValue(Source source)
+	public Optional<T> GetValue(Source source)
 	{ 
 		switch (_returnType)
 		{
-			case ReturnType.value:
+			case ReturnType.Value:
 				if (_value == null)
 				{
 					return default;
@@ -44,7 +31,7 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 
 				return _value;
 
-			case ReturnType.variable:
+			case ReturnType.Variable:
 				if (_variableName == null)
 				{
 					return default;
@@ -52,23 +39,20 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 
 				var value = _scope?.GetVariable(source, _variableName, variableType, out _);
 
-				if (value == null || !value.HasValue)
+				if (value is not { HasValue: true })
 				{
 					return default;
 				}
 
 				return (Optional<T>)value;
 
-			case ReturnType.equation:
-				if (_equation == null)
-				{
-					return default;
-				}
+			case ReturnType.Equation:
 
-				return _equation.Evaluate(new Source(0, "Evaluate Parameter", ""));
+				return _equation?.Evaluate(new Source(0, "Evaluate Parameter", "")) ?? default;
+            
+			default:
+				return new Optional<T>();
 		}
-
-		return default;
 	}
 
 	public FunctionParameter()
@@ -76,6 +60,7 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 		_value = default;
 		_variableName = null;
 		_equation = null;
+		_returnType = ReturnType.None;
 		IsConstant = false;
 	}
 
@@ -84,7 +69,7 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 		_value = value;
 		_variableName = null;
 		_equation = null;
-		_returnType = ReturnType.value;
+		_returnType = ReturnType.Value;
 		IsConstant = true;
 	}
 
@@ -94,23 +79,23 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 		
 		if (variable.HasValue && is_constant)
 		{
-			if (variable is not ConstantVariable<T> value)
+			if (variable is not Optional<T> value)
 			{
 				return;
 			}
 
 			_variableName = null;
-			_returnType = ReturnType.value;
+			_returnType = ReturnType.Value;
 			IsConstant = true;
 
-			_value = ((Optional<T>)value.Value).Value;
+			_value = value.HasValue ? value.Value : default;
 			return;
 		}
 
 		_value = default;
 		_variableName = variable_name;
 		_equation = null;
-		_returnType = ReturnType.variable;
+		_returnType = ReturnType.Variable;
 		_scope = scope;
 	}
 
@@ -128,14 +113,14 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 			_value = value.Value;
 			_variableName = null;
 			_equation = null;
-			_returnType = ReturnType.value;
+			_returnType = ReturnType.Value;
 			return;
 		}
 
 		_value = default;
 		_variableName = null;
 		_equation = equation;
-		_returnType = ReturnType.equation;
+		_returnType = ReturnType.Equation;
 	}
 
 	public FunctionParameter<T1>? ConvertTo<T1>(Source source, Scope scope) where T1 : notnull
@@ -145,45 +130,42 @@ public struct FunctionParameter<T> : IFunctionParameter where T : notnull
 			return (FunctionParameter<T1>)(object)this;
 		}
 
-		if (this._returnType == ReturnType.value)
+		switch (this._returnType)
 		{
-			Optional<T1> new_value = ParameterProcessor.ConvertParam<T1>(source, this);
-
-			if (!new_value.HasValue)
+			case ReturnType.Value:
 			{
-				throw new NullReferenceException("value is null");
+				Optional<T1> new_value = ParameterProcessor.ConvertParam<T1>(source, this);
+
+				if (!new_value.HasValue)
+				{
+					throw new NullReferenceException("value is null");
+				}
+
+				return new FunctionParameter<T1>(value:new_value.Value);
 			}
-
-			return new FunctionParameter<T1>(value:new_value.Value);
-		}
-
-		if (this._returnType == ReturnType.variable)
-		{
-			if (this._variableName == null || this._scope == null)
-			{
+            
+			case ReturnType.Variable when this._variableName == null || this._scope == null:
 				throw new NullReferenceException();
-			}
-
-			return new FunctionParameter<T1>(source, _scope, this._variableName);
-		}
-
-		if (this._returnType == ReturnType.equation)
-		{
-			if (this._equation == null)
-			{
+            
+			case ReturnType.Variable:
+				return new FunctionParameter<T1>(source, _scope, this._variableName);
+            
+			case ReturnType.Equation when this._equation == null:
 				throw new NullReferenceException();
-			}
-
-			return new FunctionParameter<T1>(this._equation.ConvertTo<T1>(), source);
+            
+			case ReturnType.Equation:
+				return new FunctionParameter<T1>(this._equation.ConvertTo<T1>(), source);
+            
+			default:
+				throw new NotImplementedException();
 		}
-
-		throw new NotImplementedException();
 	}
 }
 
 enum ReturnType
 {
-	value = 1,
-	variable = 2,
-	equation = 3
+    None = 0,
+	Value = 1,
+	Variable = 2,
+	Equation = 3
 } 

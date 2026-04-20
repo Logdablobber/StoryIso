@@ -19,7 +19,7 @@ static partial class OperatorDefs
 		returnType = typeof(bool),
 		function = (args, _) =>
 		{
-			var item1 = ParameterProcessor.ConvertByTypeToString(args![0]);
+			var item1 = ParameterProcessor.ConvertByTypeToString(args[0]);
 			var item2 = ParameterProcessor.ConvertByTypeToString(args[1]);
 
 			if (item1 == null || item2 == null)

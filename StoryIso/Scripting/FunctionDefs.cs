@@ -1,10 +1,6 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace StoryIso.Scripting;
 
@@ -34,18 +30,19 @@ public static partial class FunctionDefs
 
 			IndexToFunctionDef.Add(i, def);
 
-			if (def.name == null)
+			switch (def.name)
 			{
-				continue;
+				case null:
+					continue;
+                
+				case "GOTOIF":
+					GOTOIF_Index = i;
+					continue;
+                
+				default:
+					NameToFunctionDefIndex.Add(def.name, i);
+					break;
 			}
-
-			if (def.name == "GOTOIF")
-			{
-				GOTOIF_Index = i;
-				continue;
-			}
-
-			NameToFunctionDefIndex.Add(def.name, i);
 		}
 	}
 

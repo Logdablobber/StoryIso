@@ -20,9 +20,9 @@ public static partial class OperatorDefs
 		// using System.Reflection!
 		var fields = typeof(OperatorDefs).GetFields(BindingFlags.NonPublic | BindingFlags.Static).Where((field) => field.FieldType == typeof(OperatorDef)).ToArray();
 
-		for (int i = 0; i < fields.Length; i++)
+		foreach (var field in fields)
 		{
-			var value = fields[i].GetValue(null);
+			var value = field.GetValue(null);
 
 			if (value == null)
 			{
@@ -44,7 +44,7 @@ public static partial class OperatorDefs
 
 		characters.Remove('-'); // '-' has to be at end b/c of regex stuff
 
-		string regex_string = @$"[{string.Join("", from c in characters select $"{c}")}-]|{string.Join("|", InlineFunctions)}";
+		var regex_string = $"[{string.Join("", from c in characters select $"{c}")}-]|{string.Join("|", InlineFunctions)}";
 		Debug.WriteLine(regex_string);
 
 		OperatorRegex = new Regex(regex_string, RegexOptions.Compiled | RegexOptions.NonBacktracking);

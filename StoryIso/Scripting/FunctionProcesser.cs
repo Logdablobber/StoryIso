@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading;
 using StoryIso.Debugging;
@@ -158,7 +157,7 @@ public static partial class FunctionProcessor
 						return null;
 					}
 
-					string elif_input = matches[1..].JoinToString();
+					var elif_input = matches[1..].JoinToString();
 
 					if (!ParameterEvaluator.ToNodeTree<bool>(temp_source, new_scope.GetCurrentScope(i), "ELIF", $"!({elif_input})", out var elif_condition))
 					{
@@ -603,7 +602,7 @@ public static partial class FunctionProcessor
 				return null;
 			}
 
-			FunctionDef functionDef = FunctionDefs.Get(funcIndex);
+			var functionDef = FunctionDefs.Get(funcIndex);
 
 			if (string_parameters.Count != functionDef.parameters!.Length)
 			{
@@ -611,7 +610,7 @@ public static partial class FunctionProcessor
 				return null;
 			}
 			
-			List<object>? args = ParameterProcessor.ProcessParameters(temp_source, new_scope.GetCurrentScope(i), functionDef.name!, string_parameters, functionDef.parameters);
+			var args = ParameterProcessor.ProcessParameters(temp_source, new_scope.GetCurrentScope(i), functionDef.name!, string_parameters, functionDef.parameters);
 
 			if (args == null)
 			{

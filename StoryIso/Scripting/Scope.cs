@@ -56,7 +56,7 @@ public class Scope : IScriptObject
 			if (parent == null)
 			{
 				DebugConsole.Raise(new UndefinedVariableError(source, name));
-				is_constant = default;
+				is_constant = false;
 				return new Optional<string>();
 			}
 

@@ -19,7 +19,7 @@ static partial class OperatorDefs
 		returnType = typeof(bool),
 		function = (args, _) =>
 		{
-			var item1 = (Optional<bool>)args![0];
+			var item1 = args[0].ToOptional<bool>();
 			var item2 = (Optional<bool>)args[1];
 
 			if (!item1.HasValue || !item2.HasValue)

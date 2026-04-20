@@ -65,17 +65,18 @@ public static partial class ParameterProcessor
 			}
 		}
 
-		if (OperatorDefs.OperatorRegex.IsMatch(value))
+		if (!OperatorDefs.OperatorRegex.IsMatch(value))
 		{
-			if (!ParameterEvaluator.ToNodeTree<T>(source, scope, function, value, out var equation)) 
-			{
-				return null;
-			}
-
-			return equation;
+			return ParseParameterVariable<T>(scope, value, source, function);
 		}
 
-		return ParseParameterVariable<T>(scope, value, source, function);
+		if (!ParameterEvaluator.ToNodeTree<T>(source, scope, function, value, out var equation)) 
+		{
+			return null;
+		}
+
+		return equation;
+
 	}
 
 	private static ArrayParameter<T>? ParseArrayParameter<T>(string value, Source source, string function) where T : notnull, IParsable<T>
@@ -153,9 +154,6 @@ public static partial class ParameterProcessor
 
 				case VariableType.Bool:
 					return new FunctionParameter<bool>(source, scope, value);
-
-				default:
-					break;
 			}
 		}
 
@@ -163,12 +161,7 @@ public static partial class ParameterProcessor
 		{
 			var equation = ParseEquation<string>(scope, value, source, function);
 
-			if (!equation.HasValue)
-			{
-				return null;
-			}
-
-			return equation.Value;
+			return equation;
 		}
 
 		DebugConsole.Raise(new ParameterTypeError(source, function, value, "n\\a", "Unable to parse down to type or variable"));
@@ -179,7 +172,7 @@ public static partial class ParameterProcessor
 	{
 		List<object> args = [];
 
-		bool parse_variable<T1>(string input, bool equation = false) where T1 : notnull, IParsable<T1> 
+		bool parse_variable<T1>(string input, bool equation = false) where T1 : IParsable<T1> 
 		{
 			var param = equation ? ParseEquation<T1>(scope, input, source, function_name) : ParseParameter<T1>(input, source, function_name);
 
