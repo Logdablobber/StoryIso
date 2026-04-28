@@ -209,6 +209,8 @@ public class CharacterSystem : EntityUpdateSystem
 					"movementlocked" when character.Name == "player" => new Optional<bool>(Game1.sceneManager.Active),
 					_ => throw new UnreachableException(),
 				};
+                
+                ThreadManager.Send(id);
 			}
             
             _attributeRetrievals[character.Name].Clear();
@@ -447,10 +449,7 @@ public class CharacterSystem : EntityUpdateSystem
 			}
 		}
 
-		while (!_retrievedAttributes.ContainsKey(id))
-		{
-			Task.Delay(10);
-		}
+		ThreadManager.Await(id);
 
 		return _retrievedAttributes[id];
 	}

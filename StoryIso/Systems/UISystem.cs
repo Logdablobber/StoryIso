@@ -107,8 +107,10 @@ public class UISystem : EntityUpdateSystem
 					_ => throw new NotImplementedException(),
 				};
                 
-				_attributeChanges[info.Name].Clear();
+				ThreadManager.Send(id);
 	        }
+            
+            _attributeChanges.Clear();
         }
     }
 
@@ -149,10 +151,7 @@ public class UISystem : EntityUpdateSystem
 			}
 		}
 
-		while (!_retrievedAttributes.ContainsKey(id))
-		{
-			Task.Delay(10);
-		}
+		ThreadManager.Await(id);
 
 		return _retrievedAttributes[id];
 	}
