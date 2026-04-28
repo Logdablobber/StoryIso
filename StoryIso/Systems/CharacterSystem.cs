@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
@@ -26,15 +30,19 @@ public class CharacterSystem : EntityUpdateSystem
 	private ComponentMapper<RenderAttributes> _renderAttributesMapper = null!;
 
 	// this uses locks rather than concurrent dictionaries
-	// as I do not want the dictionaries being changes
+	// as I do not want the dictionaries being changed
 	// while being read, as the added values may be cleared and ignored
 	// and that would be bad
-	static readonly Dictionary<string, Movement> _movements = [];
-	static readonly Dictionary<string, RelativeVector2> _positionChanges = [];
-	static readonly Dictionary<string, List<(string, IOptional)>> _attributeChanges = [];
-	static readonly System.Threading.Lock _movementLock = new();
-	static readonly System.Threading.Lock _positionChangesLock = new();
-	static readonly System.Threading.Lock _attributeChangesLock = new();
+	private static readonly Dictionary<string, Movement> _movements = [];
+	private static readonly Dictionary<string, RelativeVector2> _positionChanges = [];
+	private static readonly Dictionary<string, List<(string, IOptional)>> _attributeChanges = [];
+	private static readonly System.Threading.Lock _movementLock = new();
+	private static readonly System.Threading.Lock _positionChangesLock = new();
+	private static readonly System.Threading.Lock _attributeChangesLock = new();
+
+	private static readonly Dictionary<string, List<(string, int)>> _attributeRetrievals = [];
+	private static readonly ConcurrentDictionary<int, IOptional> _retrievedAttributes = [];
+	private static readonly System.Threading.Lock _attributeRetrievalLock = new();
 
 	const float DEFAULT_MOVEMENT_SPEED = 100f;
 	const float MOVEMENT_THRESHOLD = 1f;
@@ -51,89 +59,9 @@ public class CharacterSystem : EntityUpdateSystem
 			var transform = _transformMapper.Get(entityId);
 			var render_attributes = _renderAttributesMapper.Get(entityId);
 
-			lock (_attributeChangesLock)
-			{
-				if (_attributeChanges.TryGetValue(character.Name, out var attr_changes) && attr_changes.Count > 0)
-				{
-					foreach (var (attr, value) in attr_changes)
-					{
-						switch (attr.ToLower())
-						{
-							case "x":
-								transform.Position.SetX(Game1.tiledManager.TileXToWorldX(((Optional<float>)value).Value));
-								break;
-
-							case "y":
-								transform.Position.SetY(Game1.tiledManager.TileYToWorldY(((Optional<float>)value).Value));
-								break;
-
-							case "room":
-								character.Room = ((Optional<string>)value).Value;
-								break;
-
-							case "visible":
-								character.Visible = ((Optional<bool>)value).Value;
-								break;
-
-							case "direction":
-								var direction = ParameterProcessor.GetDirection(((Optional<string>)value).Value);
-
-								if (direction == Direction.None)
-								{
-									break;
-								}
-
-								character.Direction = direction;
-								break;
-
-							case "scale":
-								transform.Scale = new Vector2(((Optional<float>)value).Value);
-								break;
-
-							case "speed":
-								if (character.Name != "Player")
-								{
-									break;
-								}
-
-								Game1.player.Get<Player>().Speed = ((Optional<float>)value).Value;
-								break;
-
-							case "movement_locked":
-								if (character.Name != "Player")
-								{
-									break;
-								}
-
-								Game1.sceneManager.Active = ((Optional<bool>)value).Value;
-								break;
-
-							default:
-								throw new NotImplementedException();
-						}
-					}
-
-					_attributeChanges[character.Name].Clear();
-				}
-			}
-
-			lock (_positionChangesLock)
-			{
-				if (_positionChanges.TryGetValue(character.Name, out var position))
-				{
-					transform.Position = position.ToAbsolute(transform.Position);
-					_positionChanges.Remove(character.Name);
-				}
-			}
-
-			lock (_movementLock)
-			{
-				if (_movements.TryGetValue(character.Name, out var move))
-				{
-					character.Movement = move.ToAbsolute(transform.Position);
-					_movements.Remove(character.Name);
-				}
-			}
+			UpdateAttributes(entityId);
+            
+            RetrieveAttributes(entityId);
 
 			render_attributes.Visible = (character.Visible ?? true) && (character.Room == "#any#" || character.Room == Game1.tiledManager.currentRoomName);
 
@@ -152,29 +80,138 @@ public class CharacterSystem : EntityUpdateSystem
 				continue;
 			}
 
-			if (delta_movement.Y > 0)
+			character.Direction = delta_movement.Y switch
 			{
-				character.Direction = Direction.Down;
-			}
-			else if (delta_movement.Y < 0)
-			{
-				character.Direction = Direction.Up;
-			}
-			else if (delta_movement.X < 0)
-			{
-				character.Direction = Direction.Left;
-			}
-			else if (delta_movement.X > 0)
-			{
-				character.Direction = Direction.Right;
-			}
+				> 0 => Direction.Down,
+				< 0 => Direction.Up,
+				_ => delta_movement.X switch
+				{
+					< 0 => Direction.Left,
+					> 0 => Direction.Right,
+					_ => character.Direction
+				}
+			};
 
 			Vector2 movement = delta_movement.NormalizedCopy() * 
-								DEFAULT_MOVEMENT_SPEED * 
-								character.Movement.Value.speed * 
-								deltaTime;
+			                   DEFAULT_MOVEMENT_SPEED * 
+			                   character.Movement.Value.speed * 
+			                   deltaTime;
 			
 			transform.Position += movement;
+		}
+	}
+    
+    private void UpdateAttributes(int entityId)
+    {
+	    var character = _characterMapper.Get(entityId);
+	    var transform = _transformMapper.Get(entityId);
+        
+		lock (_attributeChangesLock)
+		{
+			if (!_attributeChanges.TryGetValue(character.Name, out var attr_changes) || attr_changes.Count == 0)
+			{
+				return;
+			}
+            
+			foreach (var (attr, value) in attr_changes)
+			{
+				switch (attr.ToLower())
+				{
+					case "x":
+						transform.Position.SetX(Game1.tiledManager.TileXToWorldX(((Optional<float>)value).Value));
+						break;
+
+					case "y":
+						transform.Position.SetY(Game1.tiledManager.TileYToWorldY(((Optional<float>)value).Value));
+						break;
+
+					case "room":
+						character.Room = ((Optional<string>)value).Value;
+						break;
+
+					case "visible":
+						character.Visible = ((Optional<bool>)value).Value;
+						break;
+
+					case "direction":
+						var direction = ParameterProcessor.GetDirection(((Optional<string>)value).Value);
+
+						if (direction == Direction.None)
+						{
+							break;
+						}
+
+						character.Direction = direction;
+						break;
+
+					case "scale":
+						transform.Scale = new Vector2(((Optional<float>)value).Value);
+						break;
+
+					case "speed" when character.Name == "player":
+						Game1.player.Get<Player>().Speed = ((Optional<float>)value).Value;
+						break;
+
+					case "movement_locked" when character.Name == "player":
+						Game1.sceneManager.Active = ((Optional<bool>)value).Value;
+						break;
+
+					default:
+						throw new NotImplementedException();
+				}
+
+				_attributeChanges[character.Name].Clear();
+			}
+		}
+
+		lock (_positionChangesLock)
+		{
+			if (_positionChanges.TryGetValue(character.Name, out var position))
+			{
+				transform.Position = position.ToAbsolute(transform.Position);
+				_positionChanges.Remove(character.Name);
+			}
+		}
+
+		lock (_movementLock)
+		{
+			if (_movements.TryGetValue(character.Name, out var move))
+			{
+				character.Movement = move.ToAbsolute(transform.Position);
+				_movements.Remove(character.Name);
+			}
+		}
+	}
+    
+    private void RetrieveAttributes(int entityId)
+    {
+	    var character = _characterMapper.Get(entityId);
+	    var transform = _transformMapper.Get(entityId);
+        
+		lock (_attributeRetrievalLock)
+		{
+			if (!_attributeRetrievals.TryGetValue(character.Name, out var attributes) || attributes.Count == 0)
+			{
+				return;
+			}
+
+			foreach (var (attribute, id) in attributes)
+			{
+				_retrievedAttributes[id] = attribute switch
+				{
+					"x" => new Optional<float>(transform.Position.X),
+					"y" => new Optional<float>(transform.Position.Y),
+					"room" => new Optional<string>(character.Room),
+					"visible" => new Optional<bool>(character.Visible ?? false),
+					"direction" => new Optional<string>(character.Direction.ToString()),
+					"scale" => new Optional<float>(transform.Scale.X),
+					"speed" when character.Name == "player" => new Optional<float>(Game1.player.Get<Player>().Speed),
+					"movementlocked" when character.Name == "player" => new Optional<bool>(Game1.sceneManager.Active),
+					_ => throw new UnreachableException(),
+				};
+			}
+            
+            _attributeRetrievals[character.Name].Clear();
 		}
 	}
 
@@ -215,9 +252,12 @@ public class CharacterSystem : EntityUpdateSystem
 				case Direction.Right:
 					animation.SetAnimation("Moving Right");
 					break;
-
-				default:
+                
+				case Direction.None:
 					break;
+                
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
 		}
 		else
@@ -240,8 +280,11 @@ public class CharacterSystem : EntityUpdateSystem
 					animation.SetAnimation("Standing Right");
 					break;
 
-				default:
+				case Direction.None:
 					break;
+
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
 		}
 	}
@@ -358,6 +401,58 @@ public class CharacterSystem : EntityUpdateSystem
 		}
 
 		DebugConsole.Raise(new UnknownVariableError(source, attribute, $"object '{target}' does not have attribute '{attribute}'"));
+	}
+
+	public static IOptional GetAttribute(Source source, string target, string attribute)
+	{
+		attribute = attribute.ToLower();
+
+		if (UIManager.UIElements.Contains(target))
+		{
+			if (_uiAttributes.ContainsKey(attribute))
+			{
+				return UISystem.GetAttribute(target, attribute);
+			}
+            
+			DebugConsole.Raise(new UnknownVariableError(source, attribute, $"object '{target}' does not have attribute '{attribute}'"));
+			return new Optional<string>();
+		}
+
+		var attributes_dict = target == "Player" ? _playerAttributes : _characterAttributes;
+
+		if (attributes_dict.ContainsKey(attribute))
+		{
+			return GetAttribute(target, attribute);
+		}
+
+		DebugConsole.Raise(new UnknownVariableError(source, attribute,
+			$"object '{target}' does not have attribute '{attribute}'"));
+
+		return new Optional<string>();
+	}
+    
+    private static IOptional GetAttribute(string character, string attribute)
+	{
+		var id = Environment.CurrentManagedThreadId;
+
+		lock (_attributeRetrievalLock)
+		{
+			if (_attributeRetrievals.TryGetValue(character, out var ids))
+			{
+				ids.Add((attribute, id));
+			}
+			else
+			{
+				_attributeRetrievals[character] = [(attribute, id)];
+			}
+		}
+
+		while (!_retrievedAttributes.ContainsKey(id))
+		{
+			Task.Delay(10);
+		}
+
+		return _retrievedAttributes[id];
 	}
 
 	private static void SetAttributeChange(string character, string attribute, IOptional value)

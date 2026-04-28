@@ -15,6 +15,7 @@ static partial class OperatorDefs
 		oper = "&&",
 		inlineFunc = false,
 		isConstant = true,
+        sync = true,
 		parameters = [typeof(bool), typeof(bool)],
 		returnType = typeof(bool),
 		function = (args, _) =>

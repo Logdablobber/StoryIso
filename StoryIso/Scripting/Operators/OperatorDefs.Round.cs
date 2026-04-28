@@ -16,6 +16,7 @@ static partial class OperatorDefs
 		oper = "round",
 		inlineFunc = true,
 		isConstant = true,
+		sync = true,
 		parameters = [typeof(float), typeof(int)],
 		returnType = typeof(float),
 		function = (args, _) =>

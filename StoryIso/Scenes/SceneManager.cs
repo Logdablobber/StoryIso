@@ -51,7 +51,7 @@ public class SceneManager
 			throw new NullReferenceException("_scenes is null :(");
 		}
 
-		Scene? new_scene = SceneProcessor.ProcessScene(obj, scene_lines);
+		Scene? new_scene = SceneProcessor.ProcessScene(obj, scene_lines, out var bind_to_key);
 
 		if (new_scene == null)
 		{
@@ -59,6 +59,11 @@ public class SceneManager
 		}
 
 		_scenes.Add(new_scene.name, new_scene);
+		
+        if (bind_to_key.HasValue)
+        {
+	        Game1.KeybindManager.AddKeybind(bind_to_key.Value, new_scene.name);
+        }
 	}
 
 	private void LoadScenes(string directory)
@@ -92,7 +97,7 @@ public class SceneManager
 		}
 	}
 
-	public void RunScene(string name, Source source)
+	public void RunScene(string name, Source source, bool sync = false)
 	{
 		if (_scenes == null)
 		{
@@ -105,7 +110,7 @@ public class SceneManager
 			return;
 		}
 
-		FunctionProcessor.RunScope(scene.scope, scene.name, source, is_scene: true);
+		FunctionProcessor.RunScope(scene.scope, scene.name, source, sync: sync, is_scene: true);
 	}
 
 	public void Update(GameTime gameTime)

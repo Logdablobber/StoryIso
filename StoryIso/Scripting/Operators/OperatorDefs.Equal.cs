@@ -15,6 +15,7 @@ static partial class OperatorDefs
 		oper = "==",
 		inlineFunc = false,
 		isConstant = true,
+		sync = true,
 		parameters = [typeof(VariableObject), typeof(VariableObject)],
 		returnType = typeof(bool),
 		function = (args, _) =>

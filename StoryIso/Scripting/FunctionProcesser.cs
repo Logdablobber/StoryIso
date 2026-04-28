@@ -76,7 +76,7 @@ public static partial class FunctionProcessor
 
 	public static Scope? Process(string obj, string[] funcs_string, uint start_line = 0)
 	{
-		Scope new_scope = new(Game1.GlobalScope, [], start_line, (uint)funcs_string.Length);
+		Scope current_scope = new(Game1.GlobalScope, [], start_line, (uint)funcs_string.Length);
 
 		var lines = Tokenize(funcs_string);
 
@@ -103,472 +103,25 @@ public static partial class FunctionProcessor
 				continue; // comment
 			}
 
-			switch (first_value)
+			var parse_result = ParseKeywords(temp_source,
+				current_scope,
+				i,
+				matches,
+				lines,
+				ref inside_if,
+				ref inside_else,
+				loops);
+            
+			if (parse_result.HasValue)
 			{
-				case "#IF":
-
-					if (inside_if)
-					{
-						DebugConsole.Raise(new NestedIfError(temp_source));
-						return null;
-					}
-
-					inside_if = true;
-
-					string input = matches[1..].JoinToString();
-
-					if (!ParameterEvaluator.ToNodeTree<bool>(temp_source, new_scope.GetCurrentScope(i), "IF", $"!({input})", out var if_condition))
-					{
-						continue;
-					}
-
-					uint? goto_line = null;
-
-					for (uint j = i + 1; j < lines.Length; j++)
-					{
-						if (lines[j][0] == "#ENDIF" ||
-							lines[j][0] == "#ELIF" ||
-							lines[j][0] == "#ELSE")
-						{
-							goto_line = j;
-							break;
-						}
-					}
-					
-					if (!goto_line.HasValue)
-					{
-						goto_line = (uint)lines.Length;
-					}
-
-					var if_scope = new Scope(null, [], i, goto_line.Value);
-
-					if_scope.AddObject(temp_source, new Function(FunctionDefs.GOTOIF_Index, 
-												[if_condition!, 
-												new FunctionParameter<uint>(goto_line.Value)], 
-											i));
-
-					new_scope.AddObject(temp_source, if_scope);
+				if (parse_result.Value)
+				{
 					continue;
+				}
 
-				case "#ELIF":
-					if (!inside_if || inside_else)
-					{
-						DebugConsole.Raise(new MissingIfError(temp_source));
-						return null;
-					}
-
-					var elif_input = matches[1..].JoinToString();
-
-					if (!ParameterEvaluator.ToNodeTree<bool>(temp_source, new_scope.GetCurrentScope(i), "ELIF", $"!({elif_input})", out var elif_condition))
-					{
-						continue;
-					}
-
-					uint? elif_goto_line = null;
-					uint? endif_line = null;
-
-					for (uint j = i + 1; j < lines.Length; j++)
-					{
-						if (!elif_goto_line.HasValue &&
-							(lines[j][0] == "#ENDIF" ||
-							lines[j][0] == "#ELIF" ||
-							lines[j][0] == "#ELSE"))
-						{
-							elif_goto_line = j;
-						}
-
-						if (lines[j][0] == "#ENDIF")
-						{
-							endif_line = j;
-
-							if (!elif_goto_line.HasValue)
-							{
-								elif_goto_line = j;
-							}
-
-							break;
-						}
-					}
-					
-					if (!endif_line.HasValue || !elif_goto_line.HasValue)
-					{
-						endif_line = (uint)lines.Length;
-
-						if (!elif_goto_line.HasValue)
-						{
-							elif_goto_line = endif_line;
-						}
-					}
-
-					// this is the goto for the IF statement before it
-					new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("GOTO"),
-											[new FunctionParameter<uint>(endif_line.Value)],
-											i - 1));
-
-					var elif_scope = new Scope(null, [], i, elif_goto_line.Value);
-
-					elif_scope.AddObject(temp_source, new Function(FunctionDefs.GOTOIF_Index, 
-												[elif_condition!, 
-												new FunctionParameter<uint>(elif_goto_line.Value)], 
-											i));
-
-					new_scope.AddObject(temp_source, elif_scope);
-					continue;
-
-				case "#ELSE":
-					if (!inside_if || inside_else)
-					{
-						DebugConsole.Raise(new MissingIfError(temp_source));
-						return null;
-					}
-
-					inside_else = true;
-
-					uint? else_endif_line = null;
-
-					for (uint j = i + 1; j < lines.Length; j++)
-					{
-						if (lines[j][0] == "#ENDIF")
-						{
-							else_endif_line = j;
-							break;
-						}
-					}	
-
-					if (!else_endif_line.HasValue)
-					{
-						else_endif_line = (uint)lines.Length;
-					}		
-
-					// for IF statements before this one
-					new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("GOTO"),
-											[new FunctionParameter<uint>(else_endif_line.Value)],
-											i - 1));
-
-					new_scope.AddObject(temp_source, new Scope(null, [], i, else_endif_line.Value));
-					continue;
-				
-				case "#ENDIF":
-					inside_if = false;
-					inside_else = false;
-					continue;
-
-				case "#LOOP": // should be in format #LOOP LOOP_NAME AMOUNT_OF_LOOPS
-					if (matches.Length < 3)
-					{
-						DebugConsole.Raise(new ParameterError(temp_source, "LOOP", matches.Length - 1, 2, "LOOP should be given a name and then the amount of cycles to run. Did you forget a comma?"));
-						continue;
-					}
-
-					string loop_name = matches[1];
-
-					uint end_loop_line = 0;
-
-					for (uint j = i + 1; j < lines.Length; j++)
-					{
-						if (j == lines.Length - 1) 
-						{
-							end_loop_line = j;
-							break;
-						}
-
-						if (lines[j].Length == 0)
-						{
-							continue;
-						}
-
-						if (lines[j][0] == $"#ENDLOOP {loop_name}")
-						{
-							end_loop_line = j;
-							break;
-						}
-					}
-
-					var loop_variable = new ValueVariable<int>(loop_name, 0);
-
-					new_scope.GetCurrentScope(i).DefineVariable(temp_source, loop_variable);
-
-					if (!ParameterEvaluator.ToNodeTree<bool>(temp_source, new_scope.GetCurrentScope(i), "LOOP", $"({loop_name} == {matches[2..].JoinToString()}) || ({loop_name} == -1)", out var condition))
-					{
-						continue;
-					}
-					
-					new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("SetVar"),
-											[new FunctionParameter<string>(value:loop_name), 
-											new FunctionParameter<int>(0)], i - 1));
-
-					var loop_scope = new Scope(null, [], i, end_loop_line);
-
-					loop_scope.AddObject(temp_source, new Function(FunctionDefs.GOTOIF_Index,
-											[condition!, 
-											new FunctionParameter<uint>(end_loop_line)], i));
-					
-					new_scope.AddObject(temp_source, loop_scope);
-
-					loops.Add(loop_name, i);
-					continue;
-
-				case "#ENDLOOP":
-					if (matches.Length != 2)
-					{
-						DebugConsole.Raise(new ParameterError(temp_source, "ENDLOOP", matches.Length - 1, 1));
-						continue;
-					}
-
-					string end_loop_name = matches[1];
-
-					if (!loops.TryGetValue(end_loop_name, out var loop_line))
-					{
-						DebugConsole.Raise(new MissingLoopError(temp_source, end_loop_name));
-						return null;
-					}
-
-					loops.Remove(end_loop_name);
-
-					if (!ParameterEvaluator.ToNodeTree<int>(temp_source, new_scope.GetCurrentScope(i), "ENDLOOP", $"{end_loop_name} + 1", out var increment_var_equation))
-					{
-						throw new UnreachableException("How did this break?");
-					}
-
-					new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("SetVar"),
-												[new FunctionParameter<string>(value:end_loop_name),
-												increment_var_equation!], i));
-
-					new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("GOTO"), 
-												[new FunctionParameter<uint>(loop_line)], i));
-					continue;
-
-				case "#BREAK":
-					if (matches.Length != 2)
-					{
-						DebugConsole.Raise(new ParameterError(temp_source, "BREAK", matches.Length - 1, 1));
-						continue;
-					}
-
-					string break_loop_name = matches[1].Trim();
-
-					if (!loops.TryGetValue(break_loop_name, out var break_loop_line))
-					{
-						DebugConsole.Raise(new MissingLoopError(temp_source, break_loop_name));
-						return null;
-					}
-
-					// set variable to -1, as this will cause the loop to end
-					new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("SetVar"),
-											[new FunctionParameter<string>(value: break_loop_name),
-											new FunctionParameter<int>(-1)], i));
-
-					new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("GOTO"),
-											[new FunctionParameter<int>((int)break_loop_line)], i));
-
-					
-					continue;
-
-				/*
-				"let" and "var" should be either
-				"let TYPE NAME" or "var TYPE NAME" to define a variable but not set a value or
-
-				"let TYPE NAME = VALUE" or "var TYPE NAME = VALUE" to define a variable and set it to that VALUE
-				*/
-				case "let":
-					if (matches.Length < 3)
-					{
-						DebugConsole.Raise(new ParameterError(temp_source, "let", matches.Length - 1, 2));
-						return null;
-					}
-
-					if (new_scope.IsLocalVariable(matches[1], i))
-					{
-						DebugConsole.Raise(new VariableAlreadyExistsError(temp_source, matches[1]));
-						return null;
-					}
-
-					if (matches.Length >= 3)
-					{
-						var define_parameters = ParameterProcessor.ProcessParameters(temp_source, new_scope.GetCurrentScope(i), "DefineVar", [matches[1], matches[2]], [typeof(VariableType), typeof(object)]);
-
-						if (define_parameters == null)
-						{
-							continue; // TODO: raise error
-						}
-
-						define_parameters.Add(new FunctionParameter<string>());
-
-						VariableManager.DefineVariable(temp_source, new_scope.GetCurrentScope(i), define_parameters);
-					}
-
-					if (matches.Length == 3)
-					{
-						continue;
-					}
-
-					if (matches.Length < 5)
-					{
-						DebugConsole.Raise(new ParameterError(temp_source, "let", matches.Length - 1, 4));
-						return null;
-					}
-
-					if (matches[3] != "=")
-					{
-						DebugConsole.Raise(new UnknownFunctionError(temp_source, matches[3], "operator for 'let' must be '='"));
-						return null;
-					}
-
-					var set_parameters = ParameterProcessor.ProcessParameters(temp_source, new_scope.GetCurrentScope(i), "DefineVar", [matches[2], matches[4..].JoinToString()], [typeof(object), typeof(VariableObject)]);
-
-					if (set_parameters == null)
-					{
-						continue; // TODO: raise error
-					}
-
-					new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("SetVar"),
-											set_parameters, i));
-					continue;
-
-				case "var":
-					if (matches.Length < 3)
-					{
-						DebugConsole.Raise(new ParameterError(temp_source, "var", matches.Length - 1, 2));
-						return null;
-					}
-
-					// predefined in preprocess function
-
-					if (matches.Length == 3)
-					{
-						continue;
-					}
-
-					if (matches.Length < 5)
-					{
-						DebugConsole.Raise(new ParameterError(temp_source, "var", matches.Length - 1, 4));
-						return null;
-					}
-
-					if (matches[3] != "=")
-					{
-						DebugConsole.Raise(new UnknownFunctionError(temp_source, matches[3], "operator for 'var' must be '='"));
-						return null;
-					}
-
-					var set_var_parameters = ParameterProcessor.ProcessParameters(temp_source, new_scope.GetCurrentScope(i), "DefineVar", [matches[2], matches[4..].JoinToString()], [typeof(object), typeof(VariableObject)]);
-
-					if (set_var_parameters == null)
-					{
-						continue; // TODO: raise error
-					}
-
-					new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("SetVar"),
-											set_var_parameters, i));
-					continue;
-
-				// set should be "set NAME = VALUE"
-				case "set":
-					if (matches.Length < 4)
-					{
-						DebugConsole.Raise(new ParameterError(temp_source, "set", matches.Length - 1, 3));
-						return null;
-					}
-
-					if (!new_scope.ContainsVariable(matches[1], i, out var type))
-					{
-						DebugConsole.Raise(new UnknownVariableError(temp_source, matches[1]));
-						return null;
-					}
-
-					string? set_function;
-					switch (matches[2])
-					{
-						case "=":
-							set_function = matches[3..].JoinToString();
-							break;
-
-						case "+=":
-							if (((byte)type & ((byte)VariableType.Int | (byte)VariableType.Float | (byte)VariableType.String)) == 0)
-							{
-								DebugConsole.Raise(new SetOperatorError(temp_source, "+=", VariableManager.GetVariableTypeName(type)));
-								return null;
-							}
-
-							if (type == VariableType.String)
-							{
-								set_function = $"concat({matches[1]}, ({matches[3..].JoinToString()}))";
-								break;
-							}
-
-							set_function = $"{matches[1]} + ({matches[3..].JoinToString()})";
-							break;
-
-						case "-=":
-							if (((byte)type & ((byte)VariableType.Int | (byte)VariableType.Float)) == 0)
-							{
-								DebugConsole.Raise(new SetOperatorError(temp_source, "-=", VariableManager.GetVariableTypeName(type)));
-								return null;
-							}
-
-							set_function = $"{matches[1]} - ({matches[3..].JoinToString()})";
-							break;
-
-						case "/=":
-							if (((byte)type & ((byte)VariableType.Int | (byte)VariableType.Float)) == 0)
-							{
-								DebugConsole.Raise(new SetOperatorError(temp_source, "/=", VariableManager.GetVariableTypeName(type)));
-								return null;
-							}
-
-							set_function = $"{matches[1]} / ({matches[3..].JoinToString()})";
-							break;
-
-						case "*=":
-							if (((byte)type & ((byte)VariableType.Int | (byte)VariableType.Float)) == 0)
-							{
-								DebugConsole.Raise(new SetOperatorError(temp_source, "*=", VariableManager.GetVariableTypeName(type)));
-								return null;
-							}
-
-							set_function = $"{matches[1]} * ({matches[3..].JoinToString()})";
-							break;
-
-						case "^=":
-							if (((byte)type & ((byte)VariableType.Int | (byte)VariableType.Float)) == 0)
-							{
-								DebugConsole.Raise(new SetOperatorError(temp_source, "^=", VariableManager.GetVariableTypeName(type)));
-								return null;
-							}
-
-							set_function = $"{matches[1]} ^ ({matches[3..].JoinToString()})";
-							break;
-
-						case "%=":
-							if (((byte)type & ((byte)VariableType.Int | (byte)VariableType.Float)) == 0)
-							{
-								DebugConsole.Raise(new SetOperatorError(temp_source, "%=", VariableManager.GetVariableTypeName(type)));
-								return null;
-							}
-
-							set_function = $"{matches[1]} % ({matches[3..].JoinToString()})";
-							break;
-
-						default:
-							DebugConsole.Raise(new UnknownFunctionError(temp_source, matches[2]));
-							return null;
-					}
-
-					var parameters = ParameterProcessor.ProcessParameters(temp_source, new_scope.GetCurrentScope(i), "SetVar", [matches[1], set_function], [typeof(object), typeof(VariableObject)]);
-
-					if (parameters == null)
-					{
-						return null;
-					}
-
-					new_scope.AddObject(temp_source, new Function(FunctionDefs.GetIndex("SetVar"),
-											parameters, i));
-					continue;
-
-				default:
-					break;
+				return null;
 			}
-
+			
 			ushort funcIndex = FunctionDefs.GetIndex(first_value);
 
 			if (funcIndex == 0) // null function
@@ -583,9 +136,9 @@ public static partial class FunctionProcessor
 				return null;
 			}
 
-			if (matches.Length == 3 && matches[1] == "(" && matches[2] == ")")
+			if (matches is [_, "(", ")"])
 			{
-				new_scope.AddObject(temp_source, new Function(funcIndex, [], i));
+				current_scope.AddObject(temp_source, new Function(funcIndex, [], i));
 				continue;
 			}
 
@@ -604,23 +157,595 @@ public static partial class FunctionProcessor
 
 			var functionDef = FunctionDefs.Get(funcIndex);
 
-			if (string_parameters.Count != functionDef.parameters!.Length)
+			if (string_parameters.Count != functionDef.parameters.Length)
 			{
 				DebugConsole.Raise(new ParameterError(new Source(i, first_value, obj), functionDef.name!, string_parameters.Count, functionDef.parameters.Length, "Did you forget comma separators??"));
 				return null;
 			}
 			
-			var args = ParameterProcessor.ProcessParameters(temp_source, new_scope.GetCurrentScope(i), functionDef.name!, string_parameters, functionDef.parameters);
+			var args = ParameterProcessor.ProcessParameters(temp_source, current_scope.GetCurrentScope(i), functionDef.name!, string_parameters, functionDef.parameters);
 
 			if (args == null)
 			{
 				return null;
 			}
 
-			new_scope.AddObject(temp_source, new Function(funcIndex, args, i));
+			current_scope.AddObject(temp_source, new Function(funcIndex, args, i));
 		}
 
-		return new_scope;
+		return current_scope;
+	}
+
+	private static bool? ParseKeywords(Source source, 
+										Scope current_scope,
+                                        uint index,
+										string[] matches, 
+                                        string[][] lines,
+										ref bool inside_if,
+                                        ref bool inside_else,
+										Dictionary<string, uint> loops)
+	{
+		string first_value = matches[0];
+        
+		switch (first_value)
+		{
+			case "#IF":
+				inside_if = true;
+
+				string input = matches[1..].JoinToString();
+
+				if (!ParameterEvaluator.ToNodeTree<bool>(source, current_scope.GetCurrentScope(index), "IF", $"!({input})",
+					    out var if_condition))
+				{
+					return true;
+				}
+
+				uint? goto_line = null;
+
+				int nesting = 0;
+
+				for (uint j = index + 1; j < lines.Length; j++)
+				{
+					if (lines[j].Length == 0)
+					{
+						continue;
+					}
+                    
+					if (lines[j][0] == "#IF")
+					{
+						nesting += 1;
+						continue;
+					}
+
+					if (lines[j][0] == "#ENDIF")
+					{
+						nesting -= 1;
+                        
+                        if (nesting == -1)
+                        {
+	                        goto_line = j;
+	                        break;
+                        }
+
+                        continue;
+					}
+                    
+                    if ((lines[j][0] == "#ELIF" ||
+                        lines[j][0] == "#ELSE") && nesting == 0)
+                    {
+	                    goto_line = j;
+	                    break;
+                    }
+
+					if (nesting < 0)
+					{
+						DebugConsole.Raise(new InvalidSceneError(new Source(j, "#IF", source.obj, source), "#ENDIF", "ENDIF requires an if statement in the first place"));
+						return false;
+					}
+				}
+
+				goto_line ??= (uint)lines.Length;
+
+				var if_scope = new Scope(null, [], index, goto_line.Value);
+
+				if_scope.AddObject(source, new Function(FunctionDefs.GOTOIF_Index,
+					[
+						if_condition!,
+						new FunctionParameter<uint>(goto_line.Value)
+					],
+					index));
+
+				current_scope.AddObject(source, if_scope);
+				return true;
+
+			case "#ELIF":
+				if (!inside_if || inside_else)
+				{
+					DebugConsole.Raise(new MissingIfError(source));
+					return false;
+				}
+
+				var elif_input = matches[1..].JoinToString();
+
+				if (!ParameterEvaluator.ToNodeTree<bool>(source, current_scope.GetCurrentScope(index), "ELIF",
+					    $"!({elif_input})", out var elif_condition))
+				{
+					return true;
+				}
+
+				uint? elif_goto_line = null;
+				uint? endif_line = null;
+
+				int elif_nesting = 0;
+
+				for (uint j = index + 1; j < lines.Length; j++)
+				{
+					if (lines[j].Length == 0)
+					{
+						continue;
+					}
+
+					if (lines[j][0] == "#IF")
+					{
+						elif_nesting += 1;
+						continue;
+					}
+                    
+                    if (lines[j][0] == "#ENDIF")
+                    {
+	                    elif_nesting -= 1;
+                        
+                        if (elif_nesting == -1)
+                        {
+	                        endif_line = j;
+                            
+                            if (!elif_goto_line.HasValue)
+                            {
+	                            elif_goto_line = j;
+                            }
+	                        break;
+                        }
+
+                        continue;
+                    }
+                    
+					if (!elif_goto_line.HasValue &&
+					     (lines[j][0] == "#ELIF" ||
+					     lines[j][0] == "#ELSE"))
+					{
+						elif_goto_line = j;
+					}
+                    
+                    if (elif_nesting < 0)
+					{
+						DebugConsole.Raise(new InvalidSceneError(new Source(j, "#ELIF", source.obj, source), "#ENDIF",
+							"ENDIF requires an if statement in the first place"));
+						return false;
+					}
+				}
+
+				if (!endif_line.HasValue || !elif_goto_line.HasValue)
+				{
+					endif_line = (uint)lines.Length;
+
+					elif_goto_line ??= endif_line;
+				}
+
+				// this is the goto for the IF statement before it
+				current_scope.AddObject(source, new Function(FunctionDefs.GetIndex("GOTO"),
+					[new FunctionParameter<uint>(endif_line.Value)],
+					index - 1));
+
+				var elif_scope = new Scope(null, [], index, elif_goto_line.Value);
+
+				elif_scope.AddObject(source, new Function(FunctionDefs.GOTOIF_Index,
+					[
+						elif_condition!,
+						new FunctionParameter<uint>(elif_goto_line.Value)
+					],
+					index));
+
+				current_scope.AddObject(source, elif_scope);
+				return true;
+
+			case "#ELSE":
+				if (!inside_if || inside_else)
+				{
+					DebugConsole.Raise(new MissingIfError(source));
+					return false;
+				}
+
+				inside_else = true;
+
+				uint? else_endif_line = null;
+
+				int else_nesting = 0;
+
+				for (uint j = index + 1; j < lines.Length; j++)
+				{
+                    if (lines[j].Length == 0)
+                    {
+	                    continue;
+                    }
+                    
+					if (lines[j][0] == "#IF")
+					{
+						else_nesting += 1;
+						continue;
+					}
+
+					if (lines[j][0] != "#ENDIF")
+					{
+						continue;
+					}
+                    
+					else_nesting -= 1;
+                        
+					if (else_nesting == -1)
+					{
+						else_endif_line = j;
+						break;
+					}
+				}
+
+				if (!else_endif_line.HasValue)
+				{
+					else_endif_line = (uint)lines.Length;
+				}
+
+				// for IF statements before this one
+				current_scope.AddObject(source, new Function(FunctionDefs.GetIndex("GOTO"),
+					[new FunctionParameter<uint>(else_endif_line.Value)],
+					index - 1));
+
+				current_scope.AddObject(source, new Scope(null, [], index, else_endif_line.Value));
+				return true;
+
+			case "#ENDIF":
+				inside_if = false;
+				inside_else = false;
+				return true;
+
+			case "#LOOP": // should be in format #LOOP LOOP_NAME AMOUNT_OF_LOOPS
+				if (matches.Length < 3)
+				{
+					DebugConsole.Raise(new ParameterError(source, "LOOP", matches.Length - 1, 2,
+						"LOOP should be given a name and then the amount of cycles to run. Did you forget a comma?"));
+					return true;
+				}
+
+				string loop_name = matches[1];
+
+				uint end_loop_line = 0;
+
+				for (uint j = index + 1; j < lines.Length; j++)
+				{
+					if (j == lines.Length - 1)
+					{
+						end_loop_line = j;
+						break;
+					}
+
+					if (lines[j].Length == 0)
+					{
+						continue;
+					}
+
+					if (lines[j][0] == $"#ENDLOOP {loop_name}")
+					{
+						end_loop_line = j;
+						break;
+					}
+				}
+
+				var loop_variable = new ValueVariable<int>(loop_name, 0);
+
+				current_scope.GetCurrentScope(index).DefineVariable(source, loop_variable);
+
+				if (!ParameterEvaluator.ToNodeTree<bool>(source, current_scope.GetCurrentScope(index), "LOOP",
+					    $"({loop_name} == {matches[2..].JoinToString()}) || ({loop_name} == -1)", out var condition))
+				{
+					return true;
+				}
+
+				current_scope.AddObject(source, new Function(FunctionDefs.GetIndex("SetVar"),
+				[
+					new FunctionParameter<string>(value: loop_name),
+					new FunctionParameter<int>(0)
+				], index - 1));
+
+				var loop_scope = new Scope(null, [], index, end_loop_line);
+
+				loop_scope.AddObject(source, new Function(FunctionDefs.GOTOIF_Index,
+				[
+					condition!,
+					new FunctionParameter<uint>(end_loop_line)
+				], index));
+
+				current_scope.AddObject(source, loop_scope);
+
+				loops.Add(loop_name, index);
+				return true;
+
+			case "#ENDLOOP":
+				if (matches.Length != 2)
+				{
+					DebugConsole.Raise(new ParameterError(source, "ENDLOOP", matches.Length - 1, 1));
+					return true;
+				}
+
+				string end_loop_name = matches[1];
+
+				if (!loops.Remove(end_loop_name, out var loop_line))
+				{
+					DebugConsole.Raise(new MissingLoopError(source, end_loop_name));
+					return false;
+				}
+
+				if (!ParameterEvaluator.ToNodeTree<int>(source, current_scope.GetCurrentScope(index), "ENDLOOP",
+					    $"{end_loop_name} + 1", out var increment_var_equation))
+				{
+					throw new UnreachableException("How did this break?");
+				}
+
+				current_scope.AddObject(source, new Function(FunctionDefs.GetIndex("SetVar"),
+				[
+					new FunctionParameter<string>(value: end_loop_name),
+					increment_var_equation!
+				], index));
+
+				current_scope.AddObject(source, new Function(FunctionDefs.GetIndex("GOTO"),
+					[new FunctionParameter<uint>(loop_line)], index));
+				return true;
+
+			case "#BREAK":
+				if (matches.Length != 2)
+				{
+					DebugConsole.Raise(new ParameterError(source, "BREAK", matches.Length - 1, 1));
+					return true;
+				}
+
+				string break_loop_name = matches[1].Trim();
+
+				if (!loops.TryGetValue(break_loop_name, out var break_loop_line))
+				{
+					DebugConsole.Raise(new MissingLoopError(source, break_loop_name));
+					return false;
+				}
+
+				// set variable to -1, as this will cause the loop to end
+				current_scope.AddObject(source, new Function(FunctionDefs.GetIndex("SetVar"),
+				[
+					new FunctionParameter<string>(value: break_loop_name),
+					new FunctionParameter<int>(-1)
+				], index));
+
+				current_scope.AddObject(source, new Function(FunctionDefs.GetIndex("GOTO"),
+					[new FunctionParameter<int>((int)break_loop_line)], index));
+
+
+				return true;
+
+			/*
+			"let" and "var" should be either
+			"let TYPE NAME" or "var TYPE NAME" to define a variable but not set a value or
+
+			"let TYPE NAME = VALUE" or "var TYPE NAME = VALUE" to define a variable and set it to that VALUE
+			*/
+			case "let":
+				if (matches.Length < 3)
+				{
+					DebugConsole.Raise(new ParameterError(source, "let", matches.Length - 1, 2));
+					return false;
+				}
+
+				if (current_scope.IsLocalVariable(matches[1], index))
+				{
+					DebugConsole.Raise(new VariableAlreadyExistsError(source, matches[1]));
+					return false;
+				}
+
+				if (matches.Length >= 3)
+				{
+					var define_parameters = ParameterProcessor.ProcessParameters(source,
+						current_scope.GetCurrentScope(index), "DefineVar", [matches[1], matches[2]],
+						[typeof(VariableType), typeof(object)]);
+
+					if (define_parameters == null)
+					{
+						return true; // TODO: raise error
+					}
+
+					define_parameters.Add(new FunctionParameter<string>());
+
+					VariableManager.DefineVariable(source, current_scope.GetCurrentScope(index), define_parameters);
+				}
+
+				if (matches.Length == 3)
+				{
+					return true;
+				}
+
+				if (matches.Length < 5)
+				{
+					DebugConsole.Raise(new ParameterError(source, "let", matches.Length - 1, 4));
+					return false;
+				}
+
+				if (matches[3] != "=")
+				{
+					DebugConsole.Raise(new UnknownFunctionError(source, matches[3],
+						"operator for 'let' must be '='"));
+					return false;
+				}
+
+				var set_parameters = ParameterProcessor.ProcessParameters(source, current_scope.GetCurrentScope(index),
+					"DefineVar", [matches[2], matches[4..].JoinToString()], [typeof(object), typeof(VariableObject)]);
+
+				if (set_parameters == null)
+				{
+					return true; // TODO: raise error
+				}
+
+				current_scope.AddObject(source, new Function(FunctionDefs.GetIndex("SetVar"),
+					set_parameters, index));
+				return true;
+
+			case "var":
+				if (matches.Length < 3)
+				{
+					DebugConsole.Raise(new ParameterError(source, "var", matches.Length - 1, 2));
+					return false;
+				}
+
+				// predefined in preprocess function
+
+				if (matches.Length == 3)
+				{
+					return true;
+				}
+
+				if (matches.Length < 5)
+				{
+					DebugConsole.Raise(new ParameterError(source, "var", matches.Length - 1, 4));
+					return false;
+				}
+
+				if (matches[3] != "=")
+				{
+					DebugConsole.Raise(new UnknownFunctionError(source, matches[3],
+						"operator for 'var' must be '='"));
+					return false;
+				}
+
+				var set_var_parameters = ParameterProcessor.ProcessParameters(source, current_scope.GetCurrentScope(index),
+					"DefineVar", [matches[2], matches[4..].JoinToString()], [typeof(object), typeof(VariableObject)]);
+
+				if (set_var_parameters == null)
+				{
+					return true; // TODO: raise error
+				}
+
+				current_scope.AddObject(source, new Function(FunctionDefs.GetIndex("SetVar"),
+					set_var_parameters, index));
+				return true;
+
+			// set should be "set NAME = VALUE"
+			case "set":
+				if (matches.Length < 4)
+				{
+					DebugConsole.Raise(new ParameterError(source, "set", matches.Length - 1, 3));
+					return false;
+				}
+
+				if (!current_scope.ContainsVariable(matches[1], index, out var type))
+				{
+					DebugConsole.Raise(new UnknownVariableError(source, matches[1]));
+					return false;
+				}
+
+				string? set_function;
+				switch (matches[2])
+				{
+					case "=":
+						set_function = matches[3..].JoinToString();
+						break;
+
+					case "+=":
+						if (((byte)type &
+						     ((byte)VariableType.Int | (byte)VariableType.Float | (byte)VariableType.String)) == 0)
+						{
+							DebugConsole.Raise(new SetOperatorError(source, "+=",
+								VariableManager.GetVariableTypeName(type)));
+							return false;
+						}
+
+						if (type == VariableType.String)
+						{
+							set_function = $"concat({matches[1]}, ({matches[3..].JoinToString()}))";
+							break;
+						}
+
+						set_function = $"{matches[1]} + ({matches[3..].JoinToString()})";
+						break;
+
+					case "-=":
+						if (((byte)type & ((byte)VariableType.Int | (byte)VariableType.Float)) == 0)
+						{
+							DebugConsole.Raise(new SetOperatorError(source, "-=",
+								VariableManager.GetVariableTypeName(type)));
+							return false;
+						}
+
+						set_function = $"{matches[1]} - ({matches[3..].JoinToString()})";
+						break;
+
+					case "/=":
+						if (((byte)type & ((byte)VariableType.Int | (byte)VariableType.Float)) == 0)
+						{
+							DebugConsole.Raise(new SetOperatorError(source, "/=",
+								VariableManager.GetVariableTypeName(type)));
+							return false;
+						}
+
+						set_function = $"{matches[1]} / ({matches[3..].JoinToString()})";
+						break;
+
+					case "*=":
+						if (((byte)type & ((byte)VariableType.Int | (byte)VariableType.Float)) == 0)
+						{
+							DebugConsole.Raise(new SetOperatorError(source, "*=",
+								VariableManager.GetVariableTypeName(type)));
+							return false;
+						}
+
+						set_function = $"{matches[1]} * ({matches[3..].JoinToString()})";
+						break;
+
+					case "^=":
+						if (((byte)type & ((byte)VariableType.Int | (byte)VariableType.Float)) == 0)
+						{
+							DebugConsole.Raise(new SetOperatorError(source, "^=",
+								VariableManager.GetVariableTypeName(type)));
+							return false;
+						}
+
+						set_function = $"{matches[1]} ^ ({matches[3..].JoinToString()})";
+						break;
+
+					case "%=":
+						if (((byte)type & ((byte)VariableType.Int | (byte)VariableType.Float)) == 0)
+						{
+							DebugConsole.Raise(new SetOperatorError(source, "%=",
+								VariableManager.GetVariableTypeName(type)));
+							return false;
+						}
+
+						set_function = $"{matches[1]} % ({matches[3..].JoinToString()})";
+						break;
+
+					default:
+						DebugConsole.Raise(new UnknownFunctionError(source, matches[2]));
+						return false;
+				}
+
+				var parameters = ParameterProcessor.ProcessParameters(source, current_scope.GetCurrentScope(index),
+					"SetVar", [matches[1], set_function], [typeof(object), typeof(VariableObject)]);
+
+				if (parameters == null)
+				{
+					return false;
+				}
+
+				current_scope.AddObject(source, new Function(FunctionDefs.GetIndex("SetVar"),
+					parameters, index));
+				return true;
+
+			default:
+				break;
+		}
+
+		return null;
 	}
 
 	private static List<string>? ParseFunctionParameters(Source source, string[] matches)
@@ -705,12 +830,12 @@ public static partial class FunctionProcessor
 
 			if (script_object.IsScope)
 			{
-				if (script_object is not Scope new_scope)
+				if (script_object is not Scope current_scope)
 				{
 					throw new UnreachableException();
 				}
 
-				goto_line = Run(new_scope, current_variables, obj, source, sync, is_scene, goto_line);
+				goto_line = Run(current_scope, current_variables, obj, source, sync, is_scene, goto_line);
 			}
 
 			else

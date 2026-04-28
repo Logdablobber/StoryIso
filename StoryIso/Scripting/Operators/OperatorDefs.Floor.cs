@@ -16,6 +16,7 @@ static partial class OperatorDefs
 		oper = "floor",
 		inlineFunc = true,
 		isConstant = true,
+		sync = true,
 		parameters = [typeof(float)],
 		returnType = typeof(float),
 		function = (args, _) =>

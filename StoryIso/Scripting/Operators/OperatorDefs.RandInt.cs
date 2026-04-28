@@ -17,6 +17,7 @@ static partial class OperatorDefs
 		oper = "randint",
 		inlineFunc = true,
 		isConstant = false,
+		sync = true,
 		parameters = [typeof(int), typeof(int)],
 		returnType = typeof(int),
 		function = (args, _) =>

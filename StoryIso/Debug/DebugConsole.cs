@@ -80,7 +80,7 @@ public static class DebugConsole
 
 				for (int i = 0; i < wrapped_lines.Length; i++)
 				{
-					var position = new Vector2(XMARGIN, YMARGIN + index * LINE_SPACING + (wrap_index + i) * WRAP_SPACING) * Scale + Game1.cameraOffset;
+					var position = new Vector2(XMARGIN, YMARGIN + index * LINE_SPACING + (wrap_index + i) * WRAP_SPACING) * Scale + Game1.CameraOffset;
 
 					spriteBatch.DrawString(Font, wrapped_lines[i], position, line.color, 0, Vector2.Zero, Scale, SpriteEffects.None, 0);
 				}

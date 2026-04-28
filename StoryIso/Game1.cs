@@ -19,6 +19,7 @@ using StoryIso.Scenes;
 using StoryIso.Tiled;
 using StoryIso.UI;
 using Microsoft.VisualBasic.FileIO;
+using StoryIso.Input;
 using StoryIso.Misc;
 
 namespace StoryIso;
@@ -52,7 +53,7 @@ public class Game1 : Game
 	public static SceneManager sceneManager = null!;
 
 	public static OrthographicCamera camera = null!;
-	public static Vector2 cameraOffset
+	public static Vector2 CameraOffset
 	{
 		get
 		{
@@ -68,7 +69,9 @@ public class Game1 : Game
 	public const int ScreenHeight = 480;
 	public const int ScreenWidth = 800;
 
-	private bool qPressedPreviousFrame = false;
+	private bool _qPressedLastFrame;
+
+	public static InputProcessor KeybindManager;
 
 	public static Scope GlobalScope = new(null, [], 0, 0);
 
@@ -86,6 +89,8 @@ public class Game1 : Game
 
 		DeserializeOptions.Converters.Add(new ColorJsonConverter());
 		DeserializeOptions.Converters.Add(new Vector2JsonConverter());
+
+		KeybindManager = new InputProcessor();
     }
 
     protected override void Initialize()
@@ -152,24 +157,28 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+	    var keystate = Keyboard.GetState();
+        
+        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || keystate.IsKeyDown(Keys.Escape))
             Exit();
 
-		if (Keyboard.GetState().IsKeyDown(Keys.Q))
+		if (keystate.IsKeyDown(Keys.Q))
 		{
-			if (!qPressedPreviousFrame)
+			if (!_qPressedLastFrame)
 			{
-				SoundEffectInstance sfx = AudioLoader.GetSound("tx0_fire1") ?? throw new NullReferenceException();
+				var sfx = AudioLoader.GetSound("tx0_fire1") ?? throw new NullReferenceException();
 
 				sfx.Play();
 			}
 			
-			qPressedPreviousFrame = true;
+			_qPressedLastFrame = true;
 		}
 		else
 		{
-			qPressedPreviousFrame = false;
+			_qPressedLastFrame = false;
 		}
+
+		KeybindManager.Process(keystate);
 
 		_world.Update(gameTime);
 

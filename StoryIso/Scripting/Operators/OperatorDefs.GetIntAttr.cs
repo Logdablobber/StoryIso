@@ -7,19 +7,19 @@ namespace StoryIso.Scripting;
 static partial class OperatorDefs
 {
 	/// <summary>
-	/// Get String Attribute
-	/// <para>takes in the name of the target and the attribute as strings and returns the value of that attribute as a string</para>
+	/// Get Int Attribute
+	/// <para>takes in the name of the target and the attribute as strings and returns the value of that attribute as an int</para>
 	/// </summary>
 	/// 
-	/// <returns>string</returns>
-	private static readonly OperatorDef GetStringAttr = new()
+	/// <returns>int</returns>
+	private static readonly OperatorDef GetIntAttr = new()
 	{
-		oper = "GetStringAttr",
+		oper = "GetIntAttr",
 		inlineFunc = true,
 		isConstant = false,
         sync = false,
 		parameters = [typeof(string), typeof(string)],
-		returnType = typeof(string),
+		returnType = typeof(int),
 		function = (args, source) =>
 		{
 			var target = args[0].ToOptional<string>();
@@ -27,10 +27,10 @@ static partial class OperatorDefs
 
 			if (!target.HasValue || !attr.HasValue)
 			{
-				return new Optional<string>();
+				return new Optional<int>();
 			}
 
-			return ParameterProcessor.ConvertOptional<string>(source, CharacterSystem.GetAttribute(source, target.Value, attr.Value));
+			return ParameterProcessor.ConvertOptional<int>(source, CharacterSystem.GetAttribute(source, target.Value, attr.Value));
 		}
 	};
 }

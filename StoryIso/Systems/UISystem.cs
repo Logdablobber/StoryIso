@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
@@ -8,18 +11,20 @@ using MonoGame.Extended.ECS.Systems;
 using StoryIso.Debugging;
 using StoryIso.Entities;
 using StoryIso.Misc;
-using StoryIso.UI;
 
 namespace StoryIso.ECS;
 
 public class UISystem : EntityUpdateSystem
 {
-	private ComponentMapper<RenderAttributes> _renderAttributesMapper = null!;
 	private ComponentMapper<TextComponent> _textComponentMapper = null!;
 	private ComponentMapper<UIInfo> _infoMapper = null!;
 
 	private static readonly Dictionary<string, List<(string, IOptional)>> _attributeChanges = [];
 	private static readonly System.Threading.Lock _attributeChangesLock = new();
+    
+    private static readonly Dictionary<string, List<(string, int)>> _attributeRetrievals = [];
+    private static readonly ConcurrentDictionary<int, IOptional> _retrievedAttributes = [];
+    private static readonly System.Threading.Lock _attributeRetrievalLock = new();
 
 	public UISystem() : base(Aspect.All(typeof(RenderAttributes), typeof(UIInfo))
 									.One(typeof(TextComponent), typeof(Texture2D), typeof(Animation), typeof(RectangleComponent), typeof(PolygonComponent))) { }
@@ -28,92 +33,87 @@ public class UISystem : EntityUpdateSystem
 	{
 		foreach (var entityId in ActiveEntities)
 		{
-			var render_attributes = _renderAttributesMapper.Get(entityId);
-			var text_component = _textComponentMapper.Get(entityId);
-			var info = _infoMapper.Get(entityId);
-
-			lock (_attributeChangesLock)
-			{
-				if (info.Parent != null && _attributeChanges.TryGetValue(info.Parent.Name, out var parent_attributes) && parent_attributes.Count != 0)
-				{
-					foreach (var attribute in parent_attributes)
-					{
-						switch (attribute.Item1.ToLower())
-						{
-							case "visible":
-								UIManager.SetObjectVisible(info.Parent.Name, ((Optional<bool>)attribute.Item2).Value);
-								break;
-
-							case "x":
-								UIManager.SetObjectX(info.Parent.Name, ((Optional<float>)attribute.Item2).Value);
-								break;
-
-							case "y":
-								UIManager.SetObjectY(info.Parent.Name, ((Optional<float>)attribute.Item2).Value);
-								break;
-
-							case "scale":
-								UIManager.SetObjectScale(info.Parent.Name, ((Optional<float>)attribute.Item2).Value);
-								break;
-
-							case "text":
-								DebugConsole.Raise(new UnknownVariableError(new Source(0, "SetAttr", info.Parent.Name), attribute.Item1, $"object '{info.Parent.Name}' does not have attribute '{attribute}'"));
-								break;
-
-							default:
-								throw new NotImplementedException();
-						}
-					}
-
-					_attributeChanges[info.Parent.Name].Clear();
-				}
-
-				if (_attributeChanges.TryGetValue(info.Name, out var attributes) && attributes.Count != 0)
-				{
-					foreach (var attribute in attributes)
-					{
-						switch (attribute.Item1.ToLower())
-						{
-							case "visible":
-								info.Visible = ((Optional<bool>)attribute.Item2).Value;
-								break;
-
-							case "x":
-								info.SetX(((Optional<float>)attribute.Item2).Value);
-								break;
-
-							case "y":
-								info.SetY(((Optional<float>)attribute.Item2).Value);
-								break;
-
-							case "scale":
-								info.Scale = new Vector2(((Optional<float>)attribute.Item2).Value);
-								break;
-
-							case "text":
-								if (text_component == null)
-								{
-									DebugConsole.Raise(new UnknownVariableError(new Source(0, "SetAttr", info.Name), attribute.Item1, $"object '{info.Name}' does not have attribute '{attribute}'"));
-									break;
-								}
-
-								text_component.SetText(((Optional<string>)attribute.Item2).Value);
-								break;
-
-							default:
-								throw new NotImplementedException();
-						}
-					}
-
-					_attributeChanges[info.Name].Clear();
-				}
-			}
+			UpdateAttributes(entityId);
+            RetrieveAttributes(entityId);
 		}
 	}
 
+	private void UpdateAttributes(int entityId)
+	{
+		var text_component = _textComponentMapper.Get(entityId);
+		var info = _infoMapper.Get(entityId);
+
+		lock (_attributeChangesLock)
+		{
+			if (!_attributeChanges.TryGetValue(info.Name, out var attributes) || attributes.Count == 0)
+			{
+				return;
+			}
+            
+			foreach (var attribute in attributes)
+			{
+				switch (attribute.Item1.ToLower())
+				{
+					case "visible":
+						info.Visible = ((Optional<bool>)attribute.Item2).Value;
+						break;
+
+					case "x":
+						info.SetX(((Optional<float>)attribute.Item2).Value);
+						break;
+
+					case "y":
+						info.SetY(((Optional<float>)attribute.Item2).Value);
+						break;
+
+					case "scale":
+						info.Scale = new Vector2(((Optional<float>)attribute.Item2).Value);
+						break;
+
+					case "text" when text_component != null:
+						text_component.SetText(((Optional<string>)attribute.Item2).Value);
+						break;
+
+					default:
+						throw new NotImplementedException();
+				}
+
+				_attributeChanges[info.Name].Clear();
+			}
+		}
+	}
+    
+    private void RetrieveAttributes(int entityId)
+    {
+	    var text_component = _textComponentMapper.Get(entityId);
+	    var info = _infoMapper.Get(entityId);
+        
+        lock (_attributeRetrievalLock)
+        {
+	        if (!_attributeRetrievals.TryGetValue(info.Name, out var attributes) || attributes.Count == 0)
+	        {
+		        return;
+	        }
+
+	        foreach (var (attribute, id) in attributes)
+	        {
+				_retrievedAttributes[id] = attribute.ToLower() switch
+				{
+					"visible" => new Optional<bool>(info.Visible),
+					"x" => new Optional<float>(info.LocalPosition.X),
+					"y" => new Optional<float>(info.LocalPosition.Y),
+					"scale" => new Optional<float>(info.Scale.X),
+					"text" when text_component != null => new Optional<string>(text_component.Text),
+					_ => throw new NotImplementedException(),
+				};
+                
+				_attributeChanges[info.Name].Clear();
+	        }
+        }
+    }
+
 	public override void Initialize(IComponentMapperService mapperService)
 	{
-		_renderAttributesMapper = mapperService.GetMapper<RenderAttributes>();
 		_textComponentMapper = mapperService.GetMapper<TextComponent>();
 		_infoMapper = mapperService.GetMapper<UIInfo>();
 	}
@@ -131,5 +131,29 @@ public class UISystem : EntityUpdateSystem
 
 			_attributeChanges.Add(target, [(attribute, value)]);
 		}
+	}
+
+	public static IOptional GetAttribute(string target, string attribute)
+	{
+		var id = Environment.CurrentManagedThreadId;
+
+		lock (_attributeRetrievalLock)
+		{
+			if (_attributeRetrievals.TryGetValue(target, out var ids))
+			{
+				ids.Add((attribute, id));
+			}
+			else
+			{
+				_attributeRetrievals[target] = [(attribute, id)];
+			}
+		}
+
+		while (!_retrievedAttributes.ContainsKey(id))
+		{
+			Task.Delay(10);
+		}
+
+		return _retrievedAttributes[id];
 	}
 }

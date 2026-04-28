@@ -1,0 +1,17 @@
+#Move Selector Up
+#BindTo Up Up
+
+#IF GetBoolAttr("Options", "visible")
+	#IF !GetBoolAttr("Option2", "visible")
+		set dialogueSelectorIndex = 0
+
+	#ELIF dialogueSelectorIndex == 0 || !GetBoolAttr("Option3", "visible") 
+		set dialogueSelectorIndex = 1
+
+	#ELSE
+		set dialogueSelectorIndex = 2
+
+	#ENDIF
+
+	Print(dialogueSelectorIndex)
+#ENDIF

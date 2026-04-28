@@ -16,6 +16,7 @@ static partial class OperatorDefs
 		oper = "concat",
 		inlineFunc = true,
 		isConstant = true,
+		sync = true,
 		parameters = [typeof(string), typeof(string)],
 		returnType = typeof(string),
 		function = (args, _) =>

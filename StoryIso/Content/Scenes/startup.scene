@@ -3,6 +3,7 @@ let int testInt = 12 + 3 * 2
 let bool testSuccess = true
 
 var int counter = 0
+var int dialogueSelectorIndex = 0
 
 let string testString = "Starting tests!"
 Print(testString)

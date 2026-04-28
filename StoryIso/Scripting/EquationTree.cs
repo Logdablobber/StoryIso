@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using StoryIso.Debugging;
 using StoryIso.Misc;
 
@@ -10,6 +13,11 @@ public class EquationTree<T> where T : notnull
 {
 	private readonly IFunctionParameter[] parameters;
 	private readonly OperatorDef? operatorDef;
+	private Optional<T> _tempReturn;
+	private readonly Lock _tempReturnLock = new();
+
+	private Source? _tempSource;
+	private Task _updateTemp;
 
 	public bool IsConstant
 	{
@@ -20,20 +28,7 @@ public class EquationTree<T> where T : notnull
 				return true;
 			}
 
-			if (!operatorDef.isConstant)
-			{
-				return false;
-			}
-
-			foreach (var parameter in parameters)
-			{
-				if (!parameter.IsConstant)
-				{
-					return false;
-				}
-			}
-
-			return true;
+			return operatorDef.isConstant && parameters.All(parameter => parameter.IsConstant);
 		}
 	}
 
@@ -46,6 +41,8 @@ public class EquationTree<T> where T : notnull
 
 		this.parameters = parameters;
 		this.operatorDef = operatorDef;
+		this._tempSource = new Source(0, null, "Equation Tree Startup");
+		this._updateTemp = Task.Run(UpdateTemp);
 	}
 
 	public EquationTree(IFunctionParameter value)
@@ -53,9 +50,41 @@ public class EquationTree<T> where T : notnull
 		this.parameters = [value];
 		this.operatorDef = null;
 	}
-
-	public Optional<T> Evaluate(Source source)
+    
+    private void UpdateTemp()
 	{
+		if (_tempSource == null)
+		{
+			throw new NullReferenceException();
+		}
+
+		var res = Evaluate(_tempSource, true);
+
+		lock (_tempReturnLock)
+		{
+			_tempReturn = res;
+		}
+	}
+
+	public Optional<T> Evaluate(Source source, bool override_sync = false)
+	{
+		if (!override_sync && !(operatorDef?.sync ?? true))
+		{
+			Optional<T> res;
+			lock (_tempReturnLock)
+			{
+				res = _tempReturn;
+			}
+            
+            if (_updateTemp.Status != TaskStatus.Running)
+            {
+	            _tempSource = source;
+	            _updateTemp = Task.Run(UpdateTemp);
+            }
+            
+			return res;
+		}
+        
 		if (operatorDef == null)
 		{
 			if (parameters.Length != 1)
@@ -92,16 +121,16 @@ public class EquationTree<T> where T : notnull
 
 	public EquationTree<T1> ConvertTo<T1>() where T1 : notnull
 	{
-		if (operatorDef == null)
+		if (operatorDef != null)
 		{
-			if (parameters.Length != 1)
-			{
-				throw new UnreachableException();
-			}
-
-			return new EquationTree<T1>(parameters[0]);
+			return new EquationTree<T1>(parameters, operatorDef);
 		}
 
-		return new EquationTree<T1>(parameters, operatorDef);
+		if (parameters.Length != 1)
+		{
+			throw new UnreachableException();
+		}
+
+		return new EquationTree<T1>(parameters[0]);
 	}
 }

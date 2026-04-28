@@ -50,9 +50,9 @@ Content/Characters/CharacterSchema.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Characters/CharacterSchema.json: 2026-04-17T18:13:14.2129445Z
+    Characters/CharacterSchema.json: 2026-04-28T16:11:48.8158625Z
   outputs:
-    Content/Characters/CharacterSchema.json: 2026-04-17T18:13:14.2129445Z
+    Content/Characters/CharacterSchema.json: 2026-04-28T16:11:48.8158625Z
 Content/Characters/test-character.json:
   contentRoot: Content
   shouldBuild: false
@@ -116,9 +116,9 @@ Content/Scenes/Dialogue/DialogueSchema.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Scenes/Dialogue/DialogueSchema.json: 2026-04-20T16:04:26.2525385Z
+    Scenes/Dialogue/DialogueSchema.json: 2026-04-28T16:11:47.7493851Z
   outputs:
-    Content/Scenes/Dialogue/DialogueSchema.json: 2026-04-20T16:04:26.2525385Z
+    Content/Scenes/Dialogue/DialogueSchema.json: 2026-04-28T16:11:47.7493851Z
 Content/Scenes/Dialogue/test-dialogue-part2.json:
   contentRoot: Content
   shouldBuild: false
@@ -226,9 +226,9 @@ Content/Scenes/startup.scene:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Scenes/startup.scene: 2026-03-23T18:01:56.7830968Z
+    Scenes/startup.scene: 2026-04-28T14:57:29.6860040Z
   outputs:
-    Content/Scenes/startup.scene: 2026-03-23T18:01:56.7830968Z
+    Content/Scenes/startup.scene: 2026-04-28T14:57:29.6860040Z
 Content/Scenes/test-button.scene:
   contentRoot: Content
   shouldBuild: false
@@ -468,9 +468,9 @@ Content/UI/test-ui.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    UI/test-ui.json: 2026-04-10T18:20:07.4797218Z
+    UI/test-ui.json: 2026-04-28T14:31:30.6839386Z
   outputs:
-    Content/UI/test-ui.json: 2026-04-10T18:20:07.4797218Z
+    Content/UI/test-ui.json: 2026-04-28T14:31:30.6839386Z
 Content/UI/UISchema.json:
   contentRoot: Content
   shouldBuild: false
@@ -479,9 +479,9 @@ Content/UI/UISchema.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    UI/UISchema.json: 2026-04-17T18:13:14.1937374Z
+    UI/UISchema.json: 2026-04-28T16:11:48.7745939Z
   outputs:
-    Content/UI/UISchema.json: 2026-04-17T18:13:14.1937374Z
+    Content/UI/UISchema.json: 2026-04-28T16:11:48.7745939Z
 Content/UI/test-ui2.json:
   contentRoot: Content
   shouldBuild: false
@@ -493,3 +493,25 @@ Content/UI/test-ui2.json:
     UI/test-ui2.json: 2026-04-17T18:09:52.6344039Z
   outputs:
     Content/UI/test-ui2.json: 2026-04-17T18:09:52.6344039Z
+Content/Textures/option-selector.png:
+  contentRoot: Content
+  shouldBuild: false
+  importer: 
+  processor: 
+  compressContent: false
+  graphicsProfile: HiDef
+  dependencies:
+    Textures/option-selector.png: 2026-04-21T18:28:21.4646891Z
+  outputs:
+    Content/Textures/option-selector.png: 2026-04-21T18:28:21.4646891Z
+Content/Scenes/move-selector-up.scene:
+  contentRoot: Content
+  shouldBuild: false
+  importer: 
+  processor: 
+  compressContent: false
+  graphicsProfile: HiDef
+  dependencies:
+    Scenes/move-selector-up.scene: 2026-04-28T15:03:02.3939618Z
+  outputs:
+    Content/Scenes/move-selector-up.scene: 2026-04-28T15:03:02.3939618Z

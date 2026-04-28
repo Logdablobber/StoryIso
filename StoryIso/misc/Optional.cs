@@ -4,23 +4,11 @@ namespace StoryIso.Misc;
 
 public struct Optional<T> : IOptional
 {
-	public Type ValueType
-	{
-		get
-		{
-			return typeof(T);
-		}
-	}
+	public readonly Type ValueType => typeof(T);
 
 	private readonly bool _hasValue;
 
-	public readonly bool HasValue
-	{
-		get
-		{
-			return _hasValue;
-		}
-	}
+	public readonly bool HasValue => _hasValue;
 	private readonly T value;
 	public T Value
 	{
@@ -30,10 +18,8 @@ public struct Optional<T> : IOptional
 			{
 				return value;
 			}
-			else
-			{
-				throw new InvalidOperationException();
-			}
+			
+			throw new InvalidOperationException();
 		}
 	}
 

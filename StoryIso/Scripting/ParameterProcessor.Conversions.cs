@@ -180,10 +180,10 @@ public partial class ParameterProcessor
 
 		return variableType switch
 		{
-			VariableType.Int => ((Optional<int>)param).ToString(),
-			VariableType.Float => ((Optional<float>)param).ToString(),
-			VariableType.String => ((Optional<string>)param).ToString(),
-			VariableType.Bool => ((Optional<bool>)param).ToString(),
+			VariableType.Int => param.ToOptional<int>().ToString(),
+			VariableType.Float => param.ToOptional<float>().ToString(),
+			VariableType.String => param.ToOptional<string>().ToString(),
+			VariableType.Bool => param.ToOptional<bool>().ToString(),
 			_ => throw new NotImplementedException()
 		};
 	}
@@ -338,6 +338,11 @@ public partial class ParameterProcessor
 
 			if (return_type == typeof(int))
 			{
+				if (!float_value.HasValue)
+				{
+					return new Optional<int>();
+				}
+                
 				return new Optional<int>((int)float_value.Value);
 			}
 		}
@@ -348,6 +353,11 @@ public partial class ParameterProcessor
 
 			if (return_type == typeof(float))
 			{
+				if (!int_value.HasValue)
+				{
+					return new Optional<float>();
+				}
+                
 				return new Optional<float>(int_value.Value);
 			}
 		}
@@ -370,7 +380,7 @@ public partial class ParameterProcessor
 
 		if (typeof(T) == param.ValueType)
 		{
-			return (Optional<T>)(object)param;
+			return (Optional<T>)param;
 		}
 
 		if (typeof(T) == typeof(string))
@@ -457,7 +467,7 @@ public partial class ParameterProcessor
 
 		if (type == VariableType.String)
 		{
-			string? res = param.ToString();
+			var res = param.ToString();
 
 			if (res == null)
 			{

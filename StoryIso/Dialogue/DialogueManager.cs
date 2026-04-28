@@ -29,7 +29,7 @@ public class DialogueManager
 	{
 		get
 		{
-			return Position + Game1.cameraOffset;
+			return Position + Game1.CameraOffset;
 		}
 	}
 	public Vector2 Position;
