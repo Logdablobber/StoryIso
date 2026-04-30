@@ -23,7 +23,7 @@ static partial class FunctionDefs
 				return null;
 			}
 		
-			Game1.sceneManager.RunScene(scene_name.Value, source!);
+			Game1.sceneManager.RunScene(scene_name.Value, source, true);
 			return null;
 		}
 	};

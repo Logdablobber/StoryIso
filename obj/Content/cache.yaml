@@ -50,9 +50,9 @@ Content/Characters/CharacterSchema.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Characters/CharacterSchema.json: 2026-04-30T14:35:51.3615599Z
+    Characters/CharacterSchema.json: 2026-04-30T16:19:02.9139923Z
   outputs:
-    Content/Characters/CharacterSchema.json: 2026-04-30T14:35:51.3615599Z
+    Content/Characters/CharacterSchema.json: 2026-04-30T16:19:02.9139923Z
 Content/Characters/test-character.json:
   contentRoot: Content
   shouldBuild: false
@@ -116,9 +116,9 @@ Content/Scenes/Dialogue/DialogueSchema.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Scenes/Dialogue/DialogueSchema.json: 2026-04-30T14:35:50.8212997Z
+    Scenes/Dialogue/DialogueSchema.json: 2026-04-30T16:19:02.9411143Z
   outputs:
-    Content/Scenes/Dialogue/DialogueSchema.json: 2026-04-30T14:35:50.8212997Z
+    Content/Scenes/Dialogue/DialogueSchema.json: 2026-04-30T16:19:02.9411143Z
 Content/Scenes/Dialogue/test-dialogue-part2.json:
   contentRoot: Content
   shouldBuild: false
@@ -446,9 +446,9 @@ Content/UI/DialogueBox.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    UI/DialogueBox.json: 2026-04-29T17:42:49.3820559Z
+    UI/DialogueBox.json: 2026-04-30T15:19:43.3642305Z
   outputs:
-    Content/UI/DialogueBox.json: 2026-04-29T17:42:49.3820559Z
+    Content/UI/DialogueBox.json: 2026-04-30T15:19:43.3642305Z
 Content/UI/test-button.json:
   contentRoot: Content
   shouldBuild: false
@@ -479,9 +479,9 @@ Content/UI/UISchema.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    UI/UISchema.json: 2026-04-30T14:35:51.3409262Z
+    UI/UISchema.json: 2026-04-30T16:19:02.8889608Z
   outputs:
-    Content/UI/UISchema.json: 2026-04-30T14:35:51.3409262Z
+    Content/UI/UISchema.json: 2026-04-30T16:19:02.8889608Z
 Content/UI/test-ui2.json:
   contentRoot: Content
   shouldBuild: false
@@ -512,9 +512,9 @@ Content/Scenes/move-selector-up.scene:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Scenes/move-selector-up.scene: 2026-04-29T18:16:52.9109903Z
+    Scenes/move-selector-up.scene: 2026-04-30T18:24:43.4914260Z
   outputs:
-    Content/Scenes/move-selector-up.scene: 2026-04-29T18:16:52.9109903Z
+    Content/Scenes/move-selector-up.scene: 2026-04-30T18:24:43.4914260Z
 Content/Scenes/move-selector-down.scene:
   contentRoot: Content
   shouldBuild: false
@@ -523,9 +523,9 @@ Content/Scenes/move-selector-down.scene:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Scenes/move-selector-down.scene: 2026-04-30T14:27:59.3289696Z
+    Scenes/move-selector-down.scene: 2026-04-30T17:42:55.1145534Z
   outputs:
-    Content/Scenes/move-selector-down.scene: 2026-04-30T14:27:59.3289696Z
+    Content/Scenes/move-selector-down.scene: 2026-04-30T17:42:55.1145534Z
 Content/Scenes/select-dialogue-option.scene:
   contentRoot: Content
   shouldBuild: false
@@ -534,6 +534,72 @@ Content/Scenes/select-dialogue-option.scene:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Scenes/select-dialogue-option.scene: 2026-04-30T14:25:30.6986002Z
+    Scenes/select-dialogue-option.scene: 2026-04-30T18:24:47.5697875Z
   outputs:
-    Content/Scenes/select-dialogue-option.scene: 2026-04-30T14:25:30.6986002Z
+    Content/Scenes/select-dialogue-option.scene: 2026-04-30T18:24:47.5697875Z
+Content/Scenes/update-selector-position.scene:
+  contentRoot: Content
+  shouldBuild: false
+  importer: 
+  processor: 
+  compressContent: false
+  graphicsProfile: HiDef
+  dependencies:
+    Scenes/update-selector-position.scene: 2026-04-30T15:00:21.0727084Z
+  outputs:
+    Content/Scenes/update-selector-position.scene: 2026-04-30T15:00:21.0727084Z
+Content/Scenes/button1-enter.scene:
+  contentRoot: Content
+  shouldBuild: false
+  importer: 
+  processor: 
+  compressContent: false
+  graphicsProfile: HiDef
+  dependencies:
+    Scenes/button1-enter.scene: 2026-04-30T15:18:28.1595586Z
+  outputs:
+    Content/Scenes/button1-enter.scene: 2026-04-30T15:18:28.1595586Z
+Content/Scenes/button2-enter.scene:
+  contentRoot: Content
+  shouldBuild: false
+  importer: 
+  processor: 
+  compressContent: false
+  graphicsProfile: HiDef
+  dependencies:
+    Scenes/button2-enter.scene: 2026-04-30T15:18:43.3601751Z
+  outputs:
+    Content/Scenes/button2-enter.scene: 2026-04-30T15:18:43.3601751Z
+Content/Scenes/button3-enter.scene:
+  contentRoot: Content
+  shouldBuild: false
+  importer: 
+  processor: 
+  compressContent: false
+  graphicsProfile: HiDef
+  dependencies:
+    Scenes/button3-enter.scene: 2026-04-30T15:18:56.1828264Z
+  outputs:
+    Content/Scenes/button3-enter.scene: 2026-04-30T15:18:56.1828264Z
+Content/System/Keybinds.json:
+  contentRoot: Content
+  shouldBuild: false
+  importer: 
+  processor: 
+  compressContent: false
+  graphicsProfile: HiDef
+  dependencies:
+    System/Keybinds.json: 2026-04-30T16:19:27.5937331Z
+  outputs:
+    Content/System/Keybinds.json: 2026-04-30T16:19:27.5937331Z
+Content/System/KeybindsSchema.json:
+  contentRoot: Content
+  shouldBuild: false
+  importer: 
+  processor: 
+  compressContent: false
+  graphicsProfile: HiDef
+  dependencies:
+    System/KeybindsSchema.json: 2026-04-30T16:19:00.2074345Z
+  outputs:
+    Content/System/KeybindsSchema.json: 2026-04-30T16:19:00.2074345Z

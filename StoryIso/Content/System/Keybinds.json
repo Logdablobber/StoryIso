@@ -1,0 +1,23 @@
+{
+	"$schema": "./KeybindsSchema.json",
+	"Keybinds": [
+		{
+			"Key": "Up",
+			"KeyUp": [
+				"MoveSelectorUp"
+			]
+		},
+		{
+			"Key": "Down",
+			"KeyUp": [
+				"MoveSelectorDown"
+			]
+		},
+		{
+			"Key": "Enter",
+			"KeyUp": [
+				"SelectDialogueOption"
+			]
+		}
+	]
+}

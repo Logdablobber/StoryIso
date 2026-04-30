@@ -1,8 +1,6 @@
-#Move Selector Up
-#BindTo Up Up
+#MoveSelectorUp
 
 #IF !GetBoolAttr("Dialogue.Options.Option1", "visible")
-	Print("Option1 isn't visible")
 	#RETURN
 #ENDIF
 
@@ -17,4 +15,4 @@
 
 #ENDIF
 
-Print(dialogueSelectorIndex)
+RunScene("UpdateSelectorPosition")

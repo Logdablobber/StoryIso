@@ -256,7 +256,11 @@ public class DialogueManager
 				// TODO: raise error
 			}
 
-			Game1.GlobalScope.SetVariable(new Source(0, null, "DialogueManager"), "dialogueSelectorIndex", new Optional<int>(0));
+			var source = new Source(0, null, "DialogueManager");
+
+			Game1.GlobalScope.SetVariable(source, "dialogueSelectorIndex", new Optional<int>(0));
+            
+            Game1.sceneManager.RunScene("UpdateSelectorPosition", source);
 
 			UIManager.SetObjectVisible("Dialogue.Options", true);
 

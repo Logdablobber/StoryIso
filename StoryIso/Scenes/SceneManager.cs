@@ -51,7 +51,7 @@ public class SceneManager
 			throw new NullReferenceException("_scenes is null :(");
 		}
 
-		Scene? new_scene = SceneProcessor.ProcessScene(obj, scene_lines, out var bind_to_key);
+		Scene? new_scene = SceneProcessor.ProcessScene(obj, scene_lines);
 
 		if (new_scene == null)
 		{
@@ -59,11 +59,6 @@ public class SceneManager
 		}
 
 		_scenes.Add(new_scene.name, new_scene);
-		
-        if (bind_to_key.HasValue)
-        {
-	        Game1.KeybindManager.AddKeybind(bind_to_key.Value, new_scene.name);
-        }
 	}
 
 	private void LoadScenes(string directory)
@@ -72,7 +67,7 @@ public class SceneManager
 
 		DirectoryInfo dir = new DirectoryInfo(directory);
 
-		FileInfo[] files = dir.GetFiles("*.scene");
+		FileInfo[] files = dir.GetFiles("*.scene", SearchOption.AllDirectories);
 
 		List<(string, string[])> scenes = [];
 		

@@ -1,0 +1,5 @@
+#Button1Enter
+
+set dialogueSelectorIndex = 0
+
+RunScene("UpdateSelectorPosition")

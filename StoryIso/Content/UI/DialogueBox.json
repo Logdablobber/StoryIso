@@ -121,7 +121,8 @@
 							"Content": {
 								"$type": "button",
 								"Size": [75, 16],
-								"OnLeftRelease": "Button 1"
+								"OnLeftRelease": "Button 1",
+								"OnEnter": "Button1Enter"
 							}
 						}
 					]
@@ -166,14 +167,15 @@
 							"Content": {
 								"$type": "button",
 								"Size": [75, 16],
-								"OnLeftRelease": "Button 2"
+								"OnLeftRelease": "Button 2",
+								"OnEnter": "Button2Enter"
 							}
 						}
 					]
 				},
 				{
 					"Name": "Option3",
-					"Position": [120, -100],
+					"Position": [120, -102],
 					"Visible": true,
 					"Scale": 1,
 					"Parts": [
@@ -211,7 +213,26 @@
 							"Content": {
 								"$type": "button",
 								"Size": [75, 16],
-								"OnLeftRelease": "Button 3"
+								"OnLeftRelease": "Button 3",
+								"OnEnter": "Button3Enter"
+							}
+						}
+					]
+				},
+				{
+					"Name": "OptionSelector",
+					"Position": [120, -66],
+					"Scale": 1,
+					"Visible": true,
+					"Parts": [
+						{
+							"Name": "image",
+							"Position": [-2, -2],
+							"Scale": 1,
+							"Visible": true,
+							"Content": {
+								"$type": "image",
+								"image": "option-selector"
 							}
 						}
 					]

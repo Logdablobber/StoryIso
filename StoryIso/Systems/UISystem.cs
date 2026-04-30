@@ -25,8 +25,7 @@ public class UISystem : EntityUpdateSystem
 
     private static readonly Dictionary<string, int> _uiEntities = [];
 
-	public UISystem() : base(Aspect.All(typeof(RenderAttributes), typeof(UIInfo))
-									.One(typeof(TextComponent), typeof(Texture2D), typeof(Animation), typeof(RectangleComponent), typeof(PolygonComponent))) { }
+	public UISystem() : base(Aspect.All(typeof(UIInfo))) { }
 
 	public override void Update(GameTime gameTime)
 	{
@@ -56,11 +55,14 @@ public class UISystem : EntityUpdateSystem
 						info.Visible = ((Optional<bool>)attribute.Item2).Value;
 						break;
 
+					// TODO: make x and y set the absolute position
 					case "x":
+                    case "local_x":
 						info.SetX(((Optional<float>)attribute.Item2).Value);
 						break;
 
 					case "y":
+                    case "local_y":
 						info.SetY(((Optional<float>)attribute.Item2).Value);
 						break;
 
@@ -128,10 +130,20 @@ public class UISystem : EntityUpdateSystem
 
 				return new Optional<float>(info3.Position.X);
             
-            case "scale":
+            case "local_x":
 				var info4 = entity.Get<UIInfo>();
 
-				return new Optional<float>(info4.Scale.X);
+				return new Optional<float>(info4.LocalPosition.X);
+
+			case "local_y":
+				var info5 = entity.Get<UIInfo>();
+
+				return new Optional<float>(info5.LocalPosition.Y);
+            
+            case "scale":
+				var info6 = entity.Get<UIInfo>();
+
+				return new Optional<float>(info6.Scale.X);
             
             case "text":
 				var text = entity.Get<TextComponent>();

@@ -25,8 +25,6 @@ public class ButtonSystem : EntityUpdateSystem
 	{
 		MouseState state = Mouse.GetState();
 
-		List<Task> tasks = [];
-
 		foreach (var entityID in ActiveEntities)
 		{
 			UIInfo info = _uiMapper.Get(entityID);
@@ -37,16 +35,8 @@ public class ButtonSystem : EntityUpdateSystem
 
 			ButtonComponent button = _buttonMapper.Get(entityID);
 
-			Task new_task = new(() =>
-			{
-				Process(info.Position, info.Scale, button, state, _previousMouseState);
-			});
-			new_task.Start();
-
-			tasks.Add(new_task);
+			Process(info.Position, info.Scale, button, state, _previousMouseState);
 		}
-
-		Task.WaitAll(tasks);
 
 		_previousMouseState = state;
 	}
@@ -61,34 +51,34 @@ public class ButtonSystem : EntityUpdateSystem
 		{
 			if (button.onStay != null)
 			{
-				Game1.sceneManager.RunScene(button.onStay, source);
+				Game1.sceneManager.RunScene(button.onStay, source, true);
 			}
 
-			if (button.onEnter != null && (!previous_state.HasValue || hitbox.Contains(previous_state.Value.Position.ToVector2())))
+			if (button.onEnter != null && (!previous_state.HasValue || !hitbox.Contains(previous_state.Value.Position.ToVector2())))
 			{
-				Game1.sceneManager.RunScene(button.onEnter, source);
+				Game1.sceneManager.RunScene(button.onEnter, source, true);
 			}
 
 			if (current_state.LeftButton == ButtonState.Pressed)
 			{
 				if (button.whileLeftHeld != null)
 				{
-					Game1.sceneManager.RunScene(button.whileLeftHeld, source);
+					Game1.sceneManager.RunScene(button.whileLeftHeld, source, true);
 				}
 
 				button.left_held = true;
 
 				if (button.onLeftClick != null && (!previous_state.HasValue || previous_state.Value.LeftButton == ButtonState.Released))
 				{
-					Game1.sceneManager.RunScene(button.onLeftClick, source);
+					Game1.sceneManager.RunScene(button.onLeftClick, source, true);
 				}
 			}
-			else if (previous_state.HasValue && previous_state.Value.LeftButton == ButtonState.Pressed)
+			else if (previous_state is { LeftButton: ButtonState.Pressed })
 			{
 				// should only run release if button was clicked first
-				if (button.left_held && button.onLeftRelease != null)
+				if (button is { left_held: true, onLeftRelease: not null })
 				{
-					Game1.sceneManager.RunScene(button.onLeftRelease, source);
+					Game1.sceneManager.RunScene(button.onLeftRelease, source, true);
 				}
 
 				button.left_held = false;
@@ -98,22 +88,22 @@ public class ButtonSystem : EntityUpdateSystem
 			{
 				if (button.whileRightHeld != null)
 				{
-					Game1.sceneManager.RunScene(button.whileRightHeld, source);
+					Game1.sceneManager.RunScene(button.whileRightHeld, source, true);
 				}
 
 				button.right_held = true;
 
 				if (button.onRightClick != null && (!previous_state.HasValue || previous_state.Value.RightButton == ButtonState.Released))
 				{
-					Game1.sceneManager.RunScene(button.onRightClick, source);
+					Game1.sceneManager.RunScene(button.onRightClick, source, true);
 				}
 			}
-			else if (previous_state.HasValue && previous_state.Value.RightButton == ButtonState.Pressed)
+			else if (previous_state is { RightButton: ButtonState.Pressed })
 			{
 				// should only run release if button was clicked first
-				if (button.right_held && button.onRightRelease != null)
+				if (button is { right_held: true, onRightRelease: not null })
 				{
-					Game1.sceneManager.RunScene(button.onRightRelease, source);
+					Game1.sceneManager.RunScene(button.onRightRelease, source, true);
 				}
 
 				button.right_held = false;
@@ -131,14 +121,14 @@ public class ButtonSystem : EntityUpdateSystem
 		{
 			if (button.onExit != null)
 			{
-				Game1.sceneManager.RunScene(button.onExit, source);
+				Game1.sceneManager.RunScene(button.onExit, source, true);
 			}
 
 			if (button.left_held)
 			{
 				if (button.onLeftRelease != null)
 				{
-					Game1.sceneManager.RunScene(button.onLeftRelease, source);
+					Game1.sceneManager.RunScene(button.onLeftRelease, source, true);
 				}
 				button.left_held = false;
 			}
@@ -147,7 +137,7 @@ public class ButtonSystem : EntityUpdateSystem
 			{
 				if (button.onRightRelease != null)
 				{
-					Game1.sceneManager.RunScene(button.onRightRelease, source);
+					Game1.sceneManager.RunScene(button.onRightRelease, source, true);
 				}
 				button.right_held = false;
 			}

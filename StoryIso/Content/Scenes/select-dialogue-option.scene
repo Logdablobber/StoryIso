@@ -1,5 +1,4 @@
-#Select Dialogue Option
-#BindTo Enter Up
+#SelectDialogueOption
 
 #IF !GetBoolAttr("Dialogue.Options.Option1", "visible")
 	#RETURN

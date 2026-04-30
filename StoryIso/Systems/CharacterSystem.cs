@@ -299,6 +299,8 @@ public class CharacterSystem : EntityUpdateSystem
 	private static readonly Dictionary<string, Type> _uiOnlyAttributes = new()
 	{
 		{"text", typeof(string)},
+		{"local_x", typeof(float)},
+		{"local_y", typeof(float)}
 	};
 
 	private static readonly Dictionary<string, Type> _allCharacterAttributes = new() 
