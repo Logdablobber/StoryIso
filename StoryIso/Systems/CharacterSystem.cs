@@ -39,10 +39,8 @@ public class CharacterSystem : EntityUpdateSystem
 	private static readonly System.Threading.Lock _movementLock = new();
 	private static readonly System.Threading.Lock _positionChangesLock = new();
 	private static readonly System.Threading.Lock _attributeChangesLock = new();
-
-	private static readonly Dictionary<string, List<(string, int)>> _attributeRetrievals = [];
-	private static readonly ConcurrentDictionary<int, IOptional> _retrievedAttributes = [];
-	private static readonly System.Threading.Lock _attributeRetrievalLock = new();
+    
+    private static readonly Dictionary<string, int> _characterEntities = [];
 
 	const float DEFAULT_MOVEMENT_SPEED = 100f;
 	const float MOVEMENT_THRESHOLD = 1f;
@@ -60,8 +58,6 @@ public class CharacterSystem : EntityUpdateSystem
 			var render_attributes = _renderAttributesMapper.Get(entityId);
 
 			UpdateAttributes(entityId);
-            
-            RetrieveAttributes(entityId);
 
 			render_attributes.Visible = (character.Visible ?? true) && (character.Room == "#any#" || character.Room == Game1.tiledManager.currentRoomName);
 
@@ -105,6 +101,24 @@ public class CharacterSystem : EntityUpdateSystem
     {
 	    var character = _characterMapper.Get(entityId);
 	    var transform = _transformMapper.Get(entityId);
+
+		lock (_positionChangesLock)
+		{
+			if (_positionChanges.TryGetValue(character.Name, out var position))
+			{
+				transform.Position = position.ToAbsolute(transform.Position);
+				_positionChanges.Remove(character.Name);
+			}
+		}
+
+		lock (_movementLock)
+		{
+			if (_movements.TryGetValue(character.Name, out var move))
+			{
+				character.Movement = move.ToAbsolute(transform.Position);
+				_movements.Remove(character.Name);
+			}
+		}
         
 		lock (_attributeChangesLock)
 		{
@@ -148,72 +162,20 @@ public class CharacterSystem : EntityUpdateSystem
 						transform.Scale = new Vector2(((Optional<float>)value).Value);
 						break;
 
-					case "speed" when character.Name == "player":
+					case "speed" when character.Name == "Player":
 						Game1.player.Get<Player>().Speed = ((Optional<float>)value).Value;
 						break;
 
-					case "movement_locked" when character.Name == "player":
+					case "movement_locked" when character.Name == "Player":
 						Game1.sceneManager.Active = ((Optional<bool>)value).Value;
 						break;
 
 					default:
 						throw new NotImplementedException();
 				}
-
-				_attributeChanges[character.Name].Clear();
-			}
-		}
-
-		lock (_positionChangesLock)
-		{
-			if (_positionChanges.TryGetValue(character.Name, out var position))
-			{
-				transform.Position = position.ToAbsolute(transform.Position);
-				_positionChanges.Remove(character.Name);
-			}
-		}
-
-		lock (_movementLock)
-		{
-			if (_movements.TryGetValue(character.Name, out var move))
-			{
-				character.Movement = move.ToAbsolute(transform.Position);
-				_movements.Remove(character.Name);
-			}
-		}
-	}
-    
-    private void RetrieveAttributes(int entityId)
-    {
-	    var character = _characterMapper.Get(entityId);
-	    var transform = _transformMapper.Get(entityId);
-        
-		lock (_attributeRetrievalLock)
-		{
-			if (!_attributeRetrievals.TryGetValue(character.Name, out var attributes) || attributes.Count == 0)
-			{
-				return;
-			}
-
-			foreach (var (attribute, id) in attributes)
-			{
-				_retrievedAttributes[id] = attribute switch
-				{
-					"x" => new Optional<float>(transform.Position.X),
-					"y" => new Optional<float>(transform.Position.Y),
-					"room" => new Optional<string>(character.Room),
-					"visible" => new Optional<bool>(character.Visible ?? false),
-					"direction" => new Optional<string>(character.Direction.ToString()),
-					"scale" => new Optional<float>(transform.Scale.X),
-					"speed" when character.Name == "player" => new Optional<float>(Game1.player.Get<Player>().Speed),
-					"movementlocked" when character.Name == "player" => new Optional<bool>(Game1.sceneManager.Active),
-					_ => throw new UnreachableException(),
-				};
-                
-                ThreadManager.Send(id);
 			}
             
-            _attributeRetrievals[character.Name].Clear();
+            _attributeChanges[character.Name].Clear();
 		}
 	}
 
@@ -434,25 +396,72 @@ public class CharacterSystem : EntityUpdateSystem
 	}
     
     private static IOptional GetAttribute(string character, string attribute)
-	{
-		var id = Environment.CurrentManagedThreadId;
+    {
+	    if (!_characterEntities.TryGetValue(character, out var entityId))
+	    {
+		    return new Optional<string>();
+	    }
 
-		lock (_attributeRetrievalLock)
+	    var entity = Game1.world.GetEntity(entityId);
+        
+        switch (attribute)
 		{
-			if (_attributeRetrievals.TryGetValue(character, out var ids))
-			{
-				ids.Add((attribute, id));
-			}
-			else
-			{
-				_attributeRetrievals[character] = [(attribute, id)];
-			}
-		}
+			case "x":
+				var transform1 = entity.Get<Transform2>();
 
-		ThreadManager.Await(id);
+				return new Optional<float>(transform1.Position.X);
+            
+            case "y":
+				var transform2 = entity.Get<Transform2>();
 
-		return _retrievedAttributes[id];
-	}
+				return new Optional<float>(transform2.Position.Y);
+
+			case "scale":
+				var transform3 = entity.Get<Transform2>();
+
+				return new Optional<float>(transform3.Scale.X);
+            
+            case "room":
+				var char1 = entity.Get<Character>();
+
+				return new Optional<string>(char1.Room);
+            
+            case "visible":
+				var char2 = entity.Get<Character>();
+
+				return new Optional<bool>(char2.Visible ?? false);
+            
+            case "direction":
+				var char3 = entity.Get<Character>();
+
+				return new Optional<string>(char3.Direction.ToString());
+            
+            case "speed":
+				var char4 = entity.Get<Character>();
+                
+                if (char4.Name != "player")
+                {
+	                return new Optional<float>();
+                }
+
+                var player = entity.Get<Player>();
+
+                return new Optional<float>(player.Speed);
+            
+            case "movementlocked":
+				var char5 = entity.Get<Character>();
+
+				if (char5.Name != "player")
+				{
+					return new Optional<float>();
+				}
+
+				return new Optional<bool>(Game1.sceneManager.Active);
+            
+            default:
+				throw new NotImplementedException();
+ 		}
+    }
 
 	private static void SetAttributeChange(string character, string attribute, IOptional value)
 	{
@@ -468,5 +477,17 @@ public class CharacterSystem : EntityUpdateSystem
 
 			_attributeChanges[character] = [(attribute, value)];
 		}
+	}
+
+	protected override void OnEntityAdded(int entityId)
+	{        
+		base.OnEntityAdded(entityId);
+        
+        if (!_characterMapper.TryGet(entityId, out var character))
+        {
+	        return;
+        }
+        
+        _characterEntities.Add(character.Name, entityId);
 	}
 }

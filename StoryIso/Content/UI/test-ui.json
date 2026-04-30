@@ -21,7 +21,7 @@
 			"Content": 
 			{
 				"$type": "text",
-				"text": "X: {round(playerX, 2)}",
+				"text": "X: {round(GetFloatAttr(\"Player\", \"x\") / 16, 2)}",
 				"font": "ibmbios",
 				"fontSize": 1,
 				"Size": [300, 100],

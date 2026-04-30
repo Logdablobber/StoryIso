@@ -68,6 +68,9 @@ public static class UIManager
 	private static void AddObject(UIObject obj)
 	{
 		_UIObjects.Add(obj.info.Name, obj);
+        
+        UIElements.Add(obj.info.Name);
+        UIElements.AddRange(obj.Parts);
 
 		foreach (var child in obj.Children)
 		{
@@ -106,9 +109,6 @@ public static class UIManager
 			var ui_object = new UIObject(null, graphics, ui_data.Value, world);
 
 			AddObject(ui_object);
-
-			UIElements.Add(ui_object.info.Name);
-			UIElements.AddRange(ui_object.Parts);
 		}
 
 		#if DEBUG

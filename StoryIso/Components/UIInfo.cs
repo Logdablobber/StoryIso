@@ -24,7 +24,23 @@ public class UIInfo
 		}
 	}
 
-	public string Name;
+	private string _name;
+	public string Name
+	{
+		get
+		{
+			if (this.Parent != null)
+			{
+				return $"{Parent.Name}.{_name}";
+			}
+
+			return _name;
+		}
+        set
+        {
+	        _name = value;
+        }
+	}
 
 	public Vector2 LocalPosition
 	{
@@ -75,7 +91,7 @@ public class UIInfo
 		this._position = position;
 		this._scale = scale;
 		this.Visible = visible;
-		this.Name = name;
+		this._name = name;
 	}
 
 	public void SetX(float x)

@@ -740,6 +740,11 @@ public static partial class FunctionProcessor
 				current_scope.AddObject(source, new Function(FunctionDefs.GetIndex("SetVar"),
 					parameters, index));
 				return true;
+            
+            case "#RETURN":
+				current_scope.AddObject(source, new Function(FunctionDefs.GetIndex("GOTO"),
+					[new FunctionParameter<uint>((uint)lines.Length)], index));
+				return true;
 
 			default:
 				break;

@@ -11,6 +11,7 @@ using MonoGame.Extended.ECS.Systems;
 using StoryIso.Debugging;
 using StoryIso.Entities;
 using StoryIso.Misc;
+using StoryIso.UI;
 
 namespace StoryIso.ECS;
 
@@ -21,10 +22,8 @@ public class UISystem : EntityUpdateSystem
 
 	private static readonly Dictionary<string, List<(string, IOptional)>> _attributeChanges = [];
 	private static readonly System.Threading.Lock _attributeChangesLock = new();
-    
-    private static readonly Dictionary<string, List<(string, int)>> _attributeRetrievals = [];
-    private static readonly ConcurrentDictionary<int, IOptional> _retrievedAttributes = [];
-    private static readonly System.Threading.Lock _attributeRetrievalLock = new();
+
+    private static readonly Dictionary<string, int> _uiEntities = [];
 
 	public UISystem() : base(Aspect.All(typeof(RenderAttributes), typeof(UIInfo))
 									.One(typeof(TextComponent), typeof(Texture2D), typeof(Animation), typeof(RectangleComponent), typeof(PolygonComponent))) { }
@@ -34,7 +33,6 @@ public class UISystem : EntityUpdateSystem
 		foreach (var entityId in ActiveEntities)
 		{
 			UpdateAttributes(entityId);
-            RetrieveAttributes(entityId);
 		}
 	}
 
@@ -76,44 +74,13 @@ public class UISystem : EntityUpdateSystem
 
 					default:
 						throw new NotImplementedException();
-				}
-
-				_attributeChanges[info.Name].Clear();
+				}				
 			}
+            
+            _attributeChanges[info.Name].Clear();
 		}
 	}
     
-    private void RetrieveAttributes(int entityId)
-    {
-	    var text_component = _textComponentMapper.Get(entityId);
-	    var info = _infoMapper.Get(entityId);
-        
-        lock (_attributeRetrievalLock)
-        {
-	        if (!_attributeRetrievals.TryGetValue(info.Name, out var attributes) || attributes.Count == 0)
-	        {
-		        return;
-	        }
-
-	        foreach (var (attribute, id) in attributes)
-	        {
-				_retrievedAttributes[id] = attribute.ToLower() switch
-				{
-					"visible" => new Optional<bool>(info.Visible),
-					"x" => new Optional<float>(info.LocalPosition.X),
-					"y" => new Optional<float>(info.LocalPosition.Y),
-					"scale" => new Optional<float>(info.Scale.X),
-					"text" when text_component != null => new Optional<string>(text_component.Text),
-					_ => throw new NotImplementedException(),
-				};
-                
-				ThreadManager.Send(id);
-	        }
-            
-            _attributeChanges.Clear();
-        }
-    }
-
 	public override void Initialize(IComponentMapperService mapperService)
 	{
 		_textComponentMapper = mapperService.GetMapper<TextComponent>();
@@ -137,22 +104,59 @@ public class UISystem : EntityUpdateSystem
 
 	public static IOptional GetAttribute(string target, string attribute)
 	{
-		var id = Environment.CurrentManagedThreadId;
-
-		lock (_attributeRetrievalLock)
+		if (!_uiEntities.TryGetValue(target, out var entityId))
 		{
-			if (_attributeRetrievals.TryGetValue(target, out var ids))
-			{
-				ids.Add((attribute, id));
-			}
-			else
-			{
-				_attributeRetrievals[target] = [(attribute, id)];
-			}
+			return new Optional<string>();
 		}
 
-		ThreadManager.Await(id);
+		var entity = Game1.world.GetEntity(entityId);
 
-		return _retrievedAttributes[id];
+		switch (attribute)
+		{
+			case "visible":
+				var info1 = entity.Get<UIInfo>();
+
+				return new Optional<bool>(info1.Visible);
+            
+            case "x":
+				var info2 = entity.Get<UIInfo>();
+
+				return new Optional<float>(info2.Position.X);
+            
+            case "y":
+				var info3 = entity.Get<UIInfo>();
+
+				return new Optional<float>(info3.Position.X);
+            
+            case "scale":
+				var info4 = entity.Get<UIInfo>();
+
+				return new Optional<float>(info4.Scale.X);
+            
+            case "text":
+				var text = entity.Get<TextComponent>();
+                
+                if (text == null)
+                {
+	                return new Optional<string>();
+                }
+
+				return new Optional<string>(text.Text);
+            
+			default:
+				throw new NotImplementedException();
+		}
+	}
+
+	protected override void OnEntityAdded(int entityId)
+	{
+		base.OnEntityAdded(entityId);
+
+		if (!_infoMapper.TryGet(entityId, out var info))
+		{
+			return;
+		}
+        
+        _uiEntities.Add(info.Name, entityId);
 	}
 }

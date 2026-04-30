@@ -18,7 +18,7 @@ namespace StoryIso.Entities;
 
 public partial class TextComponent
 {
-	private readonly string name;
+	private readonly string _name;
 	private string _text = null!;
 	private FunctionParameter<string>[] _params = null!;
 	public string Text
@@ -30,23 +30,24 @@ public partial class TextComponent
 				return _text;
 			}
 
-			string[] _formatParams = new string[_params.Length];
+			string[] format_params = new string[_params.Length];
 
 			for (int i = 0; i < _params.Length; i++)
 			{
-				ParameterProcessor.ConvertUnknown(new Source(0, "TextComponent.GetText", $"TextComponent {name}"), _params[i], out var string_value);
+				ParameterProcessor.ConvertUnknown(new Source(0, "TextComponent.GetText", $"TextComponent {_name}"), _params[i], out var string_value);
 
 				if (string_value == null)
 				{
-					_formatParams[i] = string.Empty;
+					format_params[i] = string.Empty;
 					continue;
 				}
 
-				_formatParams[i] = string_value;
+				format_params[i] = string_value;
 			}
 
-			return string.Format(_text, _formatParams);
+			return string.Format(_text, format_params);
 		}
+        set => SetText(value);
 	}
 
 
@@ -60,7 +61,7 @@ public partial class TextComponent
 
 	public TextComponent(string name, string text, string fontName, float fontSize, SizeF size, TextAlignment alignment, bool wrap_text)
 	{
-		this.name = name;
+		this._name = name;
 		SetText(text);
 		this.FontName = fontName;
 		this.FontSize = fontSize;
@@ -86,7 +87,7 @@ public partial class TextComponent
 		{
 			text = text[..matches[i].Index] + i.ToString() + text[Math.Min(text.Length - 1, matches[i].Index + matches[i].Length + 2)..];
 
-			FunctionParameter<string>? param = ParameterProcessor.ParseEquation<string>(Game1.GlobalScope, matches[i].Value, new Source(0, null, $"TextComponent {name}"), "TextComponent.Parse");
+			FunctionParameter<string>? param = ParameterProcessor.ParseEquation<string>(Game1.GlobalScope, matches[i].Value, new Source(0, null, $"TextComponent {_name}"), "TextComponent.Parse");
 
 			if (param == null)
 			{

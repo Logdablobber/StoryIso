@@ -17,7 +17,7 @@ static partial class OperatorDefs
 		oper = "GetBoolAttr",
 		inlineFunc = true,
 		isConstant = false,
-        sync = false,
+        sync = true,
 		parameters = [typeof(string), typeof(string)],
 		returnType = typeof(bool),
 		function = (args, source) =>

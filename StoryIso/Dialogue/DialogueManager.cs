@@ -77,12 +77,11 @@ public class DialogueManager
 			return currentDialogueNode.Duration ?? TIME_PER_CHARACTER * currentDialogueNode.text.Length;
 		}
 	}
-
-	private bool _continueKeyPressedLastFrame = false;
-	private bool _skipKeyPressedLastFrame = false;
 	private float? _dialogueTimer;
 	const float TIME_PER_CHARACTER = 0.05f;
 	private int _currentCharacterIndex = 0;
+
+	private KeyboardState? _previousKeyState = null;
 
 	public bool Active
 	{
@@ -242,7 +241,7 @@ public class DialogueManager
 
 		if (currentDialogueNode.speaker != null)
 		{	
-			UISystem.SetAttributeChange("SpeakerText", "text", new Optional<string>(currentDialogueNode.speaker));
+			UISystem.SetAttributeChange("Dialogue.SpeakerBox.text", "text", new Optional<string>(currentDialogueNode.speaker));
 			SetSpeakerBoxVisibility(true);
 		}
 		else
@@ -257,38 +256,39 @@ public class DialogueManager
 				// TODO: raise error
 			}
 
-			UIManager.SetObjectVisible("Options", true);
+			Game1.GlobalScope.SetVariable(new Source(0, null, "DialogueManager"), "dialogueSelectorIndex", new Optional<int>(0));
 
-			UISystem.SetAttributeChange("Option1Text", "text", new Optional<string>(currentDialogueNode.Options[0].Text));
-			UIManager.SetObjectVisible("Option1", true);
+			UIManager.SetObjectVisible("Dialogue.Options", true);
+
+			UISystem.SetAttributeChange("Dialogue.Options.Option1.text", "text", new Optional<string>(currentDialogueNode.Options[0].Text));
 
 			if (currentDialogueNode.Options.Length < 2)
 			{
-				UIManager.SetObjectVisible("Option2", false);
-				UIManager.SetObjectVisible("Option3", false);
+				UIManager.SetObjectVisible("Dialogue.Options.Option2", false);
+				UIManager.SetObjectVisible("Dialogue.Options.Option3", false);
 				return;
 			}
 
-			UISystem.SetAttributeChange("Option2Text", "text", new Optional<string>(currentDialogueNode.Options[1].Text));
-			UIManager.SetObjectVisible("Option2", true);
+			UISystem.SetAttributeChange("Dialogue.Options.Option2.text", "text", new Optional<string>(currentDialogueNode.Options[1].Text));
+			UIManager.SetObjectVisible("Dialogue.Options.Option2", true);
 
 			if (currentDialogueNode.Options.Length < 3)
 			{
-				UIManager.SetObjectVisible("Option3", false);
+				UIManager.SetObjectVisible("Dialogue.Options.Option3", false);
 				return;
 			}
 
-			UISystem.SetAttributeChange("Option3Text", "text", new Optional<string>(currentDialogueNode.Options[2].Text));
-			UIManager.SetObjectVisible("Option3", true);
+			UISystem.SetAttributeChange("Dialogue.Options.Option3.text", "text", new Optional<string>(currentDialogueNode.Options[2].Text));
+			UIManager.SetObjectVisible("Dialogue.Options.Option3", true);
 			return;
 		}
 
-		UIManager.SetObjectVisible("Options", false);
+		UIManager.SetObjectVisible("Dialogue.Options", false);
 	}
 
 	private void SetSpeakerBoxVisibility(bool visible)
 	{
-		UIManager.SetObjectVisible("SpeakerBox", visible);
+		UIManager.SetObjectVisible("Dialogue.SpeakerBox", visible);
 	}
 
 	public void Update(GameTime gameTime)
@@ -299,6 +299,12 @@ public class DialogueManager
 		}
 
 		var keystate = Keyboard.GetState();
+        
+        if (!_previousKeyState.HasValue)
+        {
+	        _previousKeyState = keystate;
+	        return;
+        }
 
 		var current_step = currentDialogueNode!;
 
@@ -310,47 +316,41 @@ public class DialogueManager
 		{
 			_currentCharacterIndex = character_index;
 
-			UISystem.SetAttributeChange("DialogueText", "text", new Optional<string>(current_step.text[..(int)Math.Min(Math.Ceiling(_dialogueTimer!.Value / TIME_PER_CHARACTER), current_step.text.Length)]));
+			UISystem.SetAttributeChange("Dialogue.DialogueBox.text", "text", new Optional<string>(current_step.text[..(int)Math.Min(Math.Ceiling(_dialogueTimer!.Value / TIME_PER_CHARACTER), current_step.text.Length)]));
 		}
 
 		// skip to end of current dialogue node
-		if (keystate.IsKeyDown(Keys.X) || keystate.IsKeyDown(Keys.RightShift) || keystate.IsKeyDown(Keys.LeftShift)) 
+		if (!currentDialogueNode!.PreventSkip &&
+			((_previousKeyState.Value.IsKeyDown(Keys.X) && keystate.IsKeyUp(Keys.X)) ||
+			(_previousKeyState.Value.IsKeyDown(Keys.RightShift) && keystate.IsKeyUp(Keys.RightShift)) || 
+			(_previousKeyState.Value.IsKeyDown(Keys.LeftShift) && keystate.IsKeyUp(Keys.LeftShift)))) 
 		{
-			if (!currentDialogueNode!.PreventSkip && !_skipKeyPressedLastFrame)
-			{
-				_dialogueTimer = currentDialogueDuration;
-			}
-
-			_skipKeyPressedLastFrame = true;
-		}
-		else
-		{
-			_skipKeyPressedLastFrame = false;
+			_dialogueTimer = currentDialogueDuration;
 		}
 
 		// go to next dialogue
-		if (keystate.IsKeyDown(Keys.Z) || keystate.IsKeyDown(Keys.Enter))
+		if ((!_previousKeyState.Value.IsKeyDown(Keys.Z) || !keystate.IsKeyUp(Keys.Z)) &&
+		    (!_previousKeyState.Value.IsKeyDown(Keys.Enter) || !keystate.IsKeyUp(Keys.Enter)))
 		{
-			if (!_continueKeyPressedLastFrame && _dialogueTimer >= currentDialogueDuration &&
-				!currentDialogueTree!.AtEnd &&
-				currentDialogueTree.TryNext(new Source(0, null, "DialogueManager")))
-			{	
-				_currentCharacterIndex = 0;
-				_dialogueTimer = 0f;
-
-				UpdateDialogue();
-			}
-
-			if (currentDialogueTree!.AtEnd)
-			{
-				EndDialogue();
-			}
-
-			_continueKeyPressedLastFrame = true;
+			_previousKeyState = keystate;
+			return;
 		}
-		else
+        
+		if (_dialogueTimer >= currentDialogueDuration &&
+		    !currentDialogueTree!.AtEnd &&
+		    currentDialogueTree.TryNext(new Source(0, null, "DialogueManager")))
+		{	
+			_currentCharacterIndex = 0;
+			_dialogueTimer = 0f;
+
+			UpdateDialogue();
+		}
+
+		if (currentDialogueTree!.AtEnd)
 		{
-			_continueKeyPressedLastFrame = false;
+			EndDialogue();
 		}
+
+		_previousKeyState = keystate;
 	}
 }

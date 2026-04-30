@@ -176,6 +176,11 @@ public partial class ParameterProcessor
 
 	public static string? ConvertByTypeToString(IOptional param)
 	{
+        if (!param.HasValue)
+        {
+	        return null;
+        }
+        
 		var variableType = VariableManager.GetVariableType(param.ValueType);
 
 		return variableType switch
@@ -189,7 +194,7 @@ public partial class ParameterProcessor
 	}
 
 	public static Optional<string> ConvertByTypeToString(object param, Type type)
-	{
+	{        
 		var variableType = VariableManager.GetVariableType(type);
 
 		switch (variableType)

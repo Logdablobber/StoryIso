@@ -1,0 +1,8 @@
+#Select Dialogue Option
+#BindTo Enter Up
+
+#IF !GetBoolAttr("Dialogue.Options.Option1", "visible")
+	#RETURN
+#ENDIF
+
+SelectOption(dialogueSelectorIndex)

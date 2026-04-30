@@ -33,7 +33,7 @@ public class Game1 : Game
 
 	public static TiledManager tiledManager = null!;
 
-	private World _world = null!;
+	public static World world = null!;
 	public static Entity player = null!;
 	private const float CHARACTER_SCALE = 0.7f;
 	public static readonly Vector2 characterScale = new Vector2(CHARACTER_SCALE, CHARACTER_SCALE);
@@ -124,7 +124,7 @@ public class Game1 : Game
 										FontLoader.GetFont("ibmbios") ?? throw new NullReferenceException(),
 										"./Content/Scenes/");
 
-		_world = new WorldBuilder()
+		world = new WorldBuilder()
 					.AddSystem(new RenderSystem(_spriteBatch))
 					.AddSystem(new UIRenderSystem(_spriteBatch))
 					.AddSystem(new PlayerSystem())
@@ -134,9 +134,9 @@ public class Game1 : Game
 					.AddSystem(new ButtonSystem())
 					.Build();
 
-		UIManager.LoadAll(GraphicsDevice, "./Content/UI/", _world);
+		UIManager.LoadAll(GraphicsDevice, "./Content/UI/", world);
 
-		CharacterManager.LoadCharacters("./Content/Characters/", _world);
+		CharacterManager.LoadCharacters("./Content/Characters/", world);
 
 		Animation? player_animation = AsepriteLoader.GetAnimation("player-animation");
 
@@ -145,7 +145,7 @@ public class Game1 : Game
 			DebugConsole.Raise(new MissingAssetError(new Source(0, null, "Player"), "player-animation"));
 		}
 
-		player = _world.CreateEntity();
+		player = world.CreateEntity();
 		player.Attach(player_animation);
 		player.Attach(new Player(speed:100f));
 		player.Attach(new Character("Player", Direction.Down, room:"#any#"));
@@ -180,7 +180,7 @@ public class Game1 : Game
 
 		KeybindManager.Process(keystate);
 
-		_world.Update(gameTime);
+		world.Update(gameTime);
 
 		sceneManager.Update(gameTime);
 		tiledManager.Update(gameTime);
@@ -223,7 +223,7 @@ public class Game1 : Game
 
 		_spriteBatch.End();
 
-		_world.Draw(gameTime);
+		world.Draw(gameTime);
 	
 		if (debug && tiledManager.currentRoom != null)
 		{

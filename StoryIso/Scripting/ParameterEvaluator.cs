@@ -175,7 +175,7 @@ public static partial class ParameterEvaluator
 
 						if (parenthesis_depth < 0)
 						{
-							i = j + 1;
+							i = j;
 							break;
 						}
 						

@@ -17,6 +17,7 @@ namespace StoryIso.UI;
 public class UIObject
 {
 	public UIInfo info { get; private set; }
+    private Entity _objEntity { get; set; }
 
 	private Entity[] _parts { get; set; }
 	private UIObject[] _children { get; set; }
@@ -43,6 +44,9 @@ public class UIObject
 		this._parts = new Entity[data.Parts?.Length ?? 0];
 
 		this.info = new UIInfo(parent?.info, data.Position.ToVector2(), new Vector2(data.Scale ?? 1f), data.Visible ?? true, data.Name);
+
+		this._objEntity = world.CreateEntity();
+        this._objEntity.Attach(this.info);
 
 		if (data.Children != null)
 		{

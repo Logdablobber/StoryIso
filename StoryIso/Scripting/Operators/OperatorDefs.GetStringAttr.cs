@@ -17,7 +17,7 @@ static partial class OperatorDefs
 		oper = "GetStringAttr",
 		inlineFunc = true,
 		isConstant = false,
-        sync = false,
+        sync = true,
 		parameters = [typeof(string), typeof(string)],
 		returnType = typeof(string),
 		function = (args, source) =>
