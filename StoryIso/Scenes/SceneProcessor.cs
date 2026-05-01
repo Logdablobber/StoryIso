@@ -32,6 +32,8 @@ public static class SceneProcessor
 
 			return null;	
 		}
+        
+        // TODO: make scenes able to take in arguments
 
 		string name = lines[0][1..];
 

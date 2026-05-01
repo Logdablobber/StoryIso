@@ -60,7 +60,7 @@ public class Trigger
 			return;
 		}
 
-		FunctionProcessor.RunScope(_onEnter, $"onEnter of Trigger {id}", new Source(0, null, $"onEnter of Trigger {id}"));
+		ScopeProcessor.RunScope(_onEnter, $"onEnter of Trigger {id}", new Source(0, null, $"onEnter of Trigger {id}"));
 	}
 
 	private void RunOnExit()
@@ -70,7 +70,7 @@ public class Trigger
 			return;
 		}
 
-		FunctionProcessor.RunScope(_onExit, $"onExit of Trigger {id}", new Source(0, null, $"onExit of Trigger {id}"));
+		ScopeProcessor.RunScope(_onExit, $"onExit of Trigger {id}", new Source(0, null, $"onExit of Trigger {id}"));
 	}
 
 	private void RunOnStay()
@@ -80,7 +80,7 @@ public class Trigger
 			return;
 		}
 
-		FunctionProcessor.RunScope(_onStay, $"onStay of Trigger {id}", new Source(0, null, $"onStay of Trigger {id}"), sync:true);
+		ScopeProcessor.RunScope(_onStay, $"onStay of Trigger {id}", new Source(0, null, $"onStay of Trigger {id}"), sync:true);
 	}
 
 	public void Draw(SpriteBatch spriteBatch)

@@ -452,7 +452,8 @@ public partial class ParameterProcessor
 		if (param.ValueType == typeof(bool))
 		{
 			var bool_value = (Optional<bool>)param;
-			// add conversions?
+			
+            // TODO: Add conversions?
 
 			DebugConsole.Raise(new ParameterTypeError(source, "Convert", bool_value.Value.ToString(), typeof(T).Name));
 			return default;

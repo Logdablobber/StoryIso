@@ -105,7 +105,7 @@ public class SceneManager
 			return;
 		}
 
-		FunctionProcessor.RunScope(scene.scope, scene.name, source, sync: sync, is_scene: true);
+		ScopeProcessor.RunScope(scene.scope, scene.name, source, sync: sync, is_scene: true);
 	}
 
 	public void Update(GameTime gameTime)

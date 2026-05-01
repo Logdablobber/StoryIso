@@ -19,6 +19,8 @@ public class ScopeVariables
 
 	public IOptional GetVariable(Source source, string name, VariableType type, out bool is_constant)
 	{
+		// TODO: Improve?
+
 		if (!_variables.TryGetValue(name, out var variable))
 		{
 			if (parent == null)

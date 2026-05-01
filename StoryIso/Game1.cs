@@ -71,7 +71,7 @@ public class Game1 : Game
 
 	private bool _qPressedLastFrame;
 
-	public static InputProcessor KeybindManager;
+	public static InputProcessor KeybindManager = null!;
 
 	public static Scope GlobalScope = new(null, [], 0, 0);
 
@@ -127,6 +127,12 @@ public class Game1 : Game
 					.AddSystem(new UISystem())
 					.AddSystem(new ButtonSystem())
 					.Build();
+        
+        sceneManager = new SceneManager(TextureLoader.GetTexture("dialogue-box")!,
+	        TextureLoader.GetTexture("name-box")!,
+	        TextureLoader.GetTexture("option-box")!,
+	        FontLoader.GetFont("ibmbios") ?? throw new NullReferenceException(),
+	        "./Content/Scenes/");
 
 		UIManager.LoadAll(GraphicsDevice, "./Content/UI/", world);
 
@@ -145,12 +151,6 @@ public class Game1 : Game
 		player.Attach(new Character("Player", Direction.Down, room:"#any#"));
 		player.Attach(new Transform2(new Vector2(190, 150), 0, characterScale));
 		player.Attach(new RenderAttributes(true, Color.White, RenderLayer.Player));
-        
-        sceneManager = new SceneManager(TextureLoader.GetTexture("dialogue-box")!,
-	        							TextureLoader.GetTexture("name-box")!,
-	        							TextureLoader.GetTexture("option-box")!,
-	        							FontLoader.GetFont("ibmbios") ?? throw new NullReferenceException(),
-	        							"./Content/Scenes/");
 
         sceneManager.RunScene("startup", new Source(0, null, "startup"));
     }

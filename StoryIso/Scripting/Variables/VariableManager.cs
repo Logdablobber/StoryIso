@@ -51,23 +51,8 @@ public static class VariableManager
 
 	public static VariableType GetVariableType(Type type)
 	{
-		if (typeToVariableType.TryGetValue(type, out var variableType))
-		{
-			return variableType;
-		}
-
-		return VariableType.None;
+		return typeToVariableType.GetValueOrDefault(type, VariableType.None);
 	}
-
-	static readonly Dictionary<string, Func<bool>> _readonlyBools = new()
-	{
-		{"movementLocked", () => Game1.sceneManager.Active},
-	};
-
-	static readonly Dictionary<string, float> _constantFloats = new()
-	{
-		{"pi", 3.14159265358979f},
-	};
 
 	static readonly string[] _invalidNames =
 	[

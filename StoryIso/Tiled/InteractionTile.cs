@@ -168,7 +168,7 @@ public class InteractionTile
 
 		if (interactingLastFrame)
 		{
-			FunctionProcessor.RunScope(onUninteract, $"onUninteract of Interaction {id}", new Source(0, null, $"onUninteract of Interaction {id}"));
+			ScopeProcessor.RunScope(onUninteract, $"onUninteract of Interaction {id}", new Source(0, null, $"onUninteract of Interaction {id}"));
 		}
 	}
 
@@ -183,16 +183,16 @@ public class InteractionTile
 		{
 			if (onInteract != null)
 			{
-				FunctionProcessor.RunScope(onInteract, $"onInteract of Interaction {id}", new Source(0, null, $"onInteract of Interaction {id}"));
+				ScopeProcessor.RunScope(onInteract, $"onInteract of Interaction {id}", new Source(0, null, $"onInteract of Interaction {id}"));
 			}
 			
 			if (toggleState && onToggleOff != null)
 			{
-				FunctionProcessor.RunScope(onToggleOff, $"onToggleOff of Interaction {id}", new Source(0, null, $"onToggleOff of Interaction {id}"));
+				ScopeProcessor.RunScope(onToggleOff, $"onToggleOff of Interaction {id}", new Source(0, null, $"onToggleOff of Interaction {id}"));
 			}
 			else if (!toggleState && onToggleOn != null)
 			{
-				FunctionProcessor.RunScope(onToggleOn, $"onToggleOn of Interaction {id}", new Source(0, null, $"onToggleOn of Interaction {id}"));
+				ScopeProcessor.RunScope(onToggleOn, $"onToggleOn of Interaction {id}", new Source(0, null, $"onToggleOn of Interaction {id}"));
 			}
 
 			toggleState = !toggleState;
@@ -202,6 +202,6 @@ public class InteractionTile
 		{
 			return;
 		}
-		FunctionProcessor.RunScope(whileInteract, $"whileInteract of Interaction {id}", new Source(0, null, $"whileInteract of Interaction {id}"), sync:true);
+		ScopeProcessor.RunScope(whileInteract, $"whileInteract of Interaction {id}", new Source(0, null, $"whileInteract of Interaction {id}"), sync:true);
 	}
 }
