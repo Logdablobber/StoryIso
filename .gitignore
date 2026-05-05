@@ -1,10 +1,10 @@
-/StoryIso/Content/bin
-/StoryIso/bin
-/StoryIso/Content/obj
-/StoryIso/obj
+/Entropy/Content/bin
+/Entropy/bin
+/Entropy/Content/obj
+/Entropy/obj
 /.vscode
-/StoryIso/Builder/bin
-/StoryIso/Builder/obj
+/Entropy/Builder/bin
+/Entropy/Builder/obj
 /Builder/bin
 /Builder/obj
 /obj

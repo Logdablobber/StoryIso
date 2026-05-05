@@ -1,0 +1,73 @@
+{
+    "activeFile": "tileset-atlas.tsx",
+    "expandedProjectPaths": [
+        "Maps",
+        "."
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "Maps/test-tilemap.tmx": {
+            "expandedObjectLayers": [
+                6,
+                4
+            ],
+            "scale": 2,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 239.75,
+                "y": 160.5
+            }
+        },
+        "Maps/test-tilemap2.tmx": {
+            "expandedObjectLayers": [
+                3,
+                7,
+                4
+            ],
+            "scale": 3,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 129.5,
+                "y": 141.99999999999997
+            }
+        },
+        "dungeon-floor-tiles.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1
+        },
+        "dungeon-wall-tiles.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1
+        },
+        "objects.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "tileset-atlas.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.imagePath": "C:/Users/herschlebh27/Documents/DotNet Projects/Entropy/Entropy/Content/Tiled/Tiles",
+    "openFiles": [
+        "Maps/test-tilemap2.tmx",
+        "Maps/test-tilemap.tmx",
+        "tileset-atlas.tsx"
+    ],
+    "project": "Entropy.tiled-project",
+    "property.type": "float",
+    "recentFiles": [
+        "Maps/test-tilemap2.tmx",
+        "Maps/test-tilemap.tmx",
+        "tileset-atlas.tsx",
+        "objects.tsx"
+    ],
+    "textEdit.monospace": true,
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}

@@ -1,0 +1,399 @@
+using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using Entropy.Debugging;
+using Entropy.Enums;
+using Entropy.Misc;
+using Entropy.Scripting.Variables;
+
+namespace Entropy.Scripting;
+
+public static partial class ParameterProcessor
+{
+	private static TileLayerType GetLayerType(string name)
+	{
+		return name.ToLower() switch
+		{
+			"floorlayer" => TileLayerType.FloorLayer,
+			"walllayer" => TileLayerType.WallLayer,
+			"interactiontilelayer" => TileLayerType.InteractionLayer,
+			_ => TileLayerType.None,
+		};
+	}
+
+	public static Direction GetDirection(string name)
+	{
+		return name.ToLower() switch
+		{
+			"up" => Direction.Up,
+			"left" => Direction.Left,
+			"down" => Direction.Down,
+			"right" => Direction.Right,
+			_ => Direction.None,
+		};
+	}
+	public static FunctionParameter<T>? ParseParameter<T>(string value, Source source, string function) where T : notnull, IParsable<T>
+	{
+		if (!T.TryParse(value, null, out T? parsed_value))
+		{
+			DebugConsole.Raise(new ParameterTypeError(source, function, value, typeof(T).FullName ?? "Type.. doesn't have a name?"));
+			return null;
+		}
+
+		return new FunctionParameter<T>(parsed_value);
+	}
+
+	public static FunctionParameter<T>? ParseParameterVariable<T>(Scope scope, string value, Source source, string function) where T : notnull, IParsable<T>
+	{
+		if (scope.ContainsVariable(value, out _))
+		{
+			return new FunctionParameter<T>(source, scope, variable_name: value);
+		}
+
+		var parameter_value = ParseParameter<T>(value, source, function);
+
+		return parameter_value;
+	}
+
+	public static FunctionParameter<T>? ParseEquation<T>(Scope scope, string value, Source source, string function) where T : notnull, IParsable<T>
+	{
+		if (typeof(T) == typeof(float) || typeof(T) == typeof(int))
+		{
+			if (FloatRegex.IsMatch(value))
+			{
+				return ParseParameterVariable<T>(scope, value, source, function);
+			}
+		}
+
+		if (!OperatorDefs.OperatorRegex.IsMatch(value))
+		{
+			return ParseParameterVariable<T>(scope, value, source, function);
+		}
+
+		if (!ParameterEvaluator.ToNodeTree<T>(source, scope, function, value, out var equation)) 
+		{
+			return null;
+		}
+
+		return equation;
+
+	}
+
+	private static ArrayParameter<T>? ParseArrayParameter<T>(string value, Source source, string function) where T : notnull, IParsable<T>
+	{
+		if (value[0] == '[' && value[^1] == ']')
+		{
+			value = value[1..^1];
+		}
+
+		List<FunctionParameter<T>> parameters = [];
+
+		foreach (Match match in ArraySplitRegex.Matches(value))
+		{
+			FunctionParameter<T>? function_parameter = ParseParameter<T>(match.Value.Trim(), source, function);
+
+			if (!function_parameter.HasValue)
+			{
+				return null;
+			}
+
+			parameters.Add(function_parameter.Value);
+		}
+
+		return new ArrayParameter<T>(parameters);
+	}
+
+	public static IFunctionParameter? ProcessUnknownParameter(Scope scope, string value, Source source, string function)
+	{
+		if (StringRegex.IsMatch(value))
+		{
+			if (value[0] == '"' && value[^1] == '"')
+			{
+				return new FunctionParameter<string>(value: value[1..^1]);
+			}
+
+			return new FunctionParameter<string>(value: value);
+		}
+
+		if (FloatRegex.IsMatch(value))
+		{
+			var parameter = ParseParameter<float>(value, source, function);
+
+			if (!parameter.HasValue)
+			{
+				return null;
+			}
+
+			return parameter.Value;
+		}
+
+		if (BoolRegex.IsMatch(value))
+		{
+			var parameter = ParseParameter<bool>(value, source, function);
+
+			if (!parameter.HasValue)
+			{
+				return null;
+			}
+
+			return parameter.Value;
+		}
+
+		if (scope.ContainsVariable(value, out VariableType type))
+		{
+			switch (type)
+			{
+				case VariableType.Int:
+					return new FunctionParameter<int>(source, scope, value);
+
+				case VariableType.Float:
+					return new FunctionParameter<float>(source, scope, value);
+
+				case VariableType.String:
+					return new FunctionParameter<string>(source, scope, variable_name: value);
+
+				case VariableType.Bool:
+					return new FunctionParameter<bool>(source, scope, value);
+			}
+		}
+
+		if (OperatorDefs.OperatorRegex.IsMatch(value))
+		{
+			var equation = ParseEquation<string>(scope, value, source, function);
+
+			return equation;
+		}
+
+		DebugConsole.Raise(new ParameterTypeError(source, function, value, "n\\a", "Unable to parse down to type or variable"));
+		return null;
+	}
+
+	public static List<object>? ProcessParameters(Source source, Scope scope, string function_name, List<string> inputs, Type[] types)
+	{
+		List<object> args = [];
+
+		bool parse_variable<T1>(string input, bool equation = false) where T1 : IParsable<T1> 
+		{
+			var param = equation ? ParseEquation<T1>(scope, input, source, function_name) : ParseParameter<T1>(input, source, function_name);
+
+			if (!param.HasValue)
+			{
+				return false;
+			}
+
+			args.Add(param.Value);
+			return true;
+		}
+
+		// parse inputs
+		for (int j = 0; j < types.Length; j++)
+		{
+			byte type_indexer = TypeIndexers.GetTypeIndexer(types[j]);
+
+			switch (type_indexer)
+			{
+				case TypeIndexers.INT:
+					if (!parse_variable<int>(inputs[j], true))
+					{
+						return null;
+					}
+					break;
+
+				case TypeIndexers.FLOAT:
+					if (!parse_variable<float>(inputs[j], true))
+					{
+						return null;
+					}
+					break;
+
+				case TypeIndexers.STRING:
+					if (StringRegex.IsMatch(inputs[j].Trim()))
+					{
+						args.Add(new FunctionParameter<string>(value: inputs[j].Trim()[1..^1])); // remove quotes
+						break;
+					}
+
+					if (!parse_variable<string>(inputs[j], true))
+					{
+						return null;
+					}
+					break;
+
+				case TypeIndexers.BOOL:
+					if (!parse_variable<bool>(inputs[j], true))
+					{
+						return null;
+					}
+					break;
+
+				case TypeIndexers.TILE_LAYER_TYPE: 
+					if (!Enum.TryParse(typeof(TileLayerType), inputs[j], true, out var layer_type) ||
+					    layer_type is TileLayerType.None)
+					{
+						DebugConsole.Raise(new ParameterTypeError(source, function_name, inputs[j], "TileLayerType"));
+						return null;
+					}
+
+					args.Add(new FunctionParameter<TileLayerType>((TileLayerType)layer_type));
+					break;
+
+				case TypeIndexers.USHORT:
+					if (!parse_variable<ushort>(inputs[j]))
+					{
+						return null;
+					}
+					break;
+
+				case TypeIndexers.UINT:
+					if (!parse_variable<uint>(inputs[j]))
+					{
+						return null;
+					}
+					break;
+
+				case TypeIndexers.BYTE:
+					if (!parse_variable<byte>(inputs[j]))
+					{
+						return null;
+					}
+					break;
+
+				case TypeIndexers.RELATIVE_INT:
+					bool relative_int = inputs[j].StartsWith('~');
+
+					string relative_int_input = inputs[j][(relative_int ? 1 : 0)..];
+
+					var relative_int_param = ParseEquation<int>(scope, relative_int_input, source, function_name);
+					
+					if (!relative_int_param.HasValue)
+					{
+						return null;
+					}
+
+					args.Add(new RelativeVariable<FunctionParameter<int>>(relative_int_param.Value, relative_int));
+					break;
+
+				case TypeIndexers.RELATIVE_FLOAT:
+					bool relative_float = inputs[j].StartsWith('~');
+
+					string relative_float_input = inputs[j][(relative_float ? 1 : 0)..];
+
+					var relative_float_param = ParseEquation<float>(scope, relative_float_input, source, function_name);
+					
+					if (!relative_float_param.HasValue)
+					{
+						return null;
+					}
+
+					args.Add(new RelativeVariable<FunctionParameter<float>>(relative_float_param.Value, relative_float));
+					break;
+
+				case TypeIndexers.TYPE:
+					if (!Enum.TryParse(typeof(VariableType), inputs[j], true, out var variable_type) ||
+					    variable_type is VariableType.None)
+					{
+						DebugConsole.Raise(new ParameterTypeError(source, function_name, inputs[j], "VariableType"));
+						return null;
+					}
+
+					args.Add(new FunctionParameter<VariableType>((VariableType)variable_type));
+					break;
+
+				case TypeIndexers.OBJECT:
+					args.Add(new FunctionParameter<string>(value:inputs[j]));
+					break;
+
+				case TypeIndexers.VARIABLE_OBJECT:
+					var variable_parameter = ProcessUnknownParameter(scope, inputs[j], source, function_name);
+
+					if (variable_parameter == null)
+					{
+						return null;
+					}
+
+					args.Add(variable_parameter);
+					break;
+
+				case TypeIndexers.DIRECTION:
+					if (!Enum.TryParse(typeof(Direction), inputs[j], true, out var direction) || direction is Direction.None)
+					{
+						DebugConsole.Raise(new ParameterTypeError(source, function_name, inputs[j], "Direction"));
+						return null;
+					}
+
+					args.Add(new FunctionParameter<Direction>((Direction)direction));
+					break;
+                
+                case TypeIndexers.ANIMATION:
+					if (!Enum.TryParse(typeof(AnimationType), inputs[j], true, out var animation_type) ||
+					    animation_type is AnimationType.None)
+					{
+						DebugConsole.Raise(new ParameterTypeError(source, function_name, inputs[j], "Animation"));
+						return null;
+					}
+
+					args.Add(new FunctionParameter<AnimationType>((AnimationType)animation_type));
+					break;
+
+				case >=0b10000000: // array parameter
+					
+					bool parse_array_parameter<T1>(string input) where T1 : notnull, IParsable<T1>
+					{
+						ArrayParameter<T1>? array = ParseArrayParameter<T1>(input, source, function_name);
+						if (!array.HasValue)
+						{
+							DebugConsole.Raise(new ParameterTypeError(source, function_name, input, typeof(T1).Name));
+							return false;
+						}
+
+						args.Add(array.Value);
+						return true;
+					}
+
+					// remove array marker
+					if (!((type_indexer & 0b01111111) switch
+					{
+						TypeIndexers.INT => parse_array_parameter<int>(inputs[j]),
+						TypeIndexers.FLOAT => parse_array_parameter<float>(inputs[j]),
+						TypeIndexers.STRING => parse_array_parameter<string>(inputs[j]),
+						TypeIndexers.BOOL => parse_array_parameter<bool>(inputs[j]),
+						TypeIndexers.USHORT => parse_array_parameter<ushort>(inputs[j]),
+						TypeIndexers.UINT => parse_array_parameter<uint>(inputs[j]),
+						TypeIndexers.BYTE => parse_array_parameter<byte>(inputs[j]),
+						_ => true
+					}))
+					{
+						throw new NotImplementedException();
+					}
+					
+					break;
+
+				default:
+					break;
+			}
+		}
+
+		return args;
+	}
+
+
+	private static readonly Regex ArraySplitRegex = _arraySplitRegex();
+	[GeneratedRegex(@"(?<=^|,)[^,]+", RegexOptions.Compiled)]
+	private static partial Regex _arraySplitRegex();
+	
+
+	private static readonly Regex StringRegex = _stringRegex();
+
+	[GeneratedRegex(@"^""((\\"")|[^""])*""$", RegexOptions.Compiled)]
+	private static partial Regex _stringRegex();
+
+	private static readonly Regex FloatRegex = _floatRegex();
+
+	[GeneratedRegex(@"^[-]?[0-9]*[.]?[0-9]+$", RegexOptions.Compiled)]
+	private static partial Regex _floatRegex();
+
+	private static readonly Regex BoolRegex = _boolRegex();
+
+	[GeneratedRegex(@"^(true|false)$", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
+	private static partial Regex _boolRegex();
+}

@@ -15,8 +15,8 @@ var contentCollectionArgs = new ContentBuilderParams()
 {
     Mode = ContentBuilderMode.Builder,
     WorkingDirectory = $"{AppContext.BaseDirectory}../../../../", // path to where your content folder can be located
-    SourceDirectory = "StoryIso/Content", // Not actually needed as this is the default, but added for reference
-	OutputDirectory = "StoryIso/bin/Debug/net10.0",
+    SourceDirectory = "Entropy/Content", // Not actually needed as this is the default, but added for reference
+	OutputDirectory = "Entropy/bin/Debug/net10.0",
     Platform = TargetPlatform.DesktopGL
 };
 var contentCollector = new MyContentCollector();

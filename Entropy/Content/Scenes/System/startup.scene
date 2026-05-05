@@ -1,0 +1,71 @@
+#startup
+let int testInt = 12 + 3 * 2
+let bool testSuccess = true
+
+var int counter = 0
+var int dialogueSelectorIndex = 0
+
+SetAnimation("Dialogue.Options.OptionSelector.image", Blinking, 1)
+
+let string testString = "Starting tests!"
+Print(testString)
+
+set testString = "String variable setting & retrieval successful!"
+#IF !(testString == "String variable setting & retrieval successful!") 
+	Print("Variable Setting Failed")
+	set testSuccess = false
+#ELSE
+	Print(testString)
+#ENDIF
+
+#IF !("Hello, World!" == "Hello, World!")
+	Print("String Equality Failed")
+	set testSuccess = false
+#ENDIF
+
+#IF !((3 + 3) ^ 3 != 16)
+	Print("Math or Int Inequalities Failed")
+	set testSuccess = false
+#ENDIF
+
+#IF (1 == 1)
+	Print("Inequalities Succeeded")
+#ELSE
+	set testSuccess = false
+#ENDIF
+
+#IF false
+	Print("Boolean Logic Failed")
+	set testSuccess = false
+#ENDIF
+
+#IF !true
+	Print("Negation Failed")
+	set testSuccess = false
+#ENDIF
+
+#IF testInt != 18
+	Print("Variable retrieval failed")
+	set testSuccess = false
+#ENDIF
+
+#IF testSuccess
+	Print("All tests successful!")
+#ENDIF
+
+let int i = 0
+let string indexer = 		"Indexes:      "
+let string loop_indexer = 	"Loop Indexes: "
+
+#LOOP testLoop 3
+	set indexer += testLoop
+	set loop_indexer += i
+
+	Print(indexer)
+	Print(loop_indexer)
+	set i += 1
+
+#ENDLOOP testLoop
+
+Print("End of tests")
+// comment example

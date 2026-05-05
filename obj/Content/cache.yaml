@@ -50,9 +50,9 @@ Content/Characters/CharacterSchema.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Characters/CharacterSchema.json: 2026-05-01T16:12:01.1235906Z
+    Characters/CharacterSchema.json: 2026-05-05T15:12:44.0113903Z
   outputs:
-    Content/Characters/CharacterSchema.json: 2026-05-01T16:12:01.1235906Z
+    Content/Characters/CharacterSchema.json: 2026-05-05T15:12:44.0113903Z
 Content/Characters/test-character.json:
   contentRoot: Content
   shouldBuild: false
@@ -116,9 +116,9 @@ Content/Scenes/Dialogue/DialogueSchema.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Scenes/Dialogue/DialogueSchema.json: 2026-05-01T16:12:00.4611501Z
+    Scenes/Dialogue/DialogueSchema.json: 2026-05-05T15:12:43.5015356Z
   outputs:
-    Content/Scenes/Dialogue/DialogueSchema.json: 2026-05-01T16:12:00.4611501Z
+    Content/Scenes/Dialogue/DialogueSchema.json: 2026-05-05T15:12:43.5015356Z
 Content/Scenes/Dialogue/test-dialogue-part2.json:
   contentRoot: Content
   shouldBuild: false
@@ -171,9 +171,9 @@ Content/Scenes/close-wall.scene:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Scenes/close-wall.scene: 2026-03-14T17:16:01.1178419Z
+    Scenes/close-wall.scene: 2026-05-04T15:02:04.1388322Z
   outputs:
-    Content/Scenes/close-wall.scene: 2026-03-14T17:16:01.1178419Z
+    Content/Scenes/close-wall.scene: 2026-05-04T15:02:04.1388322Z
 Content/Scenes/open-wall.scene:
   contentRoot: Content
   shouldBuild: false
@@ -182,9 +182,9 @@ Content/Scenes/open-wall.scene:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Scenes/open-wall.scene: 2026-04-16T15:16:33.2461481Z
+    Scenes/open-wall.scene: 2026-05-04T15:02:08.3491612Z
   outputs:
-    Content/Scenes/open-wall.scene: 2026-04-16T15:16:33.2461481Z
+    Content/Scenes/open-wall.scene: 2026-05-04T15:02:08.3491612Z
 Content/Scenes/test-button.scene:
   contentRoot: Content
   shouldBuild: false
@@ -402,9 +402,9 @@ Content/UI/DialogueBox.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    UI/DialogueBox.json: 2026-04-30T15:19:43.3642305Z
+    UI/DialogueBox.json: 2026-05-05T14:45:42.1072913Z
   outputs:
-    Content/UI/DialogueBox.json: 2026-04-30T15:19:43.3642305Z
+    Content/UI/DialogueBox.json: 2026-05-05T14:45:42.1072913Z
 Content/UI/test-button.json:
   contentRoot: Content
   shouldBuild: false
@@ -413,9 +413,9 @@ Content/UI/test-button.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    UI/test-button.json: 2026-04-10T14:34:17.6933657Z
+    UI/test-button.json: 2026-05-05T14:35:52.1306414Z
   outputs:
-    Content/UI/test-button.json: 2026-04-10T14:34:17.6933657Z
+    Content/UI/test-button.json: 2026-05-05T14:35:52.1306414Z
 Content/UI/test-ui.json:
   contentRoot: Content
   shouldBuild: false
@@ -424,9 +424,9 @@ Content/UI/test-ui.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    UI/test-ui.json: 2026-04-29T18:15:23.7928553Z
+    UI/test-ui.json: 2026-05-05T14:35:54.5828134Z
   outputs:
-    Content/UI/test-ui.json: 2026-04-29T18:15:23.7928553Z
+    Content/UI/test-ui.json: 2026-05-05T14:35:54.5828134Z
 Content/UI/UISchema.json:
   contentRoot: Content
   shouldBuild: false
@@ -435,9 +435,9 @@ Content/UI/UISchema.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    UI/UISchema.json: 2026-05-01T16:12:01.0995451Z
+    UI/UISchema.json: 2026-05-05T15:12:43.9852919Z
   outputs:
-    Content/UI/UISchema.json: 2026-05-01T16:12:01.0995451Z
+    Content/UI/UISchema.json: 2026-05-05T15:12:43.9852919Z
 Content/UI/test-ui2.json:
   contentRoot: Content
   shouldBuild: false
@@ -446,9 +446,9 @@ Content/UI/test-ui2.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    UI/test-ui2.json: 2026-04-17T18:09:52.6344039Z
+    UI/test-ui2.json: 2026-05-05T14:35:59.0559514Z
   outputs:
-    Content/UI/test-ui2.json: 2026-04-17T18:09:52.6344039Z
+    Content/UI/test-ui2.json: 2026-05-05T14:35:59.0559514Z
 Content/Textures/option-selector.png:
   contentRoot: Content
   shouldBuild: false
@@ -468,9 +468,9 @@ Content/System/Keybinds.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    System/Keybinds.json: 2026-04-30T16:19:27.5937331Z
+    System/Keybinds.json: 2026-05-04T16:11:20.0247571Z
   outputs:
-    Content/System/Keybinds.json: 2026-04-30T16:19:27.5937331Z
+    Content/System/Keybinds.json: 2026-05-04T16:11:20.0247571Z
 Content/System/KeybindsSchema.json:
   contentRoot: Content
   shouldBuild: false
@@ -479,9 +479,9 @@ Content/System/KeybindsSchema.json:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    System/KeybindsSchema.json: 2026-05-01T16:11:57.9849353Z
+    System/KeybindsSchema.json: 2026-05-05T15:12:40.8358282Z
   outputs:
-    Content/System/KeybindsSchema.json: 2026-05-01T16:11:57.9849353Z
+    Content/System/KeybindsSchema.json: 2026-05-05T15:12:40.8358282Z
 Content/Scenes/System/button1-enter.scene:
   contentRoot: Content
   shouldBuild: false
@@ -589,9 +589,9 @@ Content/Scenes/System/startup.scene:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Scenes/System/startup.scene: 2026-04-28T14:57:29.6860040Z
+    Scenes/System/startup.scene: 2026-05-04T15:20:11.7352270Z
   outputs:
-    Content/Scenes/System/startup.scene: 2026-04-28T14:57:29.6860040Z
+    Content/Scenes/System/startup.scene: 2026-05-04T15:20:11.7352270Z
 Content/Scenes/System/update-selector-position.scene:
   contentRoot: Content
   shouldBuild: false
@@ -600,6 +600,17 @@ Content/Scenes/System/update-selector-position.scene:
   compressContent: false
   graphicsProfile: HiDef
   dependencies:
-    Scenes/System/update-selector-position.scene: 2026-04-30T15:00:21.0727084Z
+    Scenes/System/update-selector-position.scene: 2026-05-04T15:20:01.6181228Z
   outputs:
-    Content/Scenes/System/update-selector-position.scene: 2026-04-30T15:00:21.0727084Z
+    Content/Scenes/System/update-selector-position.scene: 2026-05-04T15:20:01.6181228Z
+Content/Scenes/System/toggle-fullscreen.scene:
+  contentRoot: Content
+  shouldBuild: false
+  importer: 
+  processor: 
+  compressContent: false
+  graphicsProfile: HiDef
+  dependencies:
+    Scenes/System/toggle-fullscreen.scene: 2026-05-04T16:10:16.9919391Z
+  outputs:
+    Content/Scenes/System/toggle-fullscreen.scene: 2026-05-04T16:10:16.9919391Z
