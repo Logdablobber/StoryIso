@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EntropyEngine", "EntropyEng
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Builder", "..\Builder\Builder.csproj", "{1B2E7FB4-AD29-4290-9637-3AF14BC08AC5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EntropyEditor", "..\EntropyEditor\EntropyEditor.csproj", "{7ADC95C3-3114-4476-A051-F21846A82B67}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,18 @@ Global
 		{1B2E7FB4-AD29-4290-9637-3AF14BC08AC5}.Release|x64.Build.0 = Release|Any CPU
 		{1B2E7FB4-AD29-4290-9637-3AF14BC08AC5}.Release|x86.ActiveCfg = Release|Any CPU
 		{1B2E7FB4-AD29-4290-9637-3AF14BC08AC5}.Release|x86.Build.0 = Release|Any CPU
+		{7ADC95C3-3114-4476-A051-F21846A82B67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7ADC95C3-3114-4476-A051-F21846A82B67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7ADC95C3-3114-4476-A051-F21846A82B67}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7ADC95C3-3114-4476-A051-F21846A82B67}.Debug|x64.Build.0 = Debug|Any CPU
+		{7ADC95C3-3114-4476-A051-F21846A82B67}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7ADC95C3-3114-4476-A051-F21846A82B67}.Debug|x86.Build.0 = Debug|Any CPU
+		{7ADC95C3-3114-4476-A051-F21846A82B67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7ADC95C3-3114-4476-A051-F21846A82B67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7ADC95C3-3114-4476-A051-F21846A82B67}.Release|x64.ActiveCfg = Release|Any CPU
+		{7ADC95C3-3114-4476-A051-F21846A82B67}.Release|x64.Build.0 = Release|Any CPU
+		{7ADC95C3-3114-4476-A051-F21846A82B67}.Release|x86.ActiveCfg = Release|Any CPU
+		{7ADC95C3-3114-4476-A051-F21846A82B67}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
