@@ -347,6 +347,19 @@
           "buildTransitive/CommunityToolkit.Mvvm.targets": {}
         }
       },
+      "DotTiled/1.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/DotTiled.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/DotTiled.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "HarfBuzzSharp/8.3.1.3": {
         "type": "package",
         "dependencies": {
@@ -1103,6 +1116,21 @@
         "lib/netstandard2.1/CommunityToolkit.Mvvm.xml"
       ]
     },
+    "DotTiled/1.0.0": {
+      "sha512": "w6WvJaeBSo4vlx33QFLqBMgq6V/nCYqJcVZ1qzh7RwcuVH/pAf7uTZpU2vZudNK7nPM/cvmzYdV9MXt42yS8Eg==",
+      "type": "package",
+      "path": "dottiled/1.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "README.md",
+        "dottiled.1.0.0.nupkg.sha512",
+        "dottiled.nuspec",
+        "lib/net8.0/DotTiled.dll",
+        "lib/net8.0/DotTiled.xml"
+      ]
+    },
     "HarfBuzzSharp/8.3.1.3": {
       "sha512": "NGZ2+ZVNPM+NdHB/asW0/ykWngyHWwcqjrbN2nDeH1B/aptPGlCUl8wkQ2cSJxw5fdWgdmIPmNuTPWpLwNVXWg==",
       "type": "package",
@@ -1657,7 +1685,8 @@
       "Avalonia.Fonts.Inter >= 12.0.2",
       "Avalonia.Themes.Fluent >= 12.0.2",
       "AvaloniaUI.DiagnosticsSupport >= 2.2.1",
-      "CommunityToolkit.Mvvm >= 8.4.1"
+      "CommunityToolkit.Mvvm >= 8.4.1",
+      "DotTiled >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -1726,6 +1755,10 @@
           "CommunityToolkit.Mvvm": {
             "target": "Package",
             "version": "[8.4.1, )"
+          },
+          "DotTiled": {
+            "target": "Package",
+            "version": "[1.0.0, )"
           }
         },
         "imports": [

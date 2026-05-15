@@ -33,3 +33,6 @@ build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
 [c:/ProgramData/GithubRepos/StoryIso/EntropyEditor/Views/MainWindow.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[c:/ProgramData/GithubRepos/StoryIso/EntropyEditor/Views/TilemapEditorView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml

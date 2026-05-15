@@ -8,27 +8,28 @@
     "fileStates": {
         "Maps/test-tilemap.tmx": {
             "expandedObjectLayers": [
-                6,
-                4
+                4,
+                3,
+                6
             ],
             "scale": 2,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 239.75,
-                "y": 160.5
+                "x": 150.75,
+                "y": 160
             }
         },
         "Maps/test-tilemap2.tmx": {
             "expandedObjectLayers": [
-                3,
                 7,
+                3,
                 4
             ],
             "scale": 3,
-            "selectedLayer": 3,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 129.5,
-                "y": 141.99999999999997
+                "x": 240,
+                "y": 159.83333333333331
             }
         },
         "dungeon-floor-tiles.tsx": {
@@ -56,8 +57,8 @@
         "Maps/test-tilemap.tmx",
         "tileset-atlas.tsx"
     ],
-    "project": "Entropy.tiled-project",
-    "property.type": "float",
+    "project": "storyiso.tiled-project",
+    "property.type": "color",
     "recentFiles": [
         "Maps/test-tilemap2.tmx",
         "Maps/test-tilemap.tmx",

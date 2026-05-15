@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:dottiled="using:DotTiled"
+             xmlns:local="using:EntropyEditor.Views"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="using:EntropyEditor.ViewModels"
+             xmlns:models="using:EntropyEditor.Models"
+			 xmlns:dataTemplates="using:EntropyEditor.DataTemplates"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="EntropyEditor.Views.TilemapEditorView">
+
+	<UserControl.DataContext>
+		<vm:TilemapViewModel />
+	</UserControl.DataContext>
+
+  <Grid ColumnDefinitions="0.25* 4 0.5* 4 0.25*"
+  		RowDefinitions="0.15* 4 0.45* 4 0.4*"
+		ShowGridLines="True"
+		x:DataType="vm:TilemapViewModel">
+
+		<Button Command="{Binding ScrollLeft}" HotKey="Left" IsVisible="False"/>
+		<Button Command="{Binding ScrollRight}" HotKey="Right" IsVisible="False"/>
+		<Button Command="{Binding ScrollUp}" HotKey="Up" IsVisible="False"/>
+		<Button Command="{Binding ScrollDown}" HotKey="Down" IsVisible="False"/>
+
+		<!-- GridSplitters: -->
+
+		<GridSplitter Grid.Column="1" Grid.RowSpan="5" Background="Black" ResizeDirection="Columns"/>
+		<GridSplitter Grid.Column="3" Grid.RowSpan="5" Background="Black" ResizeDirection="Columns"/>
+
+		<GridSplitter Grid.Row="1" Grid.ColumnSpan="5" Background="Black" ResizeDirection="Rows"/>
+		<GridSplitter Grid.Row="3" Grid.ColumnSpan="5" Background="Black" ResizeDirection="Rows"/>
+
+		<!-- Tilemap: -->
+
+		<ItemsControl Grid.Row="2" Grid.Column="2" Name="tilemapCanvas" ItemsSource="{Binding Tilemap}"> 
+			<ItemsControl.Styles> 
+				<Style Selector="ItemsControl > ContentPresenter" x:DataType="{x:Type vm:ITilemapItem}"> 
+					<Setter Property="Canvas.Left" Value="{Binding X}" />
+					<Setter Property="Canvas.Top" Value="{Binding Y}" />
+					<Setter Property="ZIndex" Value="{Binding ZIndex}" />
+				</Style>
+			</ItemsControl.Styles>
+
+			<ItemsControl.ItemsPanel> 
+				<ItemsPanelTemplate> 
+					<Canvas ClipToBounds="True"/> 
+				</ItemsPanelTemplate>
+			</ItemsControl.ItemsPanel>
+		</ItemsControl>
+
+		<!-- Layer Selector -->
+
+		<>
+  </Grid>
+
+  <UserControl.DataTemplates>
+	<dataTemplates:TilemapTemplateSelector>
+		<DataTemplate DataType="{x:Type vm:TileViewModel}" x:Key="Tile"> 
+			<Border Height="50" Width="50">
+				<Border.Background>
+					<ImageBrush AlignmentX="Left" 
+								AlignmentY="Top"
+								Source="{Binding Source}" 
+								SourceRect="{Binding SourceRect}"
+								DestinationRect="0,0,50,50"
+								Stretch="Uniform" 
+								TileMode="None"/>
+				</Border.Background>
+			</Border>
+		</DataTemplate>
+
+		<DataTemplate DataType="{x:Type vm:MeshedTileViewModel}" x:Key="MeshedTile">
+			<Border Height="{Binding Height}" Width="{Binding Width}">
+				<Border.Background>
+					<ImageBrush AlignmentX="Left" 
+								AlignmentY="Top"
+								Source="{Binding Source}" 
+								SourceRect="{Binding SourceRect}"
+								DestinationRect="0,0,49.9,49.9"
+								Stretch="Uniform"
+								TileMode="Tile"/>
+				</Border.Background>
+			</Border>
+		</DataTemplate>
+
+		<DataTemplate DataType="{x:Type vm:RectangleViewModel}" x:Key="Object"> 
+			<Rectangle Width="{Binding Width}" 
+						Height="{Binding Height}"
+						StrokeThickness="{Binding BorderThickness}"> 
+				<Rectangle.Fill >
+					<SolidColorBrush Color="{Binding Color}" Opacity="{Binding Opacity}"/>
+				</Rectangle.Fill>
+				<Rectangle.Stroke>
+					<SolidColorBrush Color="{Binding BorderColor}" Opacity="{Binding Opacity}"/>
+				</Rectangle.Stroke>
+			</Rectangle>
+		</DataTemplate>
+	</dataTemplates:TilemapTemplateSelector>
+  </UserControl.DataTemplates>
+</UserControl>

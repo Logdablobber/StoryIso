@@ -67,6 +67,10 @@
             "CommunityToolkit.Mvvm": {
               "target": "Package",
               "version": "[8.4.1, )"
+            },
+            "DotTiled": {
+              "target": "Package",
+              "version": "[1.0.0, )"
             }
           },
           "imports": [
